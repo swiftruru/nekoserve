@@ -1,0 +1,55 @@
+node_modules/
+out/
+dist/
+dist-electron/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+simulator-python/dist/
+simulator-python/build/
+simulator-python/*.spec.bak
+
+# Build artifacts
+*.dmg
+*.exe
+*.AppImage
+*.zip
+*.tar.gz
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Claude Code local settings
+.claude/
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python virtual envs
+.venv/
+venv/
+env/

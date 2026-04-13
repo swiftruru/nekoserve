@@ -1,0 +1,162 @@
+name: Build NekoServe
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+            python-path-check: dist/simulator/simulator
+          - os: windows-latest
+            platform: win
+            python-path-check: dist\simulator\simulator.exe
+          - os: ubuntu-latest
+            platform: linux
+            python-path-check: dist/simulator/simulator
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # ── Checkout ──────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Node.js ───────────────────────────────────────
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── Python ────────────────────────────────────────
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ── Linux: FUSE for AppImage ───────────────────────
+      - name: Install FUSE (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fuse libfuse2
+
+      # ── Node dependencies ─────────────────────────────
+      - name: Install Node dependencies
+        run: npm ci
+
+      # ── Python dependencies ───────────────────────────
+      - name: Install Python dependencies
+        run: |
+          cd simulator-python
+          pip install -r requirements.txt
+
+      # ── Build Python simulator (Unix) ─────────────────
+      - name: Build Python simulator (Unix)
+        if: runner.os != 'Windows'
+        run: bash scripts/build-simulator.sh
+
+      # ── Build Python simulator (Windows) ──────────────
+      - name: Build Python simulator (Windows)
+        if: runner.os == 'Windows'
+        run: powershell -ExecutionPolicy Bypass -File scripts/build-simulator.ps1
+
+      # ── Verify simulator binary ────────────────────────
+      - name: Verify simulator binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          BINARY="simulator-python/${{ matrix.python-path-check }}"
+          if [ -f "$BINARY" ]; then
+            echo "Binary found: $BINARY"
+            ls -lh "$BINARY"
+          else
+            echo "ERROR: Binary not found at $BINARY"
+            exit 1
+          fi
+
+      - name: Verify simulator binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $Binary = "simulator-python\${{ matrix.python-path-check }}"
+          if (Test-Path $Binary) {
+            Write-Host "Binary found: $Binary"
+            Get-Item $Binary | Select-Object Length, FullName
+          } else {
+            Write-Error "ERROR: Binary not found at $Binary"
+            exit 1
+          }
+
+      # ── Build Electron app (all platforms) ────────────
+      - name: Build Electron renderer + main
+        run: npm run ci:build
+
+      # ── Package ───────────────────────────────────────
+      - name: Package for ${{ matrix.platform }} (macOS)
+        if: runner.os == 'macOS'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # CSC_IDENTITY_AUTO_DISCOVERY=false: skip code signing for classroom build
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run ci:pack:mac
+
+      - name: Package for ${{ matrix.platform }} (Windows)
+        if: runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run ci:pack:win
+
+      - name: Package for ${{ matrix.platform }} (Linux)
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run ci:pack:linux
+
+      # ── Upload artifacts ──────────────────────────────
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nekoserve-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            dist/desktop/*.dmg
+            dist/desktop/*.zip
+            dist/desktop/*.exe
+            dist/desktop/*.AppImage
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ── Optional: run Python tests on Ubuntu ──────────────
+  test-simulator:
+    name: Test Python Simulator
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          cd simulator-python
+          pip install -r requirements.txt
+
+      - name: Run golden tests
+        run: |
+          cd simulator-python
+          python -m pytest tests/ -v --tb=short

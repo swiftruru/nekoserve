@@ -1,0 +1,16 @@
+// Re-export all shared contracts for use within the renderer
+export type {
+  SimulationConfig,
+  MetricSummary,
+  EventType,
+  EventLogItem,
+  SimulationResult,
+  ScenarioPreset,
+  SimulatorError,
+} from '@shared/contracts/types'
+
+// ── Page navigation ───────────────────────────────────────────
+export type Page = 'settings' | 'results' | 'eventlog' | 'about'
+
+// ── Simulation state machine ──────────────────────────────────
+export type SimulationStatus = 'idle' | 'running' | 'success' | 'error'

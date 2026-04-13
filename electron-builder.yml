@@ -1,0 +1,61 @@
+appId: com.nekoserve.app
+productName: NekoServe
+copyright: Copyright © 2024 NekoServe
+
+directories:
+  buildResources: build-resources
+  output: dist/desktop
+
+files:
+  - out/**/*
+  - "!out/renderer/**/*.map"
+
+extraResources:
+  - from: simulator-python/dist/simulator
+    to: simulator
+    filter:
+      - "**/*"
+  - from: build-resources/icon.png
+    to: icon.png
+
+# macOS
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  icon: build-resources/icon.icns
+  category: public.app-category.developer-tools
+
+dmg:
+  window:
+    width: 540
+    height: 380
+
+# Windows
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  icon: build-resources/icon.ico
+
+# Linux
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: build-resources/icon.png
+  category: Science
+
+# Artifacts naming
+artifactName: "${productName}-${version}-${os}-${arch}.${ext}"
+
+# Publishing (disabled for MVP)
+publish: null
