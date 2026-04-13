@@ -115,9 +115,13 @@ export default function PlaybackPage({
   }, [simTime, config.simulationDuration, setSimTime])
 
   const resetClock = useCallback(() => {
-    setPlaying(false)
+    // "Reset" is really "replay from the top" — jump to 0 and start
+    // playing immediately. If the user just wants to park the cursor at
+    // 0 they can reset then press pause, but the common case is that
+    // you clicked reset because you want to watch it again.
     setSimTime(0)
     setFocus(null)
+    setPlaying(true)
   }, [setSimTime])
 
   const seekBy = useCallback(
@@ -154,8 +158,9 @@ export default function PlaybackPage({
 
   const handleScrub = useCallback(
     (t: number) => {
-      // Scrubbing auto-pauses so the user can inspect a specific moment.
-      setPlaying(false)
+      // Scrubbing preserves the current playing state: if the user was
+      // watching, they keep watching from the new position when they
+      // release the slider; if they had paused, they stay paused.
       setSimTime(t)
     },
     [setSimTime],
@@ -261,6 +266,7 @@ export default function PlaybackPage({
           config={config}
           focus={focus}
           onSelectFocus={handleSelectFocus}
+          speed={speed}
         />
         {focus && (
           <InspectPopover

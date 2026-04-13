@@ -208,12 +208,152 @@
     radial-gradient(ellipse at center, #fef9f0 0%, #fef9f0 60%, #fdf0dc 100%);
 }
 
+/* ── Playback scene character animations ────────────────────
+   Applied to SVG <g> wrappers inside CafeScene so they compose
+   with the outer `transform: translate(x, y)` that positions
+   each avatar. All animations respect prefers-reduced-motion
+   via the block at the end of this file. */
+
+/* Gentle "breathing" bob for stationary characters. */
+@keyframes neko-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+.neko-bob { animation: neko-bob 2.2s ease-in-out infinite; }
+
+/* Bouncy entrance: customers popping in at the door. */
+@keyframes neko-pop-in {
+  0%   { transform: scale(0.2); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.neko-pop-in {
+  animation: neko-pop-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: center center;
+}
+
+/* Shrink + fade as customer leaves the scene. */
+@keyframes neko-pop-out {
+  0%   { transform: scale(1) translateY(0); }
+  100% { transform: scale(0.65) translateY(4px); }
+}
+.neko-pop-out {
+  animation: neko-pop-out 600ms ease-in both;
+  transform-origin: center center;
+}
+
+/* Floating hearts above a customer with a cat on their lap. */
+@keyframes neko-heart-rise {
+  0%   { transform: translate(0, -6px);  opacity: 0; }
+  20%  { transform: translate(0, -14px); opacity: 1; }
+  80%  { transform: translate(-4px, -32px); opacity: 0.75; }
+  100% { transform: translate(-8px, -44px); opacity: 0; }
+}
+.neko-heart { animation: neko-heart-rise 2.4s linear infinite; }
+.neko-heart--delayed { animation-delay: 1.2s; }
+
+/* Steam wisps rising above the kitchen when staff are busy. */
+@keyframes neko-steam {
+  0%   { transform: translateY(0);    opacity: 0.7; }
+  100% { transform: translateY(-24px); opacity: 0; }
+}
+.neko-steam { animation: neko-steam 2.6s ease-out infinite; }
+.neko-steam--d1 { animation-delay: 0.8s; }
+.neko-steam--d2 { animation-delay: 1.6s; }
+
+/* Tail wag: visiting cats swing a few degrees back and forth. */
+@keyframes neko-tail-wag {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+.neko-tail-wag {
+  animation: neko-tail-wag 0.8s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+/* Sparkle burst: 4 ✨ radiating from a customer on arrival. */
+@keyframes neko-sparkle-ne {
+  0%   { transform: translate(0, 0) scale(0.4);  opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translate(12px, -12px) scale(1); opacity: 0; }
+}
+@keyframes neko-sparkle-nw {
+  0%   { transform: translate(0, 0) scale(0.4);  opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translate(-12px, -12px) scale(1); opacity: 0; }
+}
+@keyframes neko-sparkle-se {
+  0%   { transform: translate(0, 0) scale(0.4);  opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translate(12px, 10px) scale(1); opacity: 0; }
+}
+@keyframes neko-sparkle-sw {
+  0%   { transform: translate(0, 0) scale(0.4);  opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translate(-12px, 10px) scale(1); opacity: 0; }
+}
+.neko-sparkle-ne { animation: neko-sparkle-ne 900ms ease-out forwards; }
+.neko-sparkle-nw { animation: neko-sparkle-nw 900ms ease-out forwards; }
+.neko-sparkle-se { animation: neko-sparkle-se 900ms ease-out forwards; }
+.neko-sparkle-sw { animation: neko-sparkle-sw 900ms ease-out forwards; }
+
+/* ── Zone feedback ── */
+
+/* Seat zone border pulses red when occupancy gets uncomfortable. */
+@keyframes neko-warn-pulse {
+  0%, 100% { stroke: #fcd34d; stroke-width: 2; }
+  50%      { stroke: #ef4444; stroke-width: 3.5; }
+}
+.neko-warn-pulse { animation: neko-warn-pulse 1.4s ease-in-out infinite; }
+
+/* Door lights up warm when a customer arrives. */
+@keyframes neko-door-flash {
+  0%   { fill: #fef3c7; }
+  100% { fill: #ffffff; }
+}
+.neko-door-flash { animation: neko-door-flash 600ms ease-out forwards; }
+
+/* Exit lights up green when a customer leaves happy, red when they give up. */
+@keyframes neko-exit-flash-good {
+  0%   { fill: #bbf7d0; }
+  100% { fill: #ffffff; }
+}
+@keyframes neko-exit-flash-bad {
+  0%   { fill: #fecaca; }
+  100% { fill: #ffffff; }
+}
+.neko-exit-flash-good { animation: neko-exit-flash-good 600ms ease-out forwards; }
+.neko-exit-flash-bad { animation: neko-exit-flash-bad 600ms ease-out forwards; }
+
 @media (prefers-reduced-motion: reduce) {
   .cat-sweep-ltr,
   .cat-sweep-rtl,
   .page-veil {
     animation: none;
     display: none;
+  }
+  /* Stop all playback-scene character motion so the page still
+     reads correctly without any moving pixels. Zone-feedback
+     flashes and the seat-full warn pulse are also disabled;
+     static stroke colors remain so the information is preserved. */
+  .neko-bob,
+  .neko-pop-in,
+  .neko-pop-out,
+  .neko-heart,
+  .neko-heart--delayed,
+  .neko-steam,
+  .neko-steam--d1,
+  .neko-steam--d2,
+  .neko-tail-wag,
+  .neko-sparkle-ne,
+  .neko-sparkle-nw,
+  .neko-sparkle-se,
+  .neko-sparkle-sw,
+  .neko-warn-pulse,
+  .neko-door-flash,
+  .neko-exit-flash-good,
+  .neko-exit-flash-bad {
+    animation: none;
   }
 }
 
