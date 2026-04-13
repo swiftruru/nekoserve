@@ -1,0 +1,65 @@
+{
+  "appName": "NekoServe",
+  "subtitle": "貓咪咖啡廳座位與服務模擬系統",
+  "version": "v0.2.0",
+  "courseBackground": {
+    "title": "📖 課程背景",
+    "author": "作者",
+    "authorValue": "潘昱如（Yu-Ru Pan）",
+    "school": "學校",
+    "schoolValue": "國立臺北護理健康大學",
+    "department": "系所",
+    "departmentValue": "資訊管理系所",
+    "course": "課程",
+    "courseValue": "系統模擬",
+    "advisorHeading": "🎓 指導老師",
+    "advisorValue": "祝國忠 老師（Kuo-Chung Chu）"
+  },
+  "tech": {
+    "title": "🔧 技術規格",
+    "frontendLabel": "前端 / 桌面容器",
+    "coreLabel": "模擬核心",
+    "github": "GitHub 專案",
+    "homepage": "個人首頁"
+  },
+  "description": {
+    "title": "📖 專案說明",
+    "body": "NekoServe 是一個桌面應用程式，用於模擬貓咪咖啡廳的顧客服務流程。透過離散事件模擬（Discrete Event Simulation），系統可精確重現顧客到達、排隊、入座、點餐、用餐、與貓咪互動直到離開的完整流程，並計算各項服務指標，適合用於教學示範或服務系統分析。"
+  },
+  "architecture": {
+    "title": "🏗️ 系統架構",
+    "simulationLogic": "<strong>模擬邏輯</strong>完全由 Python + SimPy 實作，不在 UI 端重複撰寫。Electron main process 透過 spawn 啟動打包好的 Python executable，以 JSON 格式透過 stdin/stdout 傳遞參數與結果。",
+    "ipc": "<strong>IPC 架構</strong>遵循 Electron 安全原則：renderer process 只能透過 contextBridge 暴露的白名單 API 與 main process 溝通，不可直接存取 Node.js 或 Electron 高權限 API。"
+  },
+  "distributions": {
+    "title": "🎲 隨機分佈規格",
+    "arrival": "<strong>顧客到達間隔</strong>：Exponential 分佈（Poisson process）",
+    "service": "<strong>點餐 / 製作 / 用餐 / 互動 / 休息時間</strong>：Normal 分佈，std = mean × 0.2，最小值 1 分鐘",
+    "catRest": "<strong>貓咪休息觸發</strong>：每次互動後以 catRestProbability 機率決定"
+  },
+  "usage": {
+    "title": "📌 使用方式",
+    "step1": "在「模擬設定」頁面調整各項參數，或選擇預設情境",
+    "step2": "點擊「開始模擬」按鈕，等待模擬完成（一般不超過 5 秒）",
+    "step3": "在「統計結果」頁面查看 KPI 指標與圖表",
+    "step4": "在「事件紀錄」頁面查看完整的時間序列事件，可依類型篩選",
+    "step5": "修改參數後再次執行，對比不同情境的差異"
+  },
+  "experiment": {
+    "title": "🔬 如何設計模擬實驗",
+    "principle1Title": "原則一：控制變數法",
+    "principle1Body": "每次只改變<strong>一個</strong>參數，其他所有參數（包含隨機種子）保持不變。例如想研究「增加座位數對等待時間的影響」，就只調整「座位數」，其餘維持預設值。這樣才能確定是這個參數造成了結果差異，而不是多個變因混雜。",
+    "principle2Title": "原則二：固定隨機種子以確保可重現性",
+    "principle2Body": "相同的隨機種子會產生完全相同的隨機序列，讓兩次模擬僅有你調整的參數不同。若要觀察隨機性本身的影響，可改用不同種子跑多次，取平均值作為穩健估計。",
+    "principle3Title": "原則三：如何比較情境差異",
+    "principle3BodyA": "跑完多次後，切換到「統計結果」頁面的<strong>「對比」</strong>標籤，可同時看到最近 3 次模擬的所有 KPI，橘色欄位代表差異顯著（>10%）。",
+    "principle3BodyB": "重點指標優先順序：先看<strong>放棄率</strong>（系統是否過載）→ 再看<strong>利用率</strong>（找出瓶頸資源）→ 最後看<strong>平均等待時間</strong>（顧客體驗）。",
+    "principle4Title": "原則四：如何判斷結果是否可信",
+    "principle4Item1": "<strong>模擬時長</strong>要夠長（至少是平均停留時間的 20 倍以上），避免初始效應影響指標",
+    "principle4Item2": "<strong>不同種子跑 3–5 次</strong>，若各次結果相差不到 5%，則單次結果已足夠穩定",
+    "principle4Item3": "<strong>利特爾定律驗證</strong>：N ≈ λ × W；若偏差大，可能模擬時長不足",
+    "principle5Title": "原則五：改善瓶頸的策略",
+    "principle5BodyA": "找到利用率最高的資源（座位 / 店員 / 貓咪），優先擴充該資源的容量。根據瓶頸理論（TOC），改善非瓶頸資源對系統吞吐量幾乎沒有幫助。",
+    "principle5BodyB": "例如座位利用率 95%、店員利用率 60%：加店員不會改善等待座位的問題；應先增加座位數或縮短用餐時間（加快翻桌）。"
+  }
+}

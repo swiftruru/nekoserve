@@ -1,7 +1,8 @@
-import { app, BrowserWindow, Menu, MenuItem, shell, nativeImage, screen } from 'electron'
+import { app, BrowserWindow, Menu, MenuItem, ipcMain, shell, nativeImage, screen } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { registerSimulationHandler } from './simulator-bridge'
+import { setMainLocale, mainStrings, getMainLocale } from './i18n'
 
 // ──────────────────────────────────────────────────────────────
 // Window state persistence
@@ -67,6 +68,7 @@ function getIconPath(): string {
 function buildAppMenu(): void {
   const isMac = process.platform === 'darwin'
   const appName = app.getName()
+  const s = mainStrings()
 
   const template: (Electron.MenuItemConstructorOptions | MenuItem)[] = [
     // macOS: first menu is always the "App" menu shown in the menubar
@@ -76,46 +78,46 @@ function buildAppMenu(): void {
             label: appName,
             submenu: [
               {
-                label: `關於 ${appName}`,
+                label: s.menu.about(appName),
                 click: () => showAboutWindow(),
               },
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
-              { role: 'hide', label: `隱藏 ${appName}` },
-              { role: 'hideOthers', label: '隱藏其他' },
-              { role: 'unhide', label: '全部顯示' },
+              { role: 'hide', label: s.menu.hide(appName) },
+              { role: 'hideOthers', label: s.menu.hideOthers },
+              { role: 'unhide', label: s.menu.unhide },
               { type: 'separator' },
-              { role: 'quit', label: `結束 ${appName}` },
+              { role: 'quit', label: s.menu.quit(appName) },
             ],
           } as Electron.MenuItemConstructorOptions,
         ]
       : []),
     // Edit
     {
-      label: '編輯',
+      label: s.menu.edit,
       submenu: [
-        { role: 'undo', label: '還原' },
-        { role: 'redo', label: '重做' },
+        { role: 'undo', label: s.menu.undo },
+        { role: 'redo', label: s.menu.redo },
         { type: 'separator' },
-        { role: 'cut', label: '剪下' },
-        { role: 'copy', label: '複製' },
-        { role: 'paste', label: '貼上' },
-        { role: 'selectAll', label: '全選' },
+        { role: 'cut', label: s.menu.cut },
+        { role: 'copy', label: s.menu.copy },
+        { role: 'paste', label: s.menu.paste },
+        { role: 'selectAll', label: s.menu.selectAll },
       ],
     },
     // Window
     {
-      label: '視窗',
+      label: s.menu.window,
       submenu: [
-        { role: 'minimize', label: '縮到最小' },
-        { role: 'zoom', label: '縮放' },
+        { role: 'minimize', label: s.menu.minimize },
+        { role: 'zoom', label: s.menu.zoom },
         ...(isMac
           ? [
               { type: 'separator' as const },
-              { role: 'front' as const, label: '全部移到最前面' },
+              { role: 'front' as const, label: s.menu.front },
             ]
-          : [{ role: 'close' as const, label: '關閉' }]),
+          : [{ role: 'close' as const, label: s.menu.close }]),
       ],
     },
   ]
@@ -135,9 +137,11 @@ function showAboutWindow(): void {
     .toString('base64')}`
   const appName = app.getName()
   const version = app.getVersion()
+  const s = mainStrings()
+  const htmlLang = getMainLocale()
 
   const html = `<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="${htmlLang}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy"
@@ -189,9 +193,9 @@ function showAboutWindow(): void {
 <body>
   <img src="${iconBase64}" alt="icon">
   <h1>${appName}</h1>
-  <p class="version">版本 ${version}</p>
-  <p class="copyright">© 2024 NekoServe<br>貓咪咖啡廳離散事件模擬系統</p>
-  <button onclick="window.close()">確定</button>
+  <p class="version">${s.about.version} ${version}</p>
+  <p class="copyright">${s.about.copyright}<br>${s.about.tagline}</p>
+  <button onclick="window.close()">${s.about.ok}</button>
 </body>
 </html>`
 
@@ -202,7 +206,7 @@ function showAboutWindow(): void {
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
-    title: `關於 ${appName}`,
+    title: s.about.windowTitle(appName),
     icon: getIconPath(),
     show: false,
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
@@ -225,6 +229,7 @@ function createWindow(): void {
   const savedState = loadWindowState()
 
   const isMac = process.platform === 'darwin'
+  const s = mainStrings()
 
   const win = new BrowserWindow({
     width: 1280,
@@ -232,7 +237,7 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 600,
     ...savedState,
-    title: 'NekoServe — 貓咪咖啡廳模擬系統',
+    title: s.window.title,
     icon: getIconPath(),
     backgroundColor: '#fef9f0',
     // macOS: hide native title bar, keep traffic lights inset into the header area
@@ -274,6 +279,23 @@ app.whenReady().then(() => {
       app.dock.setIcon(icon)
     }
   }
+
+  // Initialize main-process locale from the system before building the menu
+  // so the first menu/About window already uses the right language.
+  setMainLocale(app.getLocale())
+
+  // Expose system locale (normalized to a BCP-47 tag like 'zh-TW') to renderer
+  // via a synchronous IPC call used by the preload script.
+  ipcMain.on('get-initial-locale', (event) => {
+    event.returnValue = app.getLocale()
+  })
+
+  // Renderer notifies main when the user toggles language so the menu and
+  // About dialog stay in sync with the UI.
+  ipcMain.on('locale-changed', (_event, locale: string) => {
+    setMainLocale(locale)
+    buildAppMenu()
+  })
 
   buildAppMenu()
   registerSimulationHandler()

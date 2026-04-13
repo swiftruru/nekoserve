@@ -1,0 +1,27 @@
+{
+  "appName": "NekoServe",
+  "appSubtitle": "Cat café seat & service simulation",
+  "status": {
+    "running": "Simulating…",
+    "success": "Simulation complete",
+    "error": "Simulation failed"
+  },
+  "button": {
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "retry": "Retry",
+    "reset": "Reset",
+    "delete": "Delete"
+  },
+  "learningPanel": "Learning notes",
+  "unit": {
+    "min": "min",
+    "minutesShort": "min",
+    "people": "people",
+    "seat": "seats",
+    "cat": "cats",
+    "sec": "s"
+  }
+}

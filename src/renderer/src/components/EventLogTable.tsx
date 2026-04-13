@@ -1,28 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { EventLogItem, EventType } from '../types'
 import { exportEventLogCSV } from '../utils/export'
 
 interface EventLogTableProps {
   events: EventLogItem[]
   initialFilter?: EventType[]
-}
-
-const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  CUSTOMER_ARRIVE:              '顧客到達',
-  CUSTOMER_WAIT_SEAT:           '等待座位',
-  CUSTOMER_SEATED:              '入座',
-  CUSTOMER_ORDER:               '點餐',
-  ORDER_START_PREPARE:          '開始製作',
-  ORDER_READY:                  '餐點完成',
-  CUSTOMER_START_DINING:        '開始用餐',
-  CUSTOMER_FINISH_DINING:       '用餐完畢',
-  CUSTOMER_WAIT_CAT:            '等待貓咪',
-  CUSTOMER_START_CAT_INTERACTION: '開始互動',
-  CUSTOMER_FINISH_CAT_INTERACTION: '完成互動',
-  CUSTOMER_LEAVE:               '離開',
-  CUSTOMER_ABANDON:             '放棄離開',
-  CAT_START_REST:               '貓咪休息',
-  CAT_END_REST:                 '休息結束',
 }
 
 const EVENT_TYPE_COLORS: Record<EventType, string> = {
@@ -43,9 +26,10 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   CAT_END_REST:                 'bg-indigo-100 text-indigo-600',
 }
 
-const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_LABELS) as EventType[]
+const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_COLORS) as EventType[]
 
 export default function EventLogTable({ events, initialFilter }: EventLogTableProps) {
+  const { t } = useTranslation(['eventLog', 'events', 'common'])
   const [search, setSearch] = useState('')
   const [selectedTypes, setSelectedTypes] = useState<Set<EventType>>(
     () => (initialFilter ? new Set(initialFilter) : new Set())
@@ -70,18 +54,37 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
     setSelectedTypes(new Set())
   }
 
+  function describeEvent(e: EventLogItem): string {
+    return t(`events:${e.eventType}` as const, {
+      customerId: e.customerId,
+      resourceId: e.resourceId ?? '',
+      defaultValue: e.description ?? '',
+    })
+  }
+
+  function labelForType(type: EventType): string {
+    return t(`events:label.${type}` as const)
+  }
+
+  // Pre-render descriptions so search (and re-render on language change) stays consistent
+  const rendered = useMemo(
+    () => events.map((e) => ({ e, description: describeEvent(e) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [events, t]
+  )
+
   const filtered = useMemo(() => {
-    return events.filter((e) => {
+    const searchLower = search.toLowerCase()
+    return rendered.filter(({ e, description }) => {
       const matchType = selectedTypes.size === 0 || selectedTypes.has(e.eventType)
-      const searchLower = search.toLowerCase()
       const matchSearch =
         !search ||
-        e.description.toLowerCase().includes(searchLower) ||
+        description.toLowerCase().includes(searchLower) ||
         String(e.customerId).includes(searchLower) ||
         (e.resourceId ?? '').toLowerCase().includes(searchLower)
       return matchType && matchSearch
     })
-  }, [events, search, selectedTypes])
+  }, [rendered, search, selectedTypes])
 
   const hasFilters = search || selectedTypes.size > 0
 
@@ -93,7 +96,7 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
           <div className="flex-1 min-w-48">
             <input
               type="text"
-              placeholder="搜尋描述、顧客編號、資源名稱…"
+              placeholder={t('eventLog:searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field"
@@ -102,7 +105,7 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
           </div>
           {hasFilters && (
             <button type="button" onClick={clearFilters} className="btn-secondary text-sm">
-              清除篩選
+              {t('eventLog:clearFilters')}
             </button>
           )}
         </div>
@@ -119,7 +122,7 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
                   : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400'
               }`}
             >
-              {EVENT_TYPE_LABELS[type]}
+              {labelForType(type)}
             </button>
           ))}
         </div>
@@ -129,14 +132,14 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
       <div className="card p-0 overflow-hidden">
         <div className="px-4 py-3 border-b border-orange-100 flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">
-            顯示 {filtered.length} / {events.length} 筆事件
+            {t('eventLog:summary', { filtered: filtered.length, total: events.length })}
           </span>
           <button
             type="button"
-            onClick={() => exportEventLogCSV(filtered)}
+            onClick={() => exportEventLogCSV(filtered.map((r) => r.e))}
             className="btn-secondary text-xs px-3 py-1.5"
           >
-            ⬇ 匯出 CSV
+            {t('eventLog:exportCsv')}
           </button>
         </div>
 
@@ -144,22 +147,32 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
           <table className="w-full text-sm">
             <thead className="bg-orange-50 sticky top-0">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-20">時間(分)</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-28">事件類型</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-16">顧客</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-24">資源</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">描述</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-20">
+                  {t('eventLog:column.time')}
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-28">
+                  {t('eventLog:column.type')}
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-16">
+                  {t('eventLog:column.customer')}
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-24">
+                  {t('eventLog:column.resource')}
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">
+                  {t('eventLog:column.description')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map((e, i) => (
+              {filtered.map(({ e, description }, i) => (
                 <tr key={i} className="hover:bg-orange-50/50 transition-colors">
                   <td className="px-4 py-2 font-mono text-gray-600">
                     {e.timestamp.toFixed(2)}
                   </td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${EVENT_TYPE_COLORS[e.eventType]}`}>
-                      {EVENT_TYPE_LABELS[e.eventType]}
+                      {labelForType(e.eventType)}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-gray-500">
@@ -169,14 +182,14 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
                     {e.resourceId ?? '—'}
                   </td>
                   <td className="px-4 py-2 text-gray-700" data-selectable>
-                    {e.description}
+                    {description}
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                    沒有符合條件的事件
+                    {t('eventLog:empty')}
                   </td>
                 </tr>
               )}

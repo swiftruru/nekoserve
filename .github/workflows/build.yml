@@ -11,6 +11,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Opt in to Node.js 24 for all JavaScript-based actions. GitHub deprecated
+# Node.js 20 for actions on 2025-09-19 and will force Node 24 by 2026-06-02.
+# Setting this env var now silences the deprecation warnings and avoids any
+# surprise when the runner default flips. Safe no-op on Node 20 runtimes.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     name: Build (${{ matrix.os }})

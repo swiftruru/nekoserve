@@ -1,0 +1,14 @@
+{
+  "searchPlaceholder": "搜尋描述、顧客編號、資源名稱…",
+  "clearFilters": "清除篩選",
+  "summary": "顯示 {{filtered}} / {{total}} 筆事件",
+  "exportCsv": "⬇ 匯出 CSV",
+  "column": {
+    "time": "時間(分)",
+    "type": "事件類型",
+    "customer": "顧客",
+    "resource": "資源",
+    "description": "描述"
+  },
+  "empty": "沒有符合條件的事件"
+}

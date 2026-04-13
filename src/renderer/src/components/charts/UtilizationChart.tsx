@@ -8,6 +8,7 @@ import {
   Cell,
   ResponsiveContainer,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 interface UtilizationChartProps {
   seatUtilization: number
@@ -22,22 +23,26 @@ export default function UtilizationChart({
   staffUtilization,
   catUtilization,
 }: UtilizationChartProps) {
+  const { t } = useTranslation('results')
+
   const data = [
-    { name: '座位', value: Math.round(seatUtilization * 100) },
-    { name: '店員', value: Math.round(staffUtilization * 100) },
-    { name: '貓咪', value: Math.round(catUtilization * 100) },
+    { name: t('results:charts.utilization.seat'),  value: Math.round(seatUtilization * 100) },
+    { name: t('results:charts.utilization.staff'), value: Math.round(staffUtilization * 100) },
+    { name: t('results:charts.utilization.cat'),   value: Math.round(catUtilization * 100) },
   ]
+
+  const tooltipLabel = t('results:charts.utilization.tooltipLabel')
 
   return (
     <div className="card">
-      <div className="card-title">🐾 各資源利用率 (%)</div>
+      <div className="card-title">{t('results:charts.utilization.title')}</div>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#fed7aa" />
           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
           <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
           <Tooltip
-            formatter={(v: number) => [`${v}%`, '利用率']}
+            formatter={(v: number) => [`${v}%`, tooltipLabel]}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Bar dataKey="value" radius={[6, 6, 0, 0]}>

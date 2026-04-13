@@ -1,27 +1,21 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Page } from '../types'
-import { LEARN_CONTENT } from '../data/learnContent'
+import { getLearnContent } from '../data/learnContent'
 
 interface LearningPanelProps {
   page: Page
   onClose: () => void
 }
 
-const PAGE_LABELS: Record<Page, string> = {
-  settings: '模擬設定',
-  results:  '統計結果',
-  eventlog: '事件紀錄',
-  about:    '關於',
-}
-
 export default function LearningPanel({ page, onClose }: LearningPanelProps) {
-  const sections = LEARN_CONTENT[page] ?? []
+  const { t, i18n } = useTranslation(['learn', 'nav'])
+  const learnContent = getLearnContent(i18n.resolvedLanguage ?? i18n.language)
+  const sections = learnContent[page] ?? []
   // Track which section is open; default to first
   const [openId, setOpenId] = useState<string>(() => sections[0]?.id ?? '')
 
-  // Reset open section when page changes
-  const currentSections = LEARN_CONTENT[page] ?? []
-  const firstId = currentSections[0]?.id ?? ''
+  const firstId = sections[0]?.id ?? ''
 
   function toggle(id: string) {
     setOpenId((prev) => (prev === id ? '' : id))
@@ -33,13 +27,13 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
       <div className="flex items-center justify-between px-4 py-3 bg-orange-50 border-b border-orange-100 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-base">📚</span>
-          <span className="text-sm font-semibold text-orange-700">學習筆記</span>
+          <span className="text-sm font-semibold text-orange-700">{t('learn:title')}</span>
         </div>
         <button
           type="button"
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 transition-colors text-lg leading-none"
-          aria-label="關閉知識面板"
+          aria-label={t('learn:closeAria')}
         >
           ×
         </button>
@@ -48,17 +42,17 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
       {/* ── Page context label ───────────────────────── */}
       <div className="px-4 py-2 bg-orange-50/60 border-b border-orange-100 flex-shrink-0">
         <span className="text-xs text-orange-500 font-medium">
-          {PAGE_LABELS[page]} 相關概念
+          {t('learn:contextLabel', { page: t(`nav:${page}` as const) })}
         </span>
       </div>
 
       {/* ── Accordion list ───────────────────────────── */}
       <div className="flex-1 overflow-y-auto learn-panel-scroll">
-        {currentSections.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">此頁面暫無學習內容</p>
+        {sections.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">{t('learn:empty')}</p>
         ) : (
           <div className="divide-y divide-orange-50">
-            {currentSections.map((section) => {
+            {sections.map((section) => {
               const isOpen = openId === section.id || (openId === '' && section.id === firstId)
               return (
                 <div key={section.id}>
@@ -101,7 +95,7 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
       {/* ── Footer ───────────────────────────────────── */}
       <div className="px-4 py-2.5 border-t border-orange-100 bg-orange-50/40 flex-shrink-0">
         <p className="text-xs text-gray-400 leading-relaxed">
-          內容僅供教學參考。公式推導細節請參閱排隊論教材。
+          {t('learn:footer')}
         </p>
       </div>
     </div>

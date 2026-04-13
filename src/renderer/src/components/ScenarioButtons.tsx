@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ScenarioPreset, SimulationConfig } from '../types'
+import { isBuiltInScenarioId } from '../data/scenarios'
 
 interface ScenarioButtonsProps {
   scenarios: ScenarioPreset[]
@@ -20,6 +22,7 @@ export default function ScenarioButtons({
   onDeleteCustom,
   disabled = false,
 }: ScenarioButtonsProps) {
+  const { t } = useTranslation(['settings', 'scenarios', 'common'])
   const [saving, setSaving] = useState(false)
   const [saveName, setSaveName] = useState('')
 
@@ -33,15 +36,31 @@ export default function ScenarioButtons({
   }
 
   function handleDeleteCustom(id: string) {
-    if (window.confirm('確定要刪除這個自訂情境嗎？')) {
+    if (window.confirm(t('settings:scenario.deleteConfirm'))) {
       onDeleteCustom?.(id)
     }
+  }
+
+  function builtInName(preset: ScenarioPreset): string {
+    if (isBuiltInScenarioId(preset.id)) {
+      return t(`scenarios:${preset.id}.name` as const)
+    }
+    return preset.name
+  }
+
+  function builtInDescription(preset: ScenarioPreset): string {
+    if (isBuiltInScenarioId(preset.id)) {
+      return t(`scenarios:${preset.id}.description` as const)
+    }
+    return preset.description
   }
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">預設情境</p>
+        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+          {t('settings:scenario.label')}
+        </p>
         {!saving && onSaveCustom && (
           <button
             type="button"
@@ -49,7 +68,7 @@ export default function ScenarioButtons({
             onClick={() => { setSaving(true); setSaveName('') }}
             className="text-xs text-orange-500 hover:text-orange-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
           >
-            <span>＋</span> 儲存目前設定
+            <span>＋</span> {t('settings:scenario.saveCurrent')}
           </button>
         )}
       </div>
@@ -62,16 +81,16 @@ export default function ScenarioButtons({
             type="button"
             disabled={disabled}
             onClick={() => onSelect(s.config, s.id)}
-            title={s.description}
+            title={builtInDescription(s)}
             className={`btn-scenario ${
               activeScenarioId === s.id ? 'btn-scenario-active' : 'btn-scenario-inactive'
             } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
-            {s.name}
+            {builtInName(s)}
           </button>
         ))}
 
-        {/* Custom scenarios */}
+        {/* Custom scenarios (user-typed names, not translated) */}
         {customScenarios.map((s) => (
           <div key={s.id} className="relative flex items-center group">
             <button
@@ -90,7 +109,7 @@ export default function ScenarioButtons({
                 type="button"
                 onClick={() => handleDeleteCustom(s.id)}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 leading-none text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                title="刪除情境"
+                title={t('settings:scenario.delete')}
               >
                 ×
               </button>
@@ -104,7 +123,7 @@ export default function ScenarioButtons({
         <form onSubmit={handleSaveSubmit} className="flex items-center gap-2 mt-1">
           <input
             type="text"
-            placeholder="輸入情境名稱…"
+            placeholder={t('settings:scenario.nameInputPlaceholder')}
             value={saveName}
             onChange={(e) => setSaveName(e.target.value)}
             autoFocus
@@ -116,14 +135,14 @@ export default function ScenarioButtons({
             disabled={!saveName.trim()}
             className="btn-primary text-xs py-1.5 px-3 disabled:opacity-40"
           >
-            儲存
+            {t('common:button.save')}
           </button>
           <button
             type="button"
             onClick={() => setSaving(false)}
             className="btn-secondary text-xs py-1.5 px-3"
           >
-            取消
+            {t('common:button.cancel')}
           </button>
         </form>
       )}

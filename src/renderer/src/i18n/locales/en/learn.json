@@ -1,0 +1,7 @@
+{
+  "title": "Learning notes",
+  "closeAria": "Close learning panel",
+  "contextLabel": "{{page}} concepts",
+  "empty": "No learning content for this page yet",
+  "footer": "For classroom reference only. See queueing-theory textbooks for formal derivations."
+}

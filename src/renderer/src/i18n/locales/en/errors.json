@@ -1,0 +1,10 @@
+{
+  "INVALID_CONFIG": "Simulation parameters are invalid. Please check the settings and try again.",
+  "SIMULATION_ERROR": "The simulation engine reported an error. See details below.",
+  "TIMEOUT": "Simulation timed out. Try shortening the duration or reducing parameters.",
+  "BINARY_NOT_FOUND": "Simulator executable not found. Please run npm run build:simulator first.",
+  "NO_EXEC_PERMISSION": "Simulator executable is not executable (permission denied).",
+  "PARSE_ERROR": "Failed to parse simulation result. The simulator binary may be outdated.",
+  "UNKNOWN_ERROR": "An unexpected error occurred.",
+  "unknown": "An unexpected error occurred."
+}

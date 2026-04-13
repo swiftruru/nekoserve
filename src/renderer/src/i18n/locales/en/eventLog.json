@@ -1,0 +1,14 @@
+{
+  "searchPlaceholder": "Search description, customer ID, resource…",
+  "clearFilters": "Clear filters",
+  "summary": "Showing {{filtered}} / {{total}} events",
+  "exportCsv": "⬇ Export CSV",
+  "column": {
+    "time": "Time (min)",
+    "type": "Event type",
+    "customer": "Customer",
+    "resource": "Resource",
+    "description": "Description"
+  },
+  "empty": "No events match the current filter"
+}

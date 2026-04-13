@@ -5,6 +5,8 @@ declare global {
     electronAPI: {
       runSimulation: (config: SimulationConfig) => Promise<SimulationResult>
       getAppVersion: () => Promise<string>
+      initialLocale: string
+      notifyLocaleChanged: (locale: string) => void
     }
   }
 }

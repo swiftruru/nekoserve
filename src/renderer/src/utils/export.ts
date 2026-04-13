@@ -1,4 +1,5 @@
-import type { SimulationResult, EventLogItem } from '../types'
+import i18n from '@i18n/index'
+import type { SimulationResult, EventLogItem, EventType } from '../types'
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
@@ -23,35 +24,68 @@ export function exportResultJSON(result: SimulationResult): void {
 }
 
 // ── Metrics CSV ───────────────────────────────────────────────
+//
+// CSV headers are always in English regardless of the UI language.
+// This keeps exports Excel-compatible across locales and avoids
+// encoding/mojibake issues when spreadsheets are shared across teams.
 
-const METRIC_LABELS: [keyof SimulationResult['metrics'], string][] = [
-  ['totalCustomersArrived',  '總到達人數'],
-  ['totalCustomersServed',   '完成服務人數'],
-  ['abandonRate',            '放棄率'],
-  ['catInteractionRate',     '貓咪互動率'],
-  ['avgWaitForSeat',         '平均等待座位(分)'],
-  ['avgWaitForOrder',        '平均等待點餐(分)'],
-  ['avgTotalStayTime',       '平均總停留(分)'],
-  ['seatUtilization',        '座位利用率'],
-  ['staffUtilization',       '店員利用率'],
-  ['catUtilization',         '貓咪利用率'],
+const METRIC_KEYS: (keyof SimulationResult['metrics'])[] = [
+  'totalCustomersArrived',
+  'totalCustomersServed',
+  'abandonRate',
+  'catInteractionRate',
+  'avgWaitForSeat',
+  'avgWaitForOrder',
+  'avgTotalStayTime',
+  'seatUtilization',
+  'staffUtilization',
+  'catUtilization',
 ]
 
-const CONFIG_LABELS: [keyof SimulationResult['config'], string][] = [
-  ['seatCount',                '座位數'],
-  ['staffCount',               '店員數'],
-  ['catCount',                 '貓咪數'],
-  ['customerArrivalInterval',  '到達間隔(分)'],
-  ['maxWaitTime',              '最大等待(分)'],
-  ['orderTime',                '點餐時間(分)'],
-  ['preparationTime',          '製作時間(分)'],
-  ['diningTime',               '用餐時間(分)'],
-  ['catInteractionTime',       '互動時間(分)'],
-  ['catRestProbability',       '休息機率'],
-  ['catRestDuration',          '休息時間(分)'],
-  ['simulationDuration',       '模擬時長(分)'],
-  ['randomSeed',               '隨機種子'],
+const METRIC_HEADERS: Record<keyof SimulationResult['metrics'], string> = {
+  totalCustomersArrived: 'total_customers_arrived',
+  totalCustomersServed:  'total_customers_served',
+  abandonRate:           'abandon_rate',
+  catInteractionRate:    'cat_interaction_rate',
+  avgWaitForSeat:        'avg_wait_for_seat_min',
+  avgWaitForOrder:       'avg_wait_for_order_min',
+  avgTotalStayTime:      'avg_total_stay_time_min',
+  seatUtilization:       'seat_utilization',
+  staffUtilization:      'staff_utilization',
+  catUtilization:        'cat_utilization',
+}
+
+const CONFIG_KEYS: (keyof SimulationResult['config'])[] = [
+  'seatCount',
+  'staffCount',
+  'catCount',
+  'customerArrivalInterval',
+  'maxWaitTime',
+  'orderTime',
+  'preparationTime',
+  'diningTime',
+  'catInteractionTime',
+  'catRestProbability',
+  'catRestDuration',
+  'simulationDuration',
+  'randomSeed',
 ]
+
+const CONFIG_HEADERS: Record<keyof SimulationResult['config'], string> = {
+  seatCount:               'seat_count',
+  staffCount:              'staff_count',
+  catCount:                'cat_count',
+  customerArrivalInterval: 'customer_arrival_interval_min',
+  maxWaitTime:             'max_wait_time_min',
+  orderTime:               'order_time_min',
+  preparationTime:         'preparation_time_min',
+  diningTime:              'dining_time_min',
+  catInteractionTime:      'cat_interaction_time_min',
+  catRestProbability:      'cat_rest_probability',
+  catRestDuration:         'cat_rest_duration_min',
+  simulationDuration:      'simulation_duration_min',
+  randomSeed:              'random_seed',
+}
 
 function escapeCSV(value: unknown): string {
   const s = String(value)
@@ -62,12 +96,12 @@ function escapeCSV(value: unknown): string {
 
 export function exportMetricsCSV(result: SimulationResult): void {
   const headers = [
-    ...CONFIG_LABELS.map(([, label]) => label),
-    ...METRIC_LABELS.map(([, label]) => label),
+    ...CONFIG_KEYS.map((k) => CONFIG_HEADERS[k]),
+    ...METRIC_KEYS.map((k) => METRIC_HEADERS[k]),
   ]
   const values = [
-    ...CONFIG_LABELS.map(([key]) => escapeCSV(result.config[key])),
-    ...METRIC_LABELS.map(([key]) => escapeCSV(result.metrics[key])),
+    ...CONFIG_KEYS.map((key) => escapeCSV(result.config[key])),
+    ...METRIC_KEYS.map((key) => escapeCSV(result.metrics[key])),
   ]
   const csv = [headers.join(','), values.join(',')].join('\n')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
@@ -75,8 +109,26 @@ export function exportMetricsCSV(result: SimulationResult): void {
 }
 
 // ── Event log CSV ─────────────────────────────────────────────
+//
+// Column headers stay in English for portability; the description
+// column is rendered through the current i18n locale (so users get a
+// CSV whose text matches the UI they were looking at).
 
-const EVENT_LOG_HEADERS = ['時間(分)', '事件類型', '顧客ID', '資源', '描述']
+const EVENT_LOG_HEADERS = [
+  'time_min',
+  'event_type',
+  'customer_id',
+  'resource_id',
+  'description',
+]
+
+function localizedEventDescription(e: EventLogItem): string {
+  return i18n.t(`events:${e.eventType as EventType}` as const, {
+    customerId: e.customerId,
+    resourceId: e.resourceId ?? '',
+    defaultValue: e.description ?? '',
+  })
+}
 
 export function exportEventLogCSV(events: EventLogItem[]): void {
   const rows = events.map((e) => [
@@ -84,7 +136,7 @@ export function exportEventLogCSV(events: EventLogItem[]): void {
     escapeCSV(e.eventType),
     escapeCSV(e.customerId > 0 ? `#${e.customerId}` : ''),
     escapeCSV(e.resourceId ?? ''),
-    escapeCSV(e.description),
+    escapeCSV(localizedEventDescription(e)),
   ])
   const csv = [EVENT_LOG_HEADERS.join(','), ...rows.map((r) => r.join(','))].join('\n')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })

@@ -1,0 +1,7 @@
+{
+  "settings": "Settings",
+  "results": "Results",
+  "eventlog": "Event Log",
+  "about": "About",
+  "needsRunHint": "(run a simulation first)"
+}

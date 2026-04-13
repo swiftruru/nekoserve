@@ -1,0 +1,10 @@
+{
+  "INVALID_CONFIG": "模擬參數無效，請檢查設定後再試。",
+  "SIMULATION_ERROR": "模擬引擎發生錯誤，請查看詳情。",
+  "TIMEOUT": "模擬執行超時，請降低模擬時長或減少參數。",
+  "BINARY_NOT_FOUND": "找不到模擬引擎可執行檔，請先執行 npm run build:simulator。",
+  "NO_EXEC_PERMISSION": "模擬引擎可執行檔無執行權限。",
+  "PARSE_ERROR": "無法解析模擬結果，請確認模擬引擎版本是否相符。",
+  "UNKNOWN_ERROR": "發生未預期的錯誤。",
+  "unknown": "發生未預期的錯誤。"
+}

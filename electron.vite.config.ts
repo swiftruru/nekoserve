@@ -38,6 +38,7 @@ export default defineConfig({
       alias: {
         '@renderer': resolve('src/renderer/src'),
         '@shared': resolve('shared'),
+        '@i18n': resolve('src/renderer/src/i18n'),
       },
     },
     plugins: [react()],

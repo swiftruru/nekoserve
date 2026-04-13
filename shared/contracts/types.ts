@@ -116,8 +116,20 @@ export interface ScenarioPreset {
 // Error
 // ----------------------------------------------------------
 
+export type SimulatorErrorType =
+  | 'INVALID_CONFIG'
+  | 'SIMULATION_ERROR'
+  | 'TIMEOUT'
+  | 'BINARY_NOT_FOUND'
+  | 'NO_EXEC_PERMISSION'
+  | 'PARSE_ERROR'
+  | 'UNKNOWN_ERROR'
+
 export interface SimulatorError {
-  /** 錯誤描述（繁體中文） */
+  /**
+   * Developer-facing diagnostic detail (English, free-form).
+   * Never displayed to users directly — use `type` to look up a localized message.
+   */
   error: string
-  type: 'INVALID_CONFIG' | 'SIMULATION_ERROR' | 'UNKNOWN_ERROR'
+  type: SimulatorErrorType
 }

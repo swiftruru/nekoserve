@@ -1,0 +1,83 @@
+{
+  "sections": {
+    "cafeResources": "🏠 咖啡廳資源設定",
+    "customerBehavior": "👥 顧客行為設定",
+    "serviceTime": "☕ 服務時間設定",
+    "catInteraction": "🐱 貓咪互動設定",
+    "simulationParams": "🎲 模擬參數設定"
+  },
+  "parameters": {
+    "seatCount": {
+      "label": "座位數量",
+      "help": "咖啡廳可供顧客入座的座位總數。座位越少，等待隊伍越長。"
+    },
+    "staffCount": {
+      "label": "店員數量",
+      "help": "負責點餐與製作餐點的店員人數。店員越少，餐點等待時間越長。"
+    },
+    "catCount": {
+      "label": "貓咪數量",
+      "help": "咖啡廳內可供顧客互動的貓咪總數（扣除正在休息的貓咪）。"
+    },
+    "customerArrivalInterval": {
+      "label": "顧客平均到達間隔",
+      "help": "使用 Exponential 分佈。值越小表示顧客越頻繁到達。例如平均 5 分鐘到一位。"
+    },
+    "maxWaitTime": {
+      "label": "最大可接受等待時間",
+      "help": "顧客等待座位的最大耐心時間。超過後顧客放棄離開，計入放棄率。"
+    },
+    "orderTime": {
+      "label": "點餐平均時間",
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。店員協助點餐所需時間。"
+    },
+    "preparationTime": {
+      "label": "餐點製作平均時間",
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。餐點從下單到完成的時間。"
+    },
+    "diningTime": {
+      "label": "用餐平均時間",
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。顧客用餐完畢所需時間。"
+    },
+    "catInteractionTime": {
+      "label": "互動平均時間",
+      "help": "Normal 分佈，std = mean × 0.2。顧客與貓咪互動（玩耍）的時間。"
+    },
+    "catRestProbability": {
+      "label": "休息觸發機率",
+      "help": "每次互動結束後，貓咪進入休息狀態的機率（0–1）。休息中的貓咪不可互動。"
+    },
+    "catRestDuration": {
+      "label": "休息平均時間",
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。貓咪每次休息的持續時間。"
+    },
+    "simulationDuration": {
+      "label": "模擬總時長",
+      "help": "模擬的總營業時間（分鐘）。240 分鐘 = 4 小時。超過此時間後不再產生新顧客。"
+    },
+    "randomSeed": {
+      "label": "Random Seed",
+      "help": "固定隨機種子可重現完全相同的模擬結果，方便教學示範對比。"
+    }
+  },
+  "actions": {
+    "start": "▶ 開始模擬",
+    "running": "模擬進行中…",
+    "reset": "重設設定",
+    "runningHint": "模擬進行中，請稍候…"
+  },
+  "errorPanel": {
+    "title": "模擬執行失敗",
+    "showDetail": "查看詳情",
+    "hideDetail": "收合詳情"
+  },
+  "scenario": {
+    "label": "預設情境",
+    "customLabel": "自訂情境",
+    "saveCurrent": "儲存目前設定",
+    "delete": "刪除情境",
+    "deleteConfirm": "確定要刪除這個自訂情境嗎？",
+    "nameInputPlaceholder": "輸入情境名稱…",
+    "defaultRunLabel": "自訂設定"
+  }
+}

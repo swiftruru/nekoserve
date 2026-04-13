@@ -8,6 +8,7 @@ import {
   Cell,
   ResponsiveContainer,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 interface WaitTimeChartProps {
   avgWaitForSeat: number
@@ -22,22 +23,27 @@ export default function WaitTimeChart({
   avgWaitForOrder,
   avgTotalStayTime,
 }: WaitTimeChartProps) {
+  const { t } = useTranslation(['results', 'common'])
+
   const data = [
-    { name: '等待座位', value: avgWaitForSeat },
-    { name: '等待點餐', value: avgWaitForOrder },
-    { name: '總停留時間', value: avgTotalStayTime },
+    { name: t('results:charts.waitTime.waitSeat'),  value: avgWaitForSeat },
+    { name: t('results:charts.waitTime.waitOrder'), value: avgWaitForOrder },
+    { name: t('results:charts.waitTime.totalStay'), value: avgTotalStayTime },
   ]
+
+  const yUnit = t('results:charts.waitTime.yAxisUnit')
+  const minUnit = t('common:unit.min')
 
   return (
     <div className="card">
-      <div className="card-title">⏱️ 各階段平均時間 (分鐘)</div>
+      <div className="card-title">{t('results:charts.waitTime.title')}</div>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#fed7aa" />
           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} unit="分" />
+          <YAxis tick={{ fontSize: 11 }} unit={yUnit} />
           <Tooltip
-            formatter={(v: number) => [`${v.toFixed(1)} 分鐘`, '']}
+            formatter={(v: number) => [`${v.toFixed(1)} ${minUnit}`, '']}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Bar dataKey="value" radius={[6, 6, 0, 0]}>

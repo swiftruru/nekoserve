@@ -1,0 +1,104 @@
+{
+  "title": "Simulation results",
+  "subtitle": "Duration {{duration}} min · seed {{seed}}",
+  "runLabelFallback": "Run #{{index}}",
+  "exportMetricsCsv": "⬇ Metrics CSV",
+  "exportJson": "⬇ JSON",
+  "viewMode": {
+    "single": "Single run",
+    "compare": "Compare ({{count}})"
+  },
+  "kpi": {
+    "totalCustomersArrived": {
+      "label": "Total arrivals",
+      "description": "Customers who arrived at the café during the simulation"
+    },
+    "totalCustomersServed": {
+      "label": "Customers served",
+      "description": "Customers who completed the full service flow"
+    },
+    "abandonRate": {
+      "label": "Abandon rate",
+      "description": "Share of customers who gave up after waiting for a seat"
+    },
+    "catInteractionRate": {
+      "label": "Cat interaction rate",
+      "description": "Share of customers who successfully played with a cat"
+    },
+    "avgTotalStayTime": {
+      "label": "Avg. total stay",
+      "description": "Average time from arrival to departure"
+    },
+    "avgWaitForSeat": {
+      "label": "Avg. wait for seat",
+      "description": "Average wait from arrival to being seated"
+    },
+    "avgWaitForOrder": {
+      "label": "Avg. wait for order",
+      "description": "Average wait from order placed to food ready"
+    },
+    "seatUtilization": {
+      "label": "Seat utilization",
+      "description": "Fraction of time seats were occupied"
+    },
+    "staffUtilization": {
+      "label": "Staff utilization",
+      "description": "Fraction of time staff were busy"
+    },
+    "catUtilization": {
+      "label": "Cat utilization",
+      "description": "Fraction of time cats were busy (interacting or resting)"
+    }
+  },
+  "comparison": {
+    "title": "Comparison view",
+    "indicator": "Metric",
+    "legend": "Green = better · Red = worse (only marked when spreads are meaningful)",
+    "configSummary": "{{seats}} seats · {{staff}} staff · {{cats}} cats"
+  },
+  "configSummary": {
+    "title": "📄 Run parameter summary",
+    "seats": "Seats",
+    "staff": "Staff",
+    "cats": "Cats",
+    "arrivalInterval": "Arrival interval",
+    "orderTime": "Order time",
+    "preparationTime": "Prep time",
+    "diningTime": "Dining time",
+    "interactionTime": "Interaction",
+    "restProbability": "Rest prob.",
+    "restDuration": "Rest duration",
+    "maxWait": "Max wait",
+    "seed": "Seed"
+  },
+  "eventLog": {
+    "title": "Event log",
+    "description": "Full simulation event timeline, sorted by simulation time. Filter by type or search by keyword."
+  },
+  "charts": {
+    "utilization": {
+      "title": "🐾 Resource utilization (%)",
+      "seat": "Seats",
+      "staff": "Staff",
+      "cat": "Cats",
+      "tooltipLabel": "Utilization"
+    },
+    "waitTime": {
+      "title": "⏱️ Average time per phase (min)",
+      "waitSeat": "Wait seat",
+      "waitOrder": "Wait order",
+      "totalStay": "Total stay",
+      "yAxisUnit": "min"
+    },
+    "customerPie": {
+      "title": "🐱 Customer outcome distribution",
+      "clickHint": "(click a slice to open the event log)",
+      "catInteracted": "Played with cat",
+      "noInteraction": "No interaction",
+      "abandoned": "Abandoned",
+      "empty": "No customer data",
+      "tooltipUnit": "",
+      "legendSuffix": "{{count}} ({{percent}}%)"
+    }
+  }
+}

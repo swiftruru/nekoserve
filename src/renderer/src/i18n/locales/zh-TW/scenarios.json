@@ -1,0 +1,15 @@
+{
+  "weekday": {
+    "name": "平日白天",
+    "description": "悠閒步調，顧客到達間隔較長，店員與貓咪壓力適中"
+  },
+  "holiday-rush": {
+    "name": "假日尖峰",
+    "description": "人潮洶湧，顧客耐心較低，資源壓力最大，放棄率偏高"
+  },
+  "cat-nap": {
+    "name": "貓咪午睡模式",
+    "description": "貓咪頻繁休息，互動資源嚴重不足，展示排隊瓶頸效果"
+  },
+  "customDefaultDescription": "自訂情境"
+}

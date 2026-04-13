@@ -1,6 +1,6 @@
 {
   "name": "nekoserve",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "🐱 Cat café queuing & service simulation desktop app — Electron + React + SimPy",
   "main": "out/main/index.js",
   "author": "NekoServe",
@@ -27,6 +27,8 @@
     "postinstall": "electron-builder install-app-deps && node scripts/rename-electron-app.js"
   },
   "dependencies": {
+    "i18next": "^23.16.8",
+    "react-i18next": "^14.1.3",
     "recharts": "^2.12.0"
   },
   "devDependencies": {

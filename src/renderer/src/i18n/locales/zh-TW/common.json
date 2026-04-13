@@ -1,0 +1,27 @@
+{
+  "appName": "NekoServe",
+  "appSubtitle": "貓咪咖啡廳座位與服務模擬系統",
+  "status": {
+    "running": "模擬進行中…",
+    "success": "模擬完成",
+    "error": "模擬失敗"
+  },
+  "button": {
+    "confirm": "確定",
+    "cancel": "取消",
+    "save": "儲存",
+    "close": "關閉",
+    "retry": "重試",
+    "reset": "重設",
+    "delete": "刪除"
+  },
+  "learningPanel": "學習筆記",
+  "unit": {
+    "min": "分鐘",
+    "minutesShort": "分",
+    "people": "人",
+    "seat": "個",
+    "cat": "隻",
+    "sec": "秒"
+  }
+}

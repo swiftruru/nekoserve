@@ -1,0 +1,83 @@
+{
+  "sections": {
+    "cafeResources": "🏠 Café Resources",
+    "customerBehavior": "👥 Customer Behavior",
+    "serviceTime": "☕ Service Time",
+    "catInteraction": "🐱 Cat Interaction",
+    "simulationParams": "🎲 Simulation Parameters"
+  },
+  "parameters": {
+    "seatCount": {
+      "label": "Seats",
+      "help": "Total number of seats available. Fewer seats means longer queues."
+    },
+    "staffCount": {
+      "label": "Staff",
+      "help": "Staff taking orders and preparing food. Fewer staff means longer wait for food."
+    },
+    "catCount": {
+      "label": "Cats",
+      "help": "Number of cats available for interaction (excluding resting cats)."
+    },
+    "customerArrivalInterval": {
+      "label": "Avg. customer arrival interval",
+      "help": "Exponential distribution. Smaller value means more frequent arrivals (e.g. one every 5 min)."
+    },
+    "maxWaitTime": {
+      "label": "Max wait tolerance",
+      "help": "Maximum time a customer will wait for a seat before abandoning and leaving."
+    },
+    "orderTime": {
+      "label": "Avg. order time",
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Time for staff to take an order."
+    },
+    "preparationTime": {
+      "label": "Avg. preparation time",
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Order-to-ready time."
+    },
+    "diningTime": {
+      "label": "Avg. dining time",
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Time a customer spends eating."
+    },
+    "catInteractionTime": {
+      "label": "Avg. interaction time",
+      "help": "Normal distribution, std = mean × 0.2. Time a customer spends playing with a cat."
+    },
+    "catRestProbability": {
+      "label": "Rest trigger probability",
+      "help": "Probability (0–1) that a cat enters rest after each interaction. Resting cats are unavailable."
+    },
+    "catRestDuration": {
+      "label": "Avg. rest duration",
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Length of each cat rest."
+    },
+    "simulationDuration": {
+      "label": "Simulation duration",
+      "help": "Total business minutes to simulate. 240 min = 4 h. No new customers arrive after this point."
+    },
+    "randomSeed": {
+      "label": "Random seed",
+      "help": "Fix the seed to reproduce identical simulation runs for classroom comparisons."
+    }
+  },
+  "actions": {
+    "start": "▶ Run simulation",
+    "running": "Simulating…",
+    "reset": "Reset settings",
+    "runningHint": "Running simulation, please wait…"
+  },
+  "errorPanel": {
+    "title": "Simulation failed",
+    "showDetail": "Show details",
+    "hideDetail": "Hide details"
+  },
+  "scenario": {
+    "label": "Presets",
+    "customLabel": "Custom",
+    "saveCurrent": "Save current",
+    "delete": "Delete preset",
+    "deleteConfirm": "Delete this custom preset?",
+    "nameInputPlaceholder": "Preset name…",
+    "defaultRunLabel": "Custom"
+  }
+}

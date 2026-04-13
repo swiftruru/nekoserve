@@ -7,6 +7,7 @@ export type {
   SimulationResult,
   ScenarioPreset,
   SimulatorError,
+  SimulatorErrorType,
 } from '@shared/contracts/types'
 
 // ── Page navigation ───────────────────────────────────────────

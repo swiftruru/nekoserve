@@ -45,7 +45,7 @@ export default function ParamInput({
                          hover:bg-orange-200 hover:text-orange-600 transition-colors"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              aria-label={`說明：${label}`}
+              aria-label={label}
             >
               ?
             </button>

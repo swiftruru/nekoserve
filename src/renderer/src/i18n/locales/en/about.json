@@ -1,0 +1,65 @@
+{
+  "appName": "NekoServe",
+  "subtitle": "Cat café seat & service simulation",
+  "version": "v0.2.0",
+  "courseBackground": {
+    "title": "📖 Course background",
+    "author": "Author",
+    "authorValue": "Yu-Ru Pan",
+    "school": "University",
+    "schoolValue": "National Taipei University of Nursing and Health Sciences",
+    "department": "Department",
+    "departmentValue": "Department of Information Management",
+    "course": "Course",
+    "courseValue": "Systems Simulation",
+    "advisorHeading": "🎓 Advisor",
+    "advisorValue": "Prof. Kuo-Chung Chu"
+  },
+  "tech": {
+    "title": "🔧 Tech stack",
+    "frontendLabel": "Frontend / desktop shell",
+    "coreLabel": "Simulation core",
+    "github": "GitHub repository",
+    "homepage": "Personal homepage"
+  },
+  "description": {
+    "title": "📖 About the project",
+    "body": "NekoServe is a desktop application that simulates the customer service flow of a cat café. Using discrete-event simulation, it faithfully reproduces the full journey of each customer — arrival, queueing, seating, ordering, dining, interacting with cats, and leaving — and computes key service metrics. It is designed for classroom demonstration and service-system analysis."
+  },
+  "architecture": {
+    "title": "🏗️ System architecture",
+    "simulationLogic": "<strong>Simulation logic</strong> lives entirely in Python + SimPy and is not duplicated in the UI. The Electron main process spawns the packaged Python executable and exchanges parameters and results as JSON over stdin/stdout.",
+    "ipc": "<strong>IPC design</strong> follows Electron's security best practices: the renderer process can only talk to the main process through a whitelisted contextBridge API, with no direct access to Node.js or privileged Electron APIs."
+  },
+  "distributions": {
+    "title": "🎲 Random distributions",
+    "arrival": "<strong>Customer arrival interval</strong>: exponential distribution (Poisson process)",
+    "service": "<strong>Order / prep / dining / interaction / rest times</strong>: normal distribution, std = mean × 0.2, floor at 1 minute",
+    "catRest": "<strong>Cat rest trigger</strong>: after each interaction, sampled with probability catRestProbability"
+  },
+  "usage": {
+    "title": "📌 How to use",
+    "step1": "Tweak parameters on the Settings page or pick a preset scenario",
+    "step2": "Click \"Run simulation\" and wait for it to finish (typically under 5 seconds)",
+    "step3": "Inspect KPI cards and charts on the Results page",
+    "step4": "Inspect the full event timeline on the Event Log page, filtering by type",
+    "step5": "Adjust parameters and re-run to compare scenarios side-by-side"
+  },
+  "experiment": {
+    "title": "🔬 Designing simulation experiments",
+    "principle1Title": "Principle 1: control your variables",
+    "principle1Body": "Change exactly <strong>one</strong> parameter at a time while keeping everything else (including the random seed) constant. For example, to study \"how adding seats affects wait time,\" only adjust the seat count. This is the only way to attribute a change in results to your change in input.",
+    "principle2Title": "Principle 2: fix the random seed for reproducibility",
+    "principle2Body": "An identical seed generates an identical random stream, so two runs differ only in the parameter you tweaked. To study the effect of randomness itself, run multiple seeds and average the results for a robust estimate.",
+    "principle3Title": "Principle 3: how to compare scenarios",
+    "principle3BodyA": "After several runs, switch to the <strong>Compare</strong> tab on the Results page to see KPIs for the last three runs side-by-side. Orange cells highlight spreads larger than 10%.",
+    "principle3BodyB": "Metric priority: start with <strong>abandon rate</strong> (is the system overloaded?) → then <strong>utilization</strong> (which resource is the bottleneck?) → finally <strong>average wait time</strong> (customer experience).",
+    "principle4Title": "Principle 4: deciding when results are trustworthy",
+    "principle4Item1": "The <strong>simulation duration</strong> should be long enough (at least 20× the average stay time) so initial-transient effects wash out.",
+    "principle4Item2": "Run <strong>3–5 different seeds</strong>: if the spread across runs is within 5%, a single run is already stable enough.",
+    "principle4Item3": "<strong>Sanity-check with Little's Law</strong>: N ≈ λ × W. Large deviations usually mean the run was too short.",
+    "principle5Title": "Principle 5: relieving bottlenecks",
+    "principle5BodyA": "Find the resource with the highest utilization (seats / staff / cats) and expand its capacity first. By the Theory of Constraints, investing in non-bottleneck resources barely moves system throughput.",
+    "principle5BodyB": "Example: seats 95% utilized, staff 60% utilized — adding staff won't shorten the seat queue. Add seats first, or shorten dining time to turn tables faster."
+  }
+}

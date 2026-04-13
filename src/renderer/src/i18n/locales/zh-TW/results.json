@@ -1,0 +1,104 @@
+{
+  "title": "模擬統計結果",
+  "subtitle": "模擬時長 {{duration}} 分鐘・種子 {{seed}}",
+  "runLabelFallback": "運行 #{{index}}",
+  "exportMetricsCsv": "⬇ 指標 CSV",
+  "exportJson": "⬇ JSON",
+  "viewMode": {
+    "single": "單次結果",
+    "compare": "對比 ({{count}})"
+  },
+  "kpi": {
+    "totalCustomersArrived": {
+      "label": "總到達人數",
+      "description": "模擬期間到達咖啡廳的顧客數"
+    },
+    "totalCustomersServed": {
+      "label": "完成服務人數",
+      "description": "完整走完所有流程的顧客數"
+    },
+    "abandonRate": {
+      "label": "放棄等待比例",
+      "description": "等待座位超時後放棄離開的比例"
+    },
+    "catInteractionRate": {
+      "label": "貓咪互動率",
+      "description": "成功與貓咪互動的顧客比例"
+    },
+    "avgTotalStayTime": {
+      "label": "平均總停留時間",
+      "description": "從到達到離開的平均時間"
+    },
+    "avgWaitForSeat": {
+      "label": "平均等待座位",
+      "description": "從到達到入座的平均等待時間"
+    },
+    "avgWaitForOrder": {
+      "label": "平均等待點餐完成",
+      "description": "從點餐到餐點送達的平均等待時間"
+    },
+    "seatUtilization": {
+      "label": "座位利用率",
+      "description": "座位被佔用時間的比例"
+    },
+    "staffUtilization": {
+      "label": "店員利用率",
+      "description": "店員忙碌時間的比例"
+    },
+    "catUtilization": {
+      "label": "貓咪利用率",
+      "description": "貓咪忙碌（互動+休息）時間的比例"
+    }
+  },
+  "comparison": {
+    "title": "對比檢視",
+    "indicator": "指標",
+    "legend": "綠色 = 較佳值・紅色 = 較差值（僅在有明顯差異時標示）",
+    "configSummary": "{{seats}} 座・{{staff}} 員・{{cats}} 貓"
+  },
+  "configSummary": {
+    "title": "📄 本次模擬參數摘要",
+    "seats": "座位",
+    "staff": "店員",
+    "cats": "貓咪",
+    "arrivalInterval": "到達間隔",
+    "orderTime": "點餐時間",
+    "preparationTime": "製作時間",
+    "diningTime": "用餐時間",
+    "interactionTime": "互動時間",
+    "restProbability": "休息機率",
+    "restDuration": "休息時間",
+    "maxWait": "最大等待",
+    "seed": "Seed"
+  },
+  "eventLog": {
+    "title": "事件紀錄",
+    "description": "完整的模擬事件時間序列，依模擬時間排序。可依類型篩選或關鍵字搜尋。"
+  },
+  "charts": {
+    "utilization": {
+      "title": "🐾 各資源利用率 (%)",
+      "seat": "座位",
+      "staff": "店員",
+      "cat": "貓咪",
+      "tooltipLabel": "利用率"
+    },
+    "waitTime": {
+      "title": "⏱️ 各階段平均時間 (分鐘)",
+      "waitSeat": "等待座位",
+      "waitOrder": "等待點餐",
+      "totalStay": "總停留時間",
+      "yAxisUnit": "分"
+    },
+    "customerPie": {
+      "title": "🐱 顧客結果分佈",
+      "clickHint": "（點擊區段查看事件紀錄）",
+      "catInteracted": "與貓咪互動",
+      "noInteraction": "未互動",
+      "abandoned": "放棄等待",
+      "empty": "無顧客資料",
+      "tooltipUnit": "人",
+      "legendSuffix": "{{count}} 人 ({{percent}}%)"
+    }
+  }
+}

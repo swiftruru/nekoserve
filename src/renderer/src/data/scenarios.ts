@@ -1,10 +1,13 @@
 import type { ScenarioPreset } from '../types'
 
+// Built-in scenarios: `name` and `description` on these presets are only
+// used as a dev-side fallback. The UI resolves display text via the
+// `scenarios` i18n namespace keyed by `id` — see ScenarioButtons.tsx.
 export const SCENARIOS: ScenarioPreset[] = [
   {
     id: 'weekday',
-    name: '平日白天',
-    description: '悠閒步調，顧客到達間隔較長，店員與貓咪壓力適中',
+    name: 'weekday',
+    description: '',
     config: {
       seatCount: 10,
       staffCount: 2,
@@ -23,8 +26,8 @@ export const SCENARIOS: ScenarioPreset[] = [
   },
   {
     id: 'holiday-rush',
-    name: '假日尖峰',
-    description: '人潮洶湧，顧客耐心較低，資源壓力最大，放棄率偏高',
+    name: 'holiday-rush',
+    description: '',
     config: {
       seatCount: 10,
       staffCount: 3,
@@ -43,8 +46,8 @@ export const SCENARIOS: ScenarioPreset[] = [
   },
   {
     id: 'cat-nap',
-    name: '貓咪午睡模式',
-    description: '貓咪頻繁休息，互動資源嚴重不足，展示排隊瓶頸效果',
+    name: 'cat-nap',
+    description: '',
     config: {
       seatCount: 10,
       staffCount: 2,
@@ -64,6 +67,17 @@ export const SCENARIOS: ScenarioPreset[] = [
 ]
 
 export const DEFAULT_CONFIG = SCENARIOS[0].config
+
+/**
+ * The 3 built-in scenario IDs have translated display names/descriptions
+ * in the `scenarios` i18n namespace. User-saved custom scenarios keep their
+ * user-typed names verbatim and are not translated.
+ */
+export const BUILT_IN_SCENARIO_IDS = SCENARIOS.map((s) => s.id) as readonly string[]
+
+export function isBuiltInScenarioId(id: string): boolean {
+  return BUILT_IN_SCENARIO_IDS.includes(id)
+}
 
 // ── Custom scenario persistence (localStorage) ────────────────
 

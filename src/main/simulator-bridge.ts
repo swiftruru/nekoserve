@@ -99,8 +99,8 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
     const timer = setTimeout(() => {
       child.kill('SIGKILL')
       const err: SimulatorError = {
-        error: '模擬時間過長，請嘗試縮短模擬時長或減少參數',
-        type: 'SIMULATION_ERROR',
+        error: `Simulator process exceeded ${SIMULATOR_TIMEOUT_MS} ms timeout`,
+        type: 'TIMEOUT',
       }
       reject(err)
     }, SIMULATOR_TIMEOUT_MS)
@@ -114,8 +114,8 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
           resolve(result)
         } catch {
           const err: SimulatorError = {
-            error: `模擬結果 JSON 解析失敗（stdout: ${stdout.slice(0, 200)}）`,
-            type: 'SIMULATION_ERROR',
+            error: `Failed to parse simulator stdout JSON (stdout: ${stdout.slice(0, 200)})`,
+            type: 'PARSE_ERROR',
           }
           reject(err)
         }
@@ -128,7 +128,7 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
         reject(errObj)
       } catch {
         reject({
-          error: stderr.trim() || `模擬引擎以 exit code ${code} 退出`,
+          error: stderr.trim() || `Simulator exited with code ${code}`,
           type: 'UNKNOWN_ERROR',
         } as SimulatorError)
       }
@@ -137,14 +137,18 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
     child.on('error', (err) => {
       clearTimeout(timer)
 
-      let msg = `無法啟動模擬引擎：${err.message}`
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-        msg = `找不到模擬引擎可執行檔，請先執行 npm run build:simulator`
-      } else if ((err as NodeJS.ErrnoException).code === 'EACCES') {
-        msg = `模擬引擎可執行檔無執行權限`
+      const errno = (err as NodeJS.ErrnoException).code
+      let type: SimulatorError['type'] = 'UNKNOWN_ERROR'
+      let msg = `Failed to spawn simulator: ${err.message}`
+      if (errno === 'ENOENT') {
+        type = 'BINARY_NOT_FOUND'
+        msg = 'Simulator binary not found. Run `npm run build:simulator` first.'
+      } else if (errno === 'EACCES') {
+        type = 'NO_EXEC_PERMISSION'
+        msg = 'Simulator binary is not executable (permission denied).'
       }
 
-      reject({ error: msg, type: 'UNKNOWN_ERROR' } as SimulatorError)
+      reject({ error: msg, type } as SimulatorError)
     })
 
     // Send config via stdin then close to signal EOF

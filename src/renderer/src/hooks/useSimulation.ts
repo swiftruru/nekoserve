@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import i18n from '@i18n/index'
 import type { SimulationConfig, SimulationResult, SimulatorError, SimulationStatus } from '../types'
 
 export interface HistoryEntry {
@@ -55,7 +56,8 @@ export function useSimulation(): UseSimulationReturn {
       const finalElapsed = (Date.now() - startTime) / 1000
 
       setState((prev) => {
-        const runLabel = label ?? `運行 #${prev.history.length + 1}`
+        const runLabel =
+          label ?? i18n.t('results:runLabelFallback', { index: prev.history.length + 1 })
         const newHistory: HistoryEntry[] = [
           ...prev.history.slice(-2),
           { result, label: runLabel },

@@ -1,4 +1,4 @@
-# NekoServe — Build Python Simulator (Windows PowerShell)
+# NekoServe - Build Python Simulator (Windows PowerShell)
 # Output: simulator-python\dist\simulator\
 
 $ErrorActionPreference = "Stop"
@@ -8,7 +8,7 @@ $RootDir = Split-Path -Parent $ScriptDir
 $SimDir = Join-Path $RootDir "simulator-python"
 
 Write-Host "====================================" -ForegroundColor Cyan
-Write-Host " NekoServe — Building Python Simulator" -ForegroundColor Cyan
+Write-Host " NekoServe - Building Python Simulator" -ForegroundColor Cyan
 Write-Host " Platform: Windows" -ForegroundColor Cyan
 Write-Host "====================================" -ForegroundColor Cyan
 
@@ -51,6 +51,6 @@ if (Test-Path $ExecPath) {
     Write-Host " Executable: $ExecPath" -ForegroundColor Green
     Write-Host "====================================" -ForegroundColor Green
 } else {
-    Write-Error "ERROR: Build failed — $ExecPath not found"
+    Write-Error "ERROR: Build failed - $ExecPath not found"
     exit 1
 }

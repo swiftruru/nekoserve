@@ -1,0 +1,15 @@
+{
+  "weekday": {
+    "name": "Weekday daytime",
+    "description": "Relaxed pace — long inter-arrival times and moderate load on staff and cats."
+  },
+  "holiday-rush": {
+    "name": "Holiday rush",
+    "description": "Crowded peak hours with impatient customers and heavy resource contention."
+  },
+  "cat-nap": {
+    "name": "Cat nap mode",
+    "description": "Cats frequently rest, creating an interaction-resource bottleneck for demonstration."
+  },
+  "customDefaultDescription": "Custom preset"
+}

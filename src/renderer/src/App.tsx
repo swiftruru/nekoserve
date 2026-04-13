@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Page, SimulationConfig, EventType } from './types'
 import { useSimulation } from './hooks/useSimulation'
 import { SCENARIOS, DEFAULT_CONFIG } from './data/scenarios'
@@ -7,6 +8,7 @@ import ResultsPage from './pages/ResultsPage'
 import EventLogPage from './pages/EventLogPage'
 import AboutPage from './pages/AboutPage'
 import LearningPanel from './components/LearningPanel'
+import LanguageSwitcher from './components/LanguageSwitcher'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -26,15 +28,14 @@ function savePanelState(open: boolean): void {
 
 interface NavItem {
   id: Page
-  label: string
   icon: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'settings',  label: '模擬設定', icon: '⚙️' },
-  { id: 'results',   label: '統計結果', icon: '📊' },
-  { id: 'eventlog',  label: '事件紀錄', icon: '📋' },
-  { id: 'about',     label: '關於',     icon: 'ℹ️' },
+  { id: 'settings', icon: '⚙️' },
+  { id: 'results',  icon: '📊' },
+  { id: 'eventlog', icon: '📋' },
+  { id: 'about',    icon: 'ℹ️' },
 ]
 
 // ──────────────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
 // ──────────────────────────────────────────────────────────────
 
 export default function App() {
+  const { t } = useTranslation(['common', 'nav'])
   const [page, setPage] = useState<Page>('settings')
   const [config, setConfig] = useState<SimulationConfig>(DEFAULT_CONFIG)
   const [pendingEventFilter, setPendingEventFilter] = useState<EventType[] | null>(null)
@@ -83,30 +85,34 @@ export default function App() {
       {/* drag-region: entire header is draggable on macOS (no interactive elements here) */}
       <header className={`bg-white border-b border-orange-200 py-3 flex items-center gap-3 shadow-sm drag-region ${isMac ? 'pl-20 pr-5' : 'px-5'}`}>
         <span className="text-2xl" role="img" aria-label="cat">🐱</span>
-        <div>
-          <h1 className="text-base font-bold text-orange-700 leading-tight">NekoServe</h1>
-          <p className="text-xs text-gray-500">貓咪咖啡廳座位與服務模擬系統</p>
+        <div className="min-w-0">
+          <h1 className="text-base font-bold text-orange-700 leading-tight">{t('common:appName')}</h1>
+          <p className="text-xs text-gray-500 truncate">{t('common:appSubtitle')}</p>
         </div>
 
-        {/* Status badge */}
-        {status === 'running' && (
-          <span className="ml-auto flex items-center gap-2 text-sm text-orange-600 font-medium">
-            <span className="inline-block w-3 h-3 rounded-full bg-orange-400 animate-pulse" />
-            模擬進行中…
-          </span>
-        )}
-        {status === 'success' && (
-          <span className="ml-auto flex items-center gap-2 text-sm text-green-600 font-medium">
-            <span className="inline-block w-3 h-3 rounded-full bg-green-400" />
-            模擬完成
-          </span>
-        )}
-        {status === 'error' && (
-          <span className="ml-auto flex items-center gap-2 text-sm text-red-500 font-medium">
-            <span className="inline-block w-3 h-3 rounded-full bg-red-400" />
-            模擬失敗
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-3">
+          {/* Status badge */}
+          {status === 'running' && (
+            <span className="flex items-center gap-2 text-sm text-orange-600 font-medium">
+              <span className="inline-block w-3 h-3 rounded-full bg-orange-400 animate-pulse" />
+              {t('common:status.running')}
+            </span>
+          )}
+          {status === 'success' && (
+            <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
+              <span className="inline-block w-3 h-3 rounded-full bg-green-400" />
+              {t('common:status.success')}
+            </span>
+          )}
+          {status === 'error' && (
+            <span className="flex items-center gap-2 text-sm text-red-500 font-medium">
+              <span className="inline-block w-3 h-3 rounded-full bg-red-400" />
+              {t('common:status.error')}
+            </span>
+          )}
+
+          <LanguageSwitcher />
+        </div>
       </header>
 
       {/* ── Top navigation ──────────────────────────────── */}
@@ -129,9 +135,9 @@ export default function App() {
               ].join(' ')}
             >
               <span>{item.icon}</span>
-              {item.label}
+              {t(`nav:${item.id}` as const)}
               {isResults && !resultsAvailable && (
-                <span className="text-xs text-gray-300 ml-1">（需先執行模擬）</span>
+                <span className="text-xs text-gray-300 ml-1">{t('nav:needsRunHint')}</span>
               )}
             </button>
           )
@@ -147,7 +153,7 @@ export default function App() {
               : 'bg-white text-orange-600 border-orange-300 hover:bg-orange-50'
           }`}
         >
-          📚 學習筆記
+          📚 {t('common:learningPanel')}
         </button>
       </nav>
 

@@ -6,6 +6,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 import type { EventType } from '../../types'
 
 interface CustomerPieChartProps {
@@ -31,23 +32,25 @@ export default function CustomerPieChart({
   abandonRate,
   onSegmentClick,
 }: CustomerPieChartProps) {
+  const { t } = useTranslation(['results', 'common'])
+
   const catInteracted = Math.round(catInteractionRate * totalCustomersServed)
   const noInteraction = totalCustomersServed - catInteracted
   const abandoned = Math.round(abandonRate * totalCustomersArrived)
 
   const data: PieEntry[] = [
     {
-      name: '與貓咪互動',
+      name: t('results:charts.customerPie.catInteracted'),
       value: catInteracted,
       eventTypes: ['CUSTOMER_FINISH_CAT_INTERACTION'],
     },
     {
-      name: '未互動',
+      name: t('results:charts.customerPie.noInteraction'),
       value: noInteraction,
       eventTypes: ['CUSTOMER_FINISH_DINING'],
     },
     {
-      name: '放棄等待',
+      name: t('results:charts.customerPie.abandoned'),
       value: abandoned,
       eventTypes: ['CUSTOMER_ABANDON'],
     },
@@ -56,20 +59,23 @@ export default function CustomerPieChart({
   if (data.length === 0) {
     return (
       <div className="card flex items-center justify-center h-48 text-gray-400 text-sm">
-        無顧客資料
+        {t('results:charts.customerPie.empty')}
       </div>
     )
   }
 
   const clickable = !!onSegmentClick
   const total = data.reduce((sum, d) => sum + d.value, 0)
+  const tooltipUnit = t('results:charts.customerPie.tooltipUnit')
 
   return (
     <div className="card">
       <div className="card-title flex items-center gap-2">
-        🐱 顧客結果分佈
+        {t('results:charts.customerPie.title')}
         {clickable && (
-          <span className="text-xs text-gray-400 font-normal">（點擊區段查看事件紀錄）</span>
+          <span className="text-xs text-gray-400 font-normal">
+            {t('results:charts.customerPie.clickHint')}
+          </span>
         )}
       </div>
       <ResponsiveContainer width="100%" height={220}>
@@ -93,7 +99,10 @@ export default function CustomerPieChart({
             ))}
           </Pie>
           <Tooltip
-            formatter={(v: number, name: string) => [`${v} 人`, name]}
+            formatter={(v: number, name: string) => [
+              tooltipUnit ? `${v} ${tooltipUnit}` : `${v}`,
+              name,
+            ]}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Legend
@@ -103,8 +112,11 @@ export default function CustomerPieChart({
             formatter={(value) => {
               const item = data.find((d) => d.name === value)
               if (!item || total === 0) return value
-              const pct = ((item.value / total) * 100).toFixed(0)
-              return `${value}  ${item.value} 人 (${pct}%)`
+              const percent = ((item.value / total) * 100).toFixed(0)
+              return `${value}  ${t('results:charts.customerPie.legendSuffix', {
+                count: item.value,
+                percent,
+              })}`
             }}
           />
         </PieChart>
