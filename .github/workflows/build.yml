@@ -63,8 +63,16 @@ jobs:
           sudo apt-get install -y fuse libfuse2
 
       # ── Node dependencies ─────────────────────────────
+      # Electron's postinstall script downloads its binary from GitHub
+      # Releases, which intermittently returns 504. Retry so a single
+      # transient CDN blip doesn't fail the whole matrix.
       - name: Install Node dependencies
-        run: npm ci
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm ci
 
       # ── Python dependencies ───────────────────────────
       - name: Install Python dependencies
@@ -112,25 +120,44 @@ jobs:
         run: npm run ci:build
 
       # ── Package ───────────────────────────────────────
+      # electron-builder downloads platform-specific helpers (nsis on
+      # Windows, Squirrel on mac, etc.) from electron-userland/electron-
+      # builder-binaries on GitHub Releases, which hits the same flaky
+      # CDN as the electron binary install. Retry on 504.
       - name: Package for ${{ matrix.platform }} (macOS)
         if: runner.os == 'macOS'
+        uses: nick-fields/retry@v3
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # CSC_IDENTITY_AUTO_DISCOVERY=false: skip code signing for classroom build
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run ci:pack:mac
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm run ci:pack:mac
 
       - name: Package for ${{ matrix.platform }} (Windows)
         if: runner.os == 'Windows'
+        uses: nick-fields/retry@v3
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run ci:pack:win
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm run ci:pack:win
 
       - name: Package for ${{ matrix.platform }} (Linux)
         if: runner.os == 'Linux'
+        uses: nick-fields/retry@v3
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run ci:pack:linux
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm run ci:pack:linux
 
       # ── Upload artifacts ──────────────────────────────
       - name: Upload artifacts

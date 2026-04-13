@@ -92,8 +92,17 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y fuse libfuse2
 
+      # Electron's postinstall script downloads its binary from GitHub
+      # Releases, which intermittently returns 504 on macOS/Windows runners.
+      # Wrap `npm ci` in a retry so a single transient CDN blip doesn't
+      # fail the whole matrix.
       - name: Install Node dependencies
-        run: npm ci
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm ci
 
       - name: Install Python dependencies
         run: |
@@ -132,12 +141,21 @@ jobs:
       - name: Build Electron renderer + main
         run: npm run ci:build
 
+      # electron-builder downloads platform-specific helpers (nsis on
+      # Windows, Squirrel on mac, etc.) from electron-userland/electron-
+      # builder-binaries on GitHub Releases, which hits the same flaky
+      # CDN as the electron binary install. Retry on 504.
       - name: Package desktop app
+        uses: nick-fields/retry@v3
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Classroom build — no Developer ID, skip auto code signing.
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run ${{ matrix.pack_script }}
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm run ${{ matrix.pack_script }}
 
       - name: List packaged artifacts (Unix)
         if: runner.os != 'Windows'
