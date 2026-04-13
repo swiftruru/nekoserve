@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { EventLogItem, EventType } from '../types'
 import { exportEventLogCSV } from '../utils/export'
@@ -6,6 +6,10 @@ import { exportEventLogCSV } from '../utils/export'
 interface EventLogTableProps {
   events: EventLogItem[]
   initialFilter?: EventType[]
+  /** Shared playback cursor — drives row highlight + auto-scroll. */
+  highlightTime?: number
+  /** Click handler for a row: seeks Playback to the row's timestamp. */
+  onRowClick?: (timestamp: number) => void
 }
 
 const EVENT_TYPE_COLORS: Record<EventType, string> = {
@@ -28,7 +32,14 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
 
 const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_COLORS) as EventType[]
 
-export default function EventLogTable({ events, initialFilter }: EventLogTableProps) {
+const HIGHLIGHT_SCROLL_DEBOUNCE_MS = 150
+
+export default function EventLogTable({
+  events,
+  initialFilter,
+  highlightTime,
+  onRowClick,
+}: EventLogTableProps) {
   const { t } = useTranslation(['eventLog', 'events', 'common'])
   const [search, setSearch] = useState('')
   const [selectedTypes, setSelectedTypes] = useState<Set<EventType>>(
@@ -85,6 +96,46 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
       return matchType && matchSearch
     })
   }, [rendered, search, selectedTypes])
+
+  // ── Playback-cursor highlight ─────────────────────────────
+  // Find the last filtered row whose timestamp is ≤ highlightTime. That's
+  // the "current" event in the animation. Binary search is overkill for
+  // these sizes — linear scan in a memo is fine.
+  const highlightedKey = useMemo(() => {
+    if (highlightTime === undefined) return null
+    let matched: number | null = null
+    for (let i = 0; i < filtered.length; i += 1) {
+      if (filtered[i].e.timestamp <= highlightTime + 1e-6) {
+        matched = i
+      } else {
+        break
+      }
+    }
+    return matched
+  }, [filtered, highlightTime])
+
+  // Auto-scroll the highlighted row into view, debounced so rAF-driven
+  // playback updates don't thrash the scroll container.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map())
+  const scrollTimerRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (highlightedKey === null) return
+    if (scrollTimerRef.current !== null) {
+      window.clearTimeout(scrollTimerRef.current)
+    }
+    scrollTimerRef.current = window.setTimeout(() => {
+      const row = rowRefs.current.get(highlightedKey)
+      if (row) {
+        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }, HIGHLIGHT_SCROLL_DEBOUNCE_MS)
+    return () => {
+      if (scrollTimerRef.current !== null) {
+        window.clearTimeout(scrollTimerRef.current)
+      }
+    }
+  }, [highlightedKey])
 
   const hasFilters = search || selectedTypes.size > 0
 
@@ -143,7 +194,11 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
           </button>
         </div>
 
-        <div className="event-log-scroll overflow-y-auto" style={{ maxHeight: '55vh' }}>
+        <div
+          ref={scrollRef}
+          className="event-log-scroll overflow-y-auto"
+          style={{ maxHeight: '55vh' }}
+        >
           <table className="w-full text-sm">
             <thead className="bg-orange-50 sticky top-0">
               <tr>
@@ -165,27 +220,45 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map(({ e, description }, i) => (
-                <tr key={i} className="hover:bg-orange-50/50 transition-colors">
-                  <td className="px-4 py-2 font-mono text-gray-600">
-                    {e.timestamp.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${EVENT_TYPE_COLORS[e.eventType]}`}>
-                      {labelForType(e.eventType)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-gray-500">
-                    {e.customerId > 0 ? `#${e.customerId}` : '–'}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 text-xs">
-                    {e.resourceId ?? '–'}
-                  </td>
-                  <td className="px-4 py-2 text-gray-700" data-selectable>
-                    {description}
-                  </td>
-                </tr>
-              ))}
+              {filtered.map(({ e, description }, i) => {
+                const isHighlight = i === highlightedKey
+                const baseClass = isHighlight
+                  ? 'bg-orange-100 ring-2 ring-orange-400 ring-inset'
+                  : 'hover:bg-orange-50/50'
+                const rowClass = `transition-colors ${baseClass} ${
+                  onRowClick ? '' : ''
+                }`
+                return (
+                  <tr
+                    key={i}
+                    data-cursor={onRowClick ? 'pointer' : undefined}
+                    className={rowClass}
+                    ref={(node) => {
+                      if (node) rowRefs.current.set(i, node)
+                      else rowRefs.current.delete(i)
+                    }}
+                    onClick={onRowClick ? () => onRowClick(e.timestamp) : undefined}
+                  >
+                    <td className="px-4 py-2 font-mono text-gray-600">
+                      {e.timestamp.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${EVENT_TYPE_COLORS[e.eventType]}`}>
+                        {labelForType(e.eventType)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-gray-500">
+                      {e.customerId > 0 ? `#${e.customerId}` : '–'}
+                    </td>
+                    <td className="px-4 py-2 text-gray-500 text-xs">
+                      {e.resourceId ?? '–'}
+                    </td>
+                    <td className="px-4 py-2 text-gray-700" data-selectable>
+                      {description}
+                    </td>
+                  </tr>
+                )
+              })}
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-gray-400">

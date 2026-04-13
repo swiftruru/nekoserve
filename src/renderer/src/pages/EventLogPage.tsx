@@ -5,9 +5,18 @@ import EventLogTable from '../components/EventLogTable'
 interface EventLogPageProps {
   eventLog: EventLogItem[]
   initialFilter?: EventType[]
+  /** Shared playback cursor — drives row highlight + auto-scroll. */
+  highlightTime?: number
+  /** Click handler for a row: seeks Playback to the row's timestamp. */
+  onRowClick?: (timestamp: number) => void
 }
 
-export default function EventLogPage({ eventLog, initialFilter }: EventLogPageProps) {
+export default function EventLogPage({
+  eventLog,
+  initialFilter,
+  highlightTime,
+  onRowClick,
+}: EventLogPageProps) {
   const { t } = useTranslation('results')
   return (
     <div className="page-container">
@@ -17,7 +26,12 @@ export default function EventLogPage({ eventLog, initialFilter }: EventLogPagePr
           {t('results:eventLog.description')}
         </p>
       </div>
-      <EventLogTable events={eventLog} initialFilter={initialFilter} />
+      <EventLogTable
+        events={eventLog}
+        initialFilter={initialFilter}
+        highlightTime={highlightTime}
+        onRowClick={onRowClick}
+      />
     </div>
   )
 }

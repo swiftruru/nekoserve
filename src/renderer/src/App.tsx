@@ -6,6 +6,7 @@ import { SCENARIOS, DEFAULT_CONFIG } from './data/scenarios'
 import SettingsPage from './pages/SettingsPage'
 import ResultsPage from './pages/ResultsPage'
 import EventLogPage from './pages/EventLogPage'
+import PlaybackPage, { PlaybackPageEmpty } from './pages/PlaybackPage'
 import HowItWorksPage from './pages/HowItWorksPage'
 import AboutPage from './pages/AboutPage'
 import LearningPanel from './components/LearningPanel'
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'settings',   icon: '⚙️' },
   { id: 'results',    icon: '📊' },
   { id: 'eventlog',   icon: '📋' },
+  { id: 'playback',   icon: '🎞️' },
   { id: 'howitworks', icon: '🎬' },
   { id: 'about',      icon: 'ℹ️' },
 ]
@@ -52,6 +54,19 @@ export default function App() {
   const [config, setConfig] = useState<SimulationConfig>(DEFAULT_CONFIG)
   const [pendingEventFilter, setPendingEventFilter] = useState<EventType[] | null>(null)
   const [panelOpen, setPanelOpen] = useState<boolean>(() => loadPanelState())
+  /**
+   * Shared sim-time cursor for the Playback page and the Event Log row
+   * highlight. Lifted to App so both pages see the same value: Playback
+   * advances it via its rAF clock, Event Log reads it to highlight a row,
+   * and clicking a row writes it (seeking Playback).
+   */
+  const [playbackTime, setPlaybackTime] = useState(0)
+  /**
+   * One-shot auto-play trigger: flipped to true when a simulation run
+   * finishes and consumed by PlaybackPage once it mounts. Lives in App
+   * (not inside PlaybackPage) so nav-away + nav-back does not re-autoplay.
+   */
+  const [playbackAutoStartPending, setPlaybackAutoStartPending] = useState(false)
   const { status, result, error, elapsed, history, run, reset } = useSimulation()
 
   // Persist panel open/closed whenever it changes. Keeping the side effect
@@ -67,8 +82,20 @@ export default function App() {
   function handleRunSimulation(cfg: SimulationConfig, label: string) {
     setConfig(cfg)
     run(cfg, label).then(() => {
-      setPage('results')
+      // Every fresh run resets the shared sim-time cursor so Playback does
+      // not start mid-way through the new event log.
+      setPlaybackTime(0)
+      // Arm the auto-play trigger and land the user on Playback: the run's
+      // outcome is more memorable as an animation than as a KPI card, and
+      // the "Skip to results" button on Playback gives a one-click escape
+      // hatch for users who only want the numbers.
+      setPlaybackAutoStartPending(true)
+      setPage('playback')
     })
+  }
+
+  function handleSkipToResults() {
+    setPage('results')
   }
 
   function handleChartClick(eventTypes: EventType[]) {
@@ -82,6 +109,15 @@ export default function App() {
       setPendingEventFilter(null)
     }
     setPage(id)
+  }
+
+  /**
+   * Called from EventLogTable when the user clicks a row. Jumps the shared
+   * playback cursor to that event and switches to the Playback page.
+   */
+  function handleEventLogRowClick(timestamp: number) {
+    setPlaybackTime(timestamp)
+    setPage('playback')
   }
 
   const resultsAvailable = status === 'success' && result !== null
@@ -132,8 +168,11 @@ export default function App() {
       {/* ── Top navigation ──────────────────────────────── */}
       <nav className="bg-white border-b border-orange-100 px-4 flex items-center gap-1">
         {NAV_ITEMS.map((item) => {
-          const isResults = item.id === 'results' || item.id === 'eventlog'
-          const disabled = isResults && !resultsAvailable
+          const needsResult =
+            item.id === 'results' ||
+            item.id === 'eventlog' ||
+            item.id === 'playback'
+          const disabled = needsResult && !resultsAvailable
           return (
             <button
               key={item.id}
@@ -150,7 +189,7 @@ export default function App() {
             >
               <span>{item.icon}</span>
               {t(`nav:${item.id}` as const)}
-              {isResults && !resultsAvailable && (
+              {needsResult && !resultsAvailable && (
                 <span className="text-xs text-gray-300 ml-1">{t('nav:needsRunHint')}</span>
               )}
             </button>
@@ -197,8 +236,23 @@ export default function App() {
               <EventLogPage
                 eventLog={result.eventLog}
                 initialFilter={pendingEventFilter ?? undefined}
+                highlightTime={playbackTime}
+                onRowClick={handleEventLogRowClick}
               />
             )}
+            {page === 'playback' &&
+              (result ? (
+                <PlaybackPage
+                  result={result}
+                  simTime={playbackTime}
+                  setSimTime={setPlaybackTime}
+                  autoStartPending={playbackAutoStartPending}
+                  onAutoStartConsumed={() => setPlaybackAutoStartPending(false)}
+                  onSkipToResults={handleSkipToResults}
+                />
+              ) : (
+                <PlaybackPageEmpty />
+              ))}
             {page === 'howitworks' && <HowItWorksPage />}
             {page === 'about' && <AboutPage />}
           </PageTransition>

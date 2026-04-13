@@ -12,6 +12,7 @@ import zhTW_results from './locales/zh-TW/results.json'
 import zhTW_about from './locales/zh-TW/about.json'
 import zhTW_learn from './locales/zh-TW/learn.json'
 import zhTW_howItWorks from './locales/zh-TW/howItWorks.json'
+import zhTW_playback from './locales/zh-TW/playback.json'
 
 import en_common from './locales/en/common.json'
 import en_nav from './locales/en/nav.json'
@@ -24,6 +25,7 @@ import en_results from './locales/en/results.json'
 import en_about from './locales/en/about.json'
 import en_learn from './locales/en/learn.json'
 import en_howItWorks from './locales/en/howItWorks.json'
+import en_playback from './locales/en/playback.json'
 
 import { registerFormatters } from './formatters'
 
@@ -45,6 +47,7 @@ export const namespaces = [
   'about',
   'learn',
   'howItWorks',
+  'playback',
 ] as const
 
 export const resources = {
@@ -60,6 +63,7 @@ export const resources = {
     about: zhTW_about,
     learn: zhTW_learn,
     howItWorks: zhTW_howItWorks,
+    playback: zhTW_playback,
   },
   en: {
     common: en_common,
@@ -73,6 +77,7 @@ export const resources = {
     about: en_about,
     learn: en_learn,
     howItWorks: en_howItWorks,
+    playback: en_playback,
   },
 } as const
 

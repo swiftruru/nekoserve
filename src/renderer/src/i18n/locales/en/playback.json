@@ -1,0 +1,80 @@
+{
+  "title": "Simulation Playback",
+  "subtitle": "Watch every customer's journey, and see how the queue, seats and cats are used over time.",
+  "emptyState": "Run a simulation on the Settings page first, then come back here to watch the playback.",
+  "emptyStateHint": "There's nothing to animate without an event log.",
+  "timeLabel": "Sim time",
+  "eventProgress": "Event {{current}} / {{total}}",
+  "simMinutesUnit": "min",
+  "noCurrentEvent": "No events played yet",
+  "skipToResults": "View results",
+  "timeline": {
+    "label": "Timeline",
+    "hint": "Drag to seek; brighter bars mean busier moments",
+    "ariaLabel": "Simulation timeline"
+  },
+  "controls": {
+    "play": "Play",
+    "pause": "Pause",
+    "reset": "Reset",
+    "speed": "Speed",
+    "stepPrev": "Previous event",
+    "stepNext": "Next event"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "playPause": "Play / pause",
+    "seek10": "Seek \u00b110 min",
+    "stepEvent": "Step events",
+    "reset": "Reset",
+    "speed": "Change speed"
+  },
+  "zones": {
+    "door": "Door",
+    "queueSeat": "Seat queue",
+    "seats": "Seats",
+    "kitchen": "Kitchen",
+    "queueCat": "Cat queue",
+    "cats": "Cat zone",
+    "exit": "Exit"
+  },
+  "labels": {
+    "arrived": "Arrived",
+    "served": "Served",
+    "abandoned": "Left",
+    "staffBusy": "{{busy}} / {{total}} busy",
+    "seatsOccupied": "{{occ}} / {{total}} seated",
+    "catsBusy": "{{busy}} / {{total}} busy"
+  },
+  "stages": {
+    "arriving": "Arriving",
+    "waitingSeat": "Waiting for seat",
+    "seated": "Seated",
+    "ordering": "Ordering",
+    "waitingFood": "Waiting for food",
+    "dining": "Dining",
+    "waitingCat": "Waiting for cat",
+    "interacting": "Playing with cat",
+    "leaving": "Leaving",
+    "abandoned": "Abandoned"
+  },
+  "bubbles": {
+    "arrive": "Here! \u2728",
+    "order": "Ordering!",
+    "dining": "Yum \ud83c\udf7d\ufe0f",
+    "petting": "So soft \ud83d\udc95",
+    "abandon": "Giving up \ud83d\ude24"
+  },
+  "inspect": {
+    "seatTitle": "Seat #{{n}}",
+    "catTitle": "Cat #{{n}}",
+    "seatEmpty": "This seat is currently empty.",
+    "catIdle": "This cat is idle.",
+    "catBusy": "This cat is being petted.",
+    "catResting": "This cat is resting.",
+    "customerId": "Customer",
+    "stage": "Stage",
+    "stayTime": "Stay time",
+    "close": "Close"
+  }
+}

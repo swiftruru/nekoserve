@@ -11,7 +11,13 @@ export type {
 } from '@shared/contracts/types'
 
 // ── Page navigation ───────────────────────────────────────────
-export type Page = 'settings' | 'results' | 'eventlog' | 'howitworks' | 'about'
+export type Page =
+  | 'settings'
+  | 'results'
+  | 'eventlog'
+  | 'playback'
+  | 'howitworks'
+  | 'about'
 
 /**
  * Canonical display order of the nav tabs, shared by `App.tsx` NAV_ITEMS and
@@ -22,6 +28,7 @@ export const PAGE_ORDER: readonly Page[] = [
   'settings',
   'results',
   'eventlog',
+  'playback',
   'howitworks',
   'about',
 ] as const

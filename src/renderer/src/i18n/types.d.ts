@@ -10,6 +10,7 @@ import type results from './locales/zh-TW/results.json'
 import type about from './locales/zh-TW/about.json'
 import type learn from './locales/zh-TW/learn.json'
 import type howItWorks from './locales/zh-TW/howItWorks.json'
+import type playback from './locales/zh-TW/playback.json'
 
 declare module 'react-i18next' {
   interface CustomTypeOptions {
@@ -26,6 +27,7 @@ declare module 'react-i18next' {
       about: typeof about
       learn: typeof learn
       howItWorks: typeof howItWorks
+      playback: typeof playback
     }
   }
 }

@@ -1,0 +1,80 @@
+{
+  "title": "模擬回放",
+  "subtitle": "以動畫重現每位顧客的旅程，看見佇列、座位與貓咪如何被使用",
+  "emptyState": "請先到「模擬設定」頁面執行一次模擬，再回到這裡觀看回放。",
+  "emptyStateHint": "沒有事件紀錄就無法播放動畫。",
+  "timeLabel": "模擬時間",
+  "eventProgress": "事件 {{current}} / {{total}}",
+  "simMinutesUnit": "分鐘",
+  "noCurrentEvent": "尚未播放任何事件",
+  "skipToResults": "查看統計結果",
+  "timeline": {
+    "label": "時間軸",
+    "hint": "拖曳跳到任意時間，亮度代表該段事件密集度",
+    "ariaLabel": "模擬時間軸"
+  },
+  "controls": {
+    "play": "播放",
+    "pause": "暫停",
+    "reset": "重播",
+    "speed": "速度",
+    "stepPrev": "上一事件",
+    "stepNext": "下一事件"
+  },
+  "shortcuts": {
+    "title": "鍵盤快捷鍵",
+    "playPause": "播放 / 暫停",
+    "seek10": "前後跳 10 分鐘",
+    "stepEvent": "逐事件",
+    "reset": "重播",
+    "speed": "切換速度"
+  },
+  "zones": {
+    "door": "入口",
+    "queueSeat": "等座位",
+    "seats": "座位區",
+    "kitchen": "廚房",
+    "queueCat": "等貓咪",
+    "cats": "貓咪區",
+    "exit": "出口"
+  },
+  "labels": {
+    "arrived": "已到達",
+    "served": "已服務",
+    "abandoned": "已離去",
+    "staffBusy": "{{busy}} / {{total}} 忙碌",
+    "seatsOccupied": "{{occ}} / {{total}} 入座",
+    "catsBusy": "{{busy}} / {{total}} 互動中"
+  },
+  "stages": {
+    "arriving": "剛到",
+    "waitingSeat": "等座位",
+    "seated": "入座",
+    "ordering": "點餐",
+    "waitingFood": "等餐點",
+    "dining": "用餐中",
+    "waitingCat": "等貓咪",
+    "interacting": "摸貓中",
+    "leaving": "離開中",
+    "abandoned": "放棄離去"
+  },
+  "bubbles": {
+    "arrive": "來囉 ✨",
+    "order": "點餐了！",
+    "dining": "好好吃 🍽️",
+    "petting": "摸摸 💕",
+    "abandon": "不等了 😤"
+  },
+  "inspect": {
+    "seatTitle": "座位 #{{n}}",
+    "catTitle": "貓咪 #{{n}}",
+    "seatEmpty": "這個座位目前沒人使用",
+    "catIdle": "這隻貓目前是空閒的",
+    "catBusy": "這隻貓正在被撫摸",
+    "catResting": "這隻貓正在休息",
+    "customerId": "顧客",
+    "stage": "目前階段",
+    "stayTime": "已停留",
+    "close": "關閉"
+  }
+}

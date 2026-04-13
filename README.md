@@ -73,7 +73,8 @@ First-launch tips for unsigned builds:
 |------|-------------|
 | **⚙️ Simulation Settings** | 13 configurable parameters, 3 built-in scenario presets, custom presets persisted in `localStorage` |
 | **📊 Statistics Results** | 10 KPI cards, 3 Recharts visualizations (utilization, wait time, customer outcome pie), up-to-3-run side-by-side comparison |
-| **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter and localized keyword search |
+| **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter, localized keyword search, row highlight synced to the Playback cursor |
+| **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Customer emoji avatars move between door, seat queue, seat grid, kitchen, cat zone and exit in real time; play / pause / speed / scrub / step; click a seat or cat to inspect the current occupant; keyboard shortcuts for every transport action |
 | **🎬 How it Works** | Dedicated system-simulation walkthrough: event-driven clock, entity as process, queueing vs service, dynamic capacity, end-of-run aggregation (with KaTeX-rendered formulas and small SimPy code excerpts) |
 | **ℹ️ About** | Course background, tech stack, architecture overview, experiment design principles |
 
@@ -87,6 +88,37 @@ First-launch tips for unsigned builds:
 - **Page Transition Animation**: a mascot cat dashes across a cream veil whenever the active tab changes. Direction-aware (left-to-right for "forward" navigation, right-to-left for "back"), driven by a shared `PAGE_ORDER` list. The React unmount/mount happens mid-animation while the veil fully covers the viewport, hiding any content flash. Fully bypassed when the OS reports `prefers-reduced-motion: reduce`.
 - **Custom In-Window Cursor**: a pixel-art cat paw / arrow replaces the native cursor while the pointer is inside the app window. Hover over interactive controls swaps to a tabby-cat-with-coffee sprite with a soft drop shadow; clicks dip the sprite briefly for tactile feedback. Input fields, drag regions, and the window exterior fall back to the native cursor so typing, window dragging, and crossing window edges all feel correct. Built on a zero-rerender `useMousePosition` ref + `requestAnimationFrame` render loop, so it costs nothing on every frame.
 - **Polished Parameter Inputs**: each of the 13 settings uses a redesigned `ParamInput` control with an uppercase tracking-wide label, an in-field floating unit, a hover-only `i` help tooltip (with pop animation and arrow), and a thin gradient value-in-range fill bar that shows where the current value sits between min and max. Labels reserve two lines of vertical space so long bilingual labels stay baseline-aligned with short ones.
+
+### Simulation Playback
+
+A dedicated **🎞️ Simulation Playback** page animates the full event log on a hand-drawn SVG café floor plan. Running a simulation now lands the user on this page and auto-starts playback from `t=0`; a one-click **View Results →** button in the header jumps to the statistics page for users who only want the numbers.
+
+**Scene layout** — door → seat queue → N-cell seat grid → kitchen (M staff dots, lit when busy) → cat queue → K-cell cat zone → exit. Every customer is drawn as an emoji avatar (`🙂` waiting, `📝` ordering, `⏳` waiting for food, `🍽️` dining, `😺` playing with a cat, `😿` abandoning, `👋` leaving) on a stage-colored chip, and moves between zones with a 320 ms GPU-composited CSS transition.
+
+**Speech bubbles** — at key moments the customer floats a short bilingual bubble (`來囉 ✨` / `點餐了！` / `好好吃 🍽️` / `摸摸 💕` / `不等了 😤`). Bubbles are stored in reducer state, not a side effect, so scrubbing the timeline deterministically rebuilds whichever bubbles should be visible at that exact sim-minute.
+
+**Playback transport** — play / pause, reset, five speed presets (0.5× / 1× / 2× / 4× / 8×, default 4×), step to previous / next event (`⏮` `⏭`), and a draggable **timeline scrubber** with a 60-bin event-density heatmap underneath so students can spot the busiest moments at a glance.
+
+**Keyboard shortcuts** (shown in a tooltip next to the speed selector):
+
+| Key | Action |
+| --- | --- |
+| `Space` | Play / pause |
+| `←` / `→` | Seek ±10 simulation minutes |
+| `,` / `.` | Step to previous / next event |
+| `0` | Reset to `t=0` |
+| `1`–`5` | Change speed (0.5× / 1× / 2× / 4× / 8×) |
+
+The hook guards against firing shortcuts while any `<input>` / `<textarea>` / `contenteditable` element has focus, so typing `Space` in the Event Log search box does not pause the animation.
+
+**Click to inspect** — click any seat or any cat on the floor plan to pop up a small `InspectPopover` card with the current occupant's customer ID, lifecycle stage, and elapsed stay time. Click the same target again (or the background) to dismiss.
+
+**Event Log ↔ Playback linking** — `playbackTime` is lifted to `App.tsx` so both pages share a single sim-time cursor:
+
+- While Playback is playing, the corresponding `EventLogTable` row is highlighted (`bg-orange-100 ring-2`) and auto-scrolled into view (debounced 150 ms so rAF-driven updates don't thrash the scroll container).
+- Clicking any row in the Event Log jumps straight to Playback with `simTime` seeded at that row's exact timestamp.
+
+The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/renderer/src/utils/replay.ts`](src/renderer/src/utils/replay.ts) plus an `rAF`-driven [`usePlaybackClock`](src/renderer/src/hooks/usePlaybackClock.ts). The reducer maintains its own **virtual seat / cat slot allocators** because the Python simulator's `座位-N` resourceId label is actually the count of currently-occupied seats at the moment the event fired (not a stable slot identity, see `simulator-python/simulator/core.py:140`), and cat events carry no cat identity at all. Allocators are deterministic under re-replay, so scrubbing the timeline produces the same scene every time.
 
 ### Export
 
@@ -358,17 +390,20 @@ nekoserve/
 │   ├── preload/
 │   │   └── index.ts              # contextBridge whitelist API
 │   └── renderer/src/
-│       ├── pages/                # SettingsPage, ResultsPage, EventLogPage, HowItWorksPage, AboutPage
+│       ├── pages/                # SettingsPage, ResultsPage, EventLogPage, PlaybackPage, HowItWorksPage, AboutPage
 │       ├── components/
 │       │   ├── KpiCard, ScenarioButtons, ComparisonTable, EventLogTable, LanguageSwitcher, LearningPanel
 │       │   ├── ParamInput.tsx    # Redesigned number input: floating unit, help tooltip, range bar
 │       │   ├── PageTransition.tsx # Mascot-cat sweep + cream veil overlay on page change
 │       │   ├── CustomCursor.tsx  # In-window pixel-art cursor overlay with hover / press states
 │       │   ├── Math.tsx          # <InlineMath> / <BlockMath> KaTeX wrappers
+│       │   ├── playback/         # Simulation Playback: CafeScene, PlaybackControls, TimelineScrubber, InspectPopover
 │       │   └── charts/           # UtilizationChart, WaitTimeChart, CustomerPieChart
 │       ├── hooks/
 │       │   ├── useSimulation.ts  # Simulation state, history, elapsed timer
-│       │   └── useMousePosition.ts # Zero-rerender cursor position tracker for CustomCursor
+│       │   ├── useMousePosition.ts # Zero-rerender cursor position tracker for CustomCursor
+│       │   ├── usePlaybackClock.ts # rAF sim-time clock driving the Playback animation
+│       │   └── useKeyboardShortcuts.ts # Document-level key map with input-focus protection
 │       ├── assets/
 │       │   ├── mascot-cat.png    # Page-transition mascot sprite
 │       │   └── cursors/          # CustomCursor sprites (default + hover) and archived source
@@ -377,7 +412,8 @@ nekoserve/
 │       │   ├── scenarios.ts      # Built-in + custom scenario presets (localStorage)
 │       │   └── learnContent/     # Bilingual learning sidebar content (zh-TW.tsx + en.tsx)
 │       └── utils/
-│           └── export.ts         # JSON / CSV export utilities
+│           ├── export.ts         # JSON / CSV export utilities
+│           └── replay.ts         # Pure reducer rebuilding café state from the event log for Playback
 ├── simulator-python/
 │   ├── simulator/                # Python SimPy core (core.py, models.py)
 │   └── tests/                    # Golden test cases
