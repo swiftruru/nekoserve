@@ -1,0 +1,220 @@
+name: Release NekoServe
+
+# Triggered by pushing a semver tag (e.g. v0.2.0, v1.0.0).
+# Builds macOS + Windows desktop apps (bundling the PyInstaller Python
+# simulator) in parallel, then publishes a single GitHub Release whose
+# body is read from changelog/vX.Y.Z.md and whose assets are the
+# packaged installers / portable executables.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v0.2.1). Must already exist on main.'
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  # Silence the 2025-09-19 GitHub Node 20 deprecation warnings by forcing
+  # JavaScript-based actions to run on Node 24 ahead of the 2026-06-02
+  # forced upgrade. Safe no-op on runners still defaulting to Node 20.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────
+  # 1) Build matrix: macOS + Windows in parallel.
+  #    Each job uploads its packaged files as a workflow artifact
+  #    for the downstream `publish` job to collect.
+  # ────────────────────────────────────────────────────────────
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+            pack_script: ci:pack:mac
+            simulator_script: bash scripts/build-simulator.sh
+            python_path_check: dist/simulator/simulator
+          - os: windows-latest
+            platform: win
+            pack_script: ci:pack:win
+            simulator_script: powershell -ExecutionPolicy Bypass -File scripts/build-simulator.ps1
+            python_path_check: dist\simulator\simulator.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Resolve tag ref
+        id: ref
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: |
+          cd simulator-python
+          pip install -r requirements.txt
+
+      - name: Build Python simulator
+        run: ${{ matrix.simulator_script }}
+
+      - name: Verify simulator binary (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          BINARY="simulator-python/${{ matrix.python_path_check }}"
+          if [ -f "$BINARY" ]; then
+            echo "Binary found: $BINARY"
+            ls -lh "$BINARY"
+          else
+            echo "ERROR: Binary not found at $BINARY"
+            exit 1
+          fi
+
+      - name: Verify simulator binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $Binary = "simulator-python\${{ matrix.python_path_check }}"
+          if (Test-Path $Binary) {
+            Write-Host "Binary found: $Binary"
+            Get-Item $Binary | Select-Object Length, FullName
+          } else {
+            Write-Error "ERROR: Binary not found at $Binary"
+            exit 1
+          }
+
+      - name: Build Electron renderer + main
+        run: npm run ci:build
+
+      - name: Package desktop app
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Classroom build — no Developer ID, skip auto code signing.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run ${{ matrix.pack_script }}
+
+      - name: List packaged artifacts (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ls -lh dist/desktop
+
+      - name: List packaged artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Get-ChildItem dist\desktop
+
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nekoserve-${{ matrix.platform }}
+          path: |
+            dist/desktop/NekoServe-*.dmg
+            dist/desktop/NekoServe-*.zip
+            dist/desktop/NekoServe-*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  # ────────────────────────────────────────────────────────────
+  # 2) Publish: runs once after both builds succeed. Downloads all
+  #    matrix artifacts, verifies the per-version changelog file
+  #    exists, and creates/updates the GitHub Release in a single
+  #    atomic call (avoids matrix-level race conditions).
+  # ────────────────────────────────────────────────────────────
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve tag ref
+        id: ref
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository (for changelog)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+          sparse-checkout: |
+            changelog
+          sparse-checkout-cone-mode: false
+
+      - name: Verify changelog entry exists
+        shell: bash
+        run: |
+          CHANGELOG="changelog/${{ steps.ref.outputs.ref }}.md"
+          if [ ! -f "$CHANGELOG" ]; then
+            echo "::error::$CHANGELOG is missing."
+            echo "Per project convention, every tagged release must have a matching"
+            echo "per-version changelog file committed at changelog/vX.Y.Z.md."
+            exit 1
+          fi
+          echo "Found changelog: $CHANGELOG"
+          echo "--- contents preview ---"
+          head -20 "$CHANGELOG"
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: nekoserve-*
+          merge-multiple: true
+
+      - name: List collected release assets
+        shell: bash
+        run: |
+          ls -lh release-assets/
+          echo "---"
+          find release-assets -type f
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ref.outputs.ref }}
+          name: NekoServe ${{ steps.ref.outputs.ref }}
+          body_path: changelog/${{ steps.ref.outputs.ref }}.md
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          files: |
+            release-assets/NekoServe-*.dmg
+            release-assets/NekoServe-*.zip
+            release-assets/NekoServe-*.exe
