@@ -66,7 +66,7 @@ export default function ScenarioButtons({
             type="button"
             disabled={disabled}
             onClick={() => { setSaving(true); setSaveName('') }}
-            className="text-xs text-orange-500 hover:text-orange-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+            className="text-xs text-orange-500 hover:text-orange-700 disabled:opacity-40 flex items-center gap-1"
           >
             <span>＋</span> {t('settings:scenario.saveCurrent')}
           </button>
@@ -84,7 +84,7 @@ export default function ScenarioButtons({
             title={builtInDescription(s)}
             className={`btn-scenario ${
               activeScenarioId === s.id ? 'btn-scenario-active' : 'btn-scenario-inactive'
-            } disabled:opacity-40 disabled:cursor-not-allowed`}
+            } disabled:opacity-40`}
           >
             {builtInName(s)}
           </button>
@@ -100,7 +100,7 @@ export default function ScenarioButtons({
               title={s.description || s.name}
               className={`btn-scenario pr-6 ${
                 activeScenarioId === s.id ? 'btn-scenario-active' : 'btn-scenario-inactive'
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
+              } disabled:opacity-40`}
             >
               {s.name}
             </button>

@@ -215,7 +215,7 @@ export default function SettingsPage({
         {/* ── Cat interaction ────────────────────────── */}
         <div className="card">
           <div className="card-title">{t('settings:sections.catInteraction')}</div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <ParamInput
               label={paramLabel('catInteractionTime')}
               value={config.catInteractionTime}

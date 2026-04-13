@@ -39,6 +39,7 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src'),
         '@shared': resolve('shared'),
         '@i18n': resolve('src/renderer/src/i18n'),
+        '@assets': resolve('src/renderer/src/assets'),
       },
     },
     plugins: [react()],

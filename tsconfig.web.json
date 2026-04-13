@@ -13,7 +13,8 @@
     "paths": {
       "@renderer/*": ["./src/renderer/src/*"],
       "@shared/*": ["./shared/*"],
-      "@i18n/*": ["./src/renderer/src/i18n/*"]
+      "@i18n/*": ["./src/renderer/src/i18n/*"],
+      "@assets/*": ["./src/renderer/src/assets/*"]
     },
     "resolveJsonModule": true
   },

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Page, SimulationConfig, EventType } from './types'
 import { useSimulation } from './hooks/useSimulation'
@@ -10,6 +10,8 @@ import HowItWorksPage from './pages/HowItWorksPage'
 import AboutPage from './pages/AboutPage'
 import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
+import PageTransition from './components/PageTransition'
+import CustomCursor from './components/CustomCursor'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -52,11 +54,14 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState<boolean>(() => loadPanelState())
   const { status, result, error, elapsed, history, run, reset } = useSimulation()
 
+  // Persist panel open/closed whenever it changes. Keeping the side effect
+  // out of the state updater is required for React 18 StrictMode purity.
+  useEffect(() => {
+    savePanelState(panelOpen)
+  }, [panelOpen])
+
   function togglePanel() {
-    setPanelOpen((v) => {
-      savePanelState(!v)
-      return !v
-    })
+    setPanelOpen((prev) => !prev)
   }
 
   function handleRunSimulation(cfg: SimulationConfig, label: string) {
@@ -83,6 +88,13 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-cream-100">
+      {/* ── In-window custom cursor overlay ───────────────
+           Mounted at the outermost level so its `position: fixed`
+           overlay is never clipped by `overflow-hidden` ancestors
+           on the main/aside flex container. Renders behind nothing
+           (z-index 9999) and has `pointer-events: none`. */}
+      <CustomCursor />
+
       {/* ── Title bar area ──────────────────────────────── */}
       {/* drag-region: entire header is draggable on macOS (no interactive elements here) */}
       <header className={`bg-white border-b border-orange-200 py-3 flex items-center gap-3 shadow-sm drag-region ${isMac ? 'pl-20 pr-5' : 'px-5'}`}>
@@ -132,7 +144,7 @@ export default function App() {
                 page === item.id
                   ? 'border-orange-500 text-orange-600'
                   : disabled
-                  ? 'border-transparent text-gray-300 cursor-not-allowed'
+                  ? 'border-transparent text-gray-300'
                   : 'border-transparent text-gray-500 hover:text-orange-500 hover:border-orange-300',
               ].join(' ')}
             >
@@ -162,32 +174,34 @@ export default function App() {
       {/* ── Main area: content + sidebar ────────────────── */}
       <div className="flex-1 flex overflow-hidden">
         <main className="flex-1 overflow-y-auto">
-          {page === 'settings' && (
-            <SettingsPage
-              initialConfig={config}
-              scenarios={SCENARIOS}
-              onRun={handleRunSimulation}
-              onReset={reset}
-              isRunning={status === 'running'}
-              elapsed={elapsed}
-              error={status === 'error' ? error : null}
-            />
-          )}
-          {page === 'results' && result && (
-            <ResultsPage
-              result={result}
-              history={history}
-              onChartClick={handleChartClick}
-            />
-          )}
-          {page === 'eventlog' && result && (
-            <EventLogPage
-              eventLog={result.eventLog}
-              initialFilter={pendingEventFilter ?? undefined}
-            />
-          )}
-          {page === 'howitworks' && <HowItWorksPage />}
-          {page === 'about' && <AboutPage />}
+          <PageTransition pageKey={page}>
+            {page === 'settings' && (
+              <SettingsPage
+                initialConfig={config}
+                scenarios={SCENARIOS}
+                onRun={handleRunSimulation}
+                onReset={reset}
+                isRunning={status === 'running'}
+                elapsed={elapsed}
+                error={status === 'error' ? error : null}
+              />
+            )}
+            {page === 'results' && result && (
+              <ResultsPage
+                result={result}
+                history={history}
+                onChartClick={handleChartClick}
+              />
+            )}
+            {page === 'eventlog' && result && (
+              <EventLogPage
+                eventLog={result.eventLog}
+                initialFilter={pendingEventFilter ?? undefined}
+              />
+            )}
+            {page === 'howitworks' && <HowItWorksPage />}
+            {page === 'about' && <AboutPage />}
+          </PageTransition>
         </main>
 
         {/* ── Learning sidebar ──────────────────────────── */}

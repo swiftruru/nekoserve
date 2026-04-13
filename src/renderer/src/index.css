@@ -5,18 +5,61 @@
 @layer base {
   html {
     @apply antialiased;
+    /* Hide the native OS cursor; CustomCursor renders its own sprite on
+       top of the viewport. Input-like elements below override this back
+       to their native cursors so text selection and drag still work. */
+    cursor: none;
   }
 
   body {
     @apply bg-cream-100 text-gray-800 font-sans;
     user-select: none;
     -webkit-user-select: none;
+    cursor: none;
   }
 
   /* Allow text selection in inputs and event log */
   input, textarea, select, [data-selectable] {
     user-select: text;
     -webkit-user-select: text;
+  }
+
+  /* ── Cursor exceptions ──────────────────────────────────────
+     Keep the native cursor on elements where precise affordance
+     matters more than theming: text inputs show the I-beam, disabled
+     controls keep the native "no-entry" glyph, and the macOS drag
+     region stays interactive for window dragging. CustomCursor
+     detects these same regions and hides its sprite over them so
+     only one cursor is visible at a time. */
+  input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select,
+  [contenteditable="true"],
+  [data-selectable] {
+    cursor: text;
+  }
+
+  /* Tailwind's preflight explicitly sets `cursor: pointer` on buttons and
+     role="button" elements, which overrides the inherited `cursor: none`
+     from html/body and makes the native finger pointer show up alongside
+     our custom cursor on interactive elements. Force it back to none so
+     only CustomCursor is visible. */
+  button,
+  a,
+  [role="button"],
+  [data-cursor="pointer"],
+  summary {
+    cursor: none;
+  }
+
+  [disabled],
+  button[disabled],
+  .cursor-not-allowed {
+    cursor: none;
+  }
+
+  .drag-region {
+    cursor: default;
   }
 }
 
@@ -25,33 +68,55 @@
     @apply max-w-6xl mx-auto px-4 py-6;
   }
 
+  /* Card with gentle hover lift and a subtle gradient-to-cream inner tone. */
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-orange-100 p-5;
+    @apply relative bg-white rounded-2xl border border-orange-100 p-5
+           shadow-[0_1px_2px_rgba(251,146,60,0.05),0_8px_24px_-12px_rgba(251,146,60,0.12)]
+           transition-all duration-200 ease-out
+           hover:shadow-[0_2px_4px_rgba(251,146,60,0.08),0_12px_32px_-12px_rgba(251,146,60,0.18)]
+           hover:border-orange-200;
   }
 
+  /* Card title: orange accent glyph on the left (via ::before) and slightly
+     bigger type than before so section headers read more clearly. */
   .card-title {
-    @apply text-base font-semibold text-orange-700 mb-3 flex items-center gap-2;
+    @apply text-[15px] font-semibold text-orange-700 mb-4
+           flex items-center gap-2 tracking-tight;
+  }
+  .card-title::before {
+    content: '';
+    @apply block w-1 h-5 rounded-full bg-gradient-to-b from-orange-400 to-orange-600;
   }
 
   .btn-primary {
-    @apply bg-orange-500 hover:bg-orange-600 active:bg-orange-700
-           text-white font-medium rounded-xl px-5 py-2.5
-           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-gradient-to-br from-orange-500 to-orange-600
+           hover:from-orange-500 hover:to-orange-700
+           active:from-orange-600 active:to-orange-700
+           text-white font-semibold rounded-xl px-6 py-2.5
+           shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30
+           transition-all duration-150
+           disabled:opacity-50 disabled:shadow-none;
   }
 
   .btn-secondary {
     @apply bg-white hover:bg-orange-50 active:bg-orange-100
            text-orange-600 font-medium rounded-xl px-5 py-2.5
-           border border-orange-300 transition-colors duration-150;
+           border border-orange-200 hover:border-orange-400
+           shadow-sm hover:shadow
+           transition-all duration-150;
   }
 
   .btn-scenario {
-    @apply px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150
-           border border-orange-200 hover:border-orange-400;
+    @apply px-3.5 py-1.5 rounded-lg text-sm font-medium
+           transition-all duration-150
+           border border-orange-200
+           hover:border-orange-400 hover:-translate-y-px hover:shadow-sm;
   }
 
   .btn-scenario-active {
-    @apply bg-orange-500 text-white border-orange-500;
+    @apply bg-gradient-to-br from-orange-500 to-orange-600
+           text-white border-transparent
+           shadow-md shadow-orange-500/25;
   }
 
   .btn-scenario-inactive {
@@ -60,8 +125,9 @@
 
   .input-field {
     @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-           focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent
-           transition-shadow duration-150 bg-white;
+           focus:outline-none focus:ring-4 focus:ring-orange-200/50
+           focus:border-orange-300
+           transition-all duration-150 bg-white;
   }
 
   .label {
@@ -70,6 +136,84 @@
 
   .section-divider {
     @apply border-t border-orange-100 my-4;
+  }
+}
+
+/* ── ParamInput: hide browser-native number spinners ─────────
+   Native Chromium spinners in Electron look boxy and low-contrast.
+   Hiding them makes the polished custom input read cleanly. */
+.param-number-input::-webkit-outer-spin-button,
+.param-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.param-number-input {
+  -moz-appearance: textfield;
+}
+
+/* ── Tooltip pop animation (for ParamInput help bubble) ───── */
+@keyframes tooltip-pop {
+  from {
+    opacity: 0;
+    transform: translateY(2px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.tooltip-pop {
+  animation: tooltip-pop 120ms ease-out;
+  transform-origin: bottom right;
+}
+
+/* ── Page transition: mascot cat sweep + cream veil ─────────
+   Triggered by <PageTransition> whenever the active page changes.
+   The veil covers the moment React swaps the page content (~200ms)
+   while the mascot sprite dashes horizontally across the screen. */
+
+@keyframes cat-sweep-ltr {
+  0%   { transform: translate(-40vw, -50%) rotate(-2deg); }
+  50%  { transform: translate(50vw, calc(-50% - 10px)) rotate(0deg); }
+  100% { transform: translate(140vw, -50%) rotate(2deg); }
+}
+
+@keyframes cat-sweep-rtl {
+  0%   { transform: translate(140vw, -50%) scaleX(-1) rotate(-2deg); }
+  50%  { transform: translate(50vw, calc(-50% - 10px)) scaleX(-1) rotate(0deg); }
+  100% { transform: translate(-40vw, -50%) scaleX(-1) rotate(2deg); }
+}
+
+@keyframes veil-pulse {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.cat-sweep-ltr {
+  animation: cat-sweep-ltr 900ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  will-change: transform;
+}
+
+.cat-sweep-rtl {
+  animation: cat-sweep-rtl 900ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  will-change: transform;
+}
+
+.page-veil {
+  animation: veil-pulse 900ms ease-in-out forwards;
+  will-change: opacity;
+  background:
+    radial-gradient(ellipse at center, #fef9f0 0%, #fef9f0 60%, #fdf0dc 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-sweep-ltr,
+  .cat-sweep-rtl,
+  .page-veil {
+    animation: none;
+    display: none;
   }
 }
 

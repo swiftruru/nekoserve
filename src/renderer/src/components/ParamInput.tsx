@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 
 interface ParamInputProps {
   label: string
@@ -12,6 +12,79 @@ interface ParamInputProps {
   disabled?: boolean
 }
 
+/**
+ * Small circular "info" help button with a tooltip that appears on hover.
+ * Kept as a local sub-component so the main ParamInput body stays flat.
+ */
+function HelpButton({ label, tooltip }: { label: string; tooltip: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="flex h-4 w-4 items-center justify-center rounded-full
+                   bg-orange-50 text-[10px] font-semibold text-orange-400
+                   ring-1 ring-inset ring-orange-100
+                   transition-colors duration-150
+                   hover:bg-orange-100 hover:text-orange-600 hover:ring-orange-200
+                   focus:outline-none focus:ring-2 focus:ring-orange-400"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        aria-label={label}
+      >
+        i
+      </button>
+      {open && (
+        <div
+          role="tooltip"
+          className="pointer-events-none absolute bottom-6 right-0 z-20 w-56
+                     rounded-xl bg-gray-900/95 px-3 py-2.5 text-xs font-normal
+                     leading-relaxed text-white shadow-xl backdrop-blur-sm
+                     tooltip-pop"
+        >
+          {tooltip}
+          <div className="absolute -bottom-1 right-2 h-2.5 w-2.5 rotate-45 bg-gray-900/95" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Value progress bar: a thin gradient fill that shows where `value`
+ * currently sits within [min, max]. Clamped to 0–100 %. Only rendered
+ * when both min and max are known.
+ */
+function ValueBar({
+  value,
+  min,
+  max,
+  disabled,
+}: {
+  value: number
+  min: number
+  max: number
+  disabled: boolean
+}) {
+  const range = max - min
+  const pct = range > 0 ? Math.max(0, Math.min(100, ((value - min) / range) * 100)) : 0
+  return (
+    <div
+      className="h-1 overflow-hidden rounded-full bg-orange-50"
+      aria-hidden
+    >
+      <div
+        className={`h-full rounded-full bg-gradient-to-r from-orange-300 to-orange-500
+                    transition-all duration-200 ease-out
+                    ${disabled ? 'opacity-40' : ''}`}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  )
+}
+
 export default function ParamInput({
   label,
   value,
@@ -23,51 +96,79 @@ export default function ParamInput({
   unit,
   disabled = false,
 }: ParamInputProps) {
-  const [showTooltip, setShowTooltip] = useState(false)
+  const inputId = useId()
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = parseFloat(e.target.value)
-    if (!isNaN(raw)) {
+    if (!Number.isNaN(raw)) {
       onChange(raw)
     }
   }
 
+  const hasRange = typeof min === 'number' && typeof max === 'number'
+
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-1">
-        <label className="text-sm font-medium text-gray-700">{label}</label>
-        {unit && <span className="text-xs text-gray-400">({unit})</span>}
+    <div className="flex flex-col gap-1.5">
+      {/* ── Label row ──────────────────────────────────
+           min-h-[2.4em] reserves space for two lines of the uppercase label
+           so single-line and two-line labels all align horizontally, keeping
+           sibling inputs on the same baseline regardless of language or
+           label length. */}
+      <div className="flex items-start gap-1.5 min-h-[2.4em]">
+        <label
+          htmlFor={inputId}
+          className="flex-1 text-[11px] font-semibold uppercase tracking-wide
+                     text-gray-500 leading-[1.2]"
+        >
+          {label}
+        </label>
         {tooltip && (
-          <div className="relative ml-auto">
-            <button
-              type="button"
-              className="w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs flex items-center justify-center
-                         hover:bg-orange-200 hover:text-orange-600 transition-colors"
-              onMouseEnter={() => setShowTooltip(true)}
-              onMouseLeave={() => setShowTooltip(false)}
-              aria-label={label}
-            >
-              ?
-            </button>
-            {showTooltip && (
-              <div className="absolute right-0 bottom-6 z-10 w-52 bg-gray-800 text-white text-xs rounded-lg p-2.5 shadow-lg leading-relaxed">
-                {tooltip}
-                <div className="absolute bottom-[-5px] right-1.5 w-2.5 h-2.5 bg-gray-800 rotate-45" />
-              </div>
-            )}
+          <div className="flex-shrink-0 pt-[1px]">
+            <HelpButton label={label} tooltip={tooltip} />
           </div>
         )}
       </div>
-      <input
-        type="number"
-        value={value}
-        onChange={handleChange}
-        min={min}
-        max={max}
-        step={step}
-        disabled={disabled}
-        className="input-field"
-      />
+
+      {/* ── Input row ────────────────────────────────── */}
+      <div className="relative group">
+        <input
+          id={inputId}
+          type="number"
+          value={value}
+          onChange={handleChange}
+          min={min}
+          max={max}
+          step={step}
+          disabled={disabled}
+          className={`
+            param-number-input
+            w-full rounded-xl border border-orange-100 bg-cream-50
+            px-3 py-2 pr-10
+            text-base font-semibold tabular-nums text-gray-800
+            transition-all duration-150 ease-out
+            hover:border-orange-200 hover:bg-white
+            focus:border-orange-300 focus:bg-white
+            focus:outline-none focus:ring-4 focus:ring-orange-200/50
+            disabled:bg-gray-50
+            disabled:text-gray-400 disabled:opacity-70
+          `}
+        />
+        {unit && (
+          <span
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2
+                       text-[11px] font-medium uppercase tracking-wide
+                       text-gray-400 group-hover:text-orange-400 transition-colors"
+            aria-hidden
+          >
+            {unit}
+          </span>
+        )}
+      </div>
+
+      {/* ── Value range fill bar ─────────────────────── */}
+      {hasRange && (
+        <ValueBar value={value} min={min} max={max} disabled={disabled} />
+      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Page } from '../types'
 import { getLearnContent } from '../data/learnContent'
@@ -12,10 +12,23 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
   const { t, i18n } = useTranslation(['learn', 'nav'])
   const learnContent = getLearnContent(i18n.resolvedLanguage ?? i18n.language)
   const sections = learnContent[page] ?? []
-  // Track which section is open; default to first
+
+  // Which section is currently expanded. Starts as the first section's id
+  // so the panel shows something useful the moment it opens. When the user
+  // toggles a section off we allow openId to become '' (all collapsed).
   const [openId, setOpenId] = useState<string>(() => sections[0]?.id ?? '')
 
-  const firstId = sections[0]?.id ?? ''
+  // When the active app page changes, reset the expanded section back to
+  // the new page's first section. Without this the sidebar would appear
+  // empty when switching pages if the previous openId does not exist in
+  // the new page's section list.
+  useEffect(() => {
+    setOpenId(learnContent[page]?.[0]?.id ?? '')
+    // We intentionally only depend on `page`; `learnContent` is a stable
+    // reference per locale and we don't want locale changes to re-open
+    // a section the user already collapsed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
 
   function toggle(id: string) {
     setOpenId((prev) => (prev === id ? '' : id))
@@ -32,10 +45,28 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
         <button
           type="button"
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors text-lg leading-none"
+          className="flex h-7 w-7 items-center justify-center rounded-lg
+                     text-orange-500 hover:bg-orange-100 hover:text-orange-700
+                     active:bg-orange-200 transition-colors
+                     focus:outline-none focus:ring-2 focus:ring-orange-400"
           aria-label={t('learn:closeAria')}
+          title={t('learn:closeAria')}
         >
-          ×
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
         </button>
       </div>
 
@@ -53,7 +84,7 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
         ) : (
           <div className="divide-y divide-orange-50">
             {sections.map((section) => {
-              const isOpen = openId === section.id || (openId === '' && section.id === firstId)
+              const isOpen = openId === section.id
               return (
                 <div key={section.id}>
                   {/* Accordion header */}

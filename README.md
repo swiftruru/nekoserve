@@ -84,6 +84,9 @@ First-launch tips for unsigned builds:
 - **Progress Animation**: exponential progress bar with elapsed-time counter during simulation
 - **Window State Persistence**: restores window size and position on relaunch
 - **Chart → Event Log Linking**: click a pie chart segment to jump directly to a filtered event log
+- **Page Transition Animation**: a mascot cat dashes across a cream veil whenever the active tab changes. Direction-aware (left-to-right for "forward" navigation, right-to-left for "back"), driven by a shared `PAGE_ORDER` list. The React unmount/mount happens mid-animation while the veil fully covers the viewport, hiding any content flash. Fully bypassed when the OS reports `prefers-reduced-motion: reduce`.
+- **Custom In-Window Cursor**: a pixel-art cat paw / arrow replaces the native cursor while the pointer is inside the app window. Hover over interactive controls swaps to a tabby-cat-with-coffee sprite with a soft drop shadow; clicks dip the sprite briefly for tactile feedback. Input fields, drag regions, and the window exterior fall back to the native cursor so typing, window dragging, and crossing window edges all feel correct. Built on a zero-rerender `useMousePosition` ref + `requestAnimationFrame` render loop, so it costs nothing on every frame.
+- **Polished Parameter Inputs**: each of the 13 settings uses a redesigned `ParamInput` control with an uppercase tracking-wide label, an in-field floating unit, a hover-only `i` help tooltip (with pop animation and arrow), and a thin gradient value-in-range fill bar that shows where the current value sits between min and max. Labels reserve two lines of vertical space so long bilingual labels stay baseline-aligned with short ones.
 
 ### Export
 
@@ -358,10 +361,17 @@ nekoserve/
 │       ├── pages/                # SettingsPage, ResultsPage, EventLogPage, HowItWorksPage, AboutPage
 │       ├── components/
 │       │   ├── KpiCard, ScenarioButtons, ComparisonTable, EventLogTable, LanguageSwitcher, LearningPanel
+│       │   ├── ParamInput.tsx    # Redesigned number input: floating unit, help tooltip, range bar
+│       │   ├── PageTransition.tsx # Mascot-cat sweep + cream veil overlay on page change
+│       │   ├── CustomCursor.tsx  # In-window pixel-art cursor overlay with hover / press states
 │       │   ├── Math.tsx          # <InlineMath> / <BlockMath> KaTeX wrappers
 │       │   └── charts/           # UtilizationChart, WaitTimeChart, CustomerPieChart
 │       ├── hooks/
-│       │   └── useSimulation.ts  # Simulation state, history, elapsed timer
+│       │   ├── useSimulation.ts  # Simulation state, history, elapsed timer
+│       │   └── useMousePosition.ts # Zero-rerender cursor position tracker for CustomCursor
+│       ├── assets/
+│       │   ├── mascot-cat.png    # Page-transition mascot sprite
+│       │   └── cursors/          # CustomCursor sprites (default + hover) and archived source
 │       ├── i18n/                 # react-i18next setup + typed JSON locales
 │       ├── data/
 │       │   ├── scenarios.ts      # Built-in + custom scenario presets (localStorage)
