@@ -32,11 +32,11 @@ VALID_EVENT_TYPES = {
     "ORDER_READY",
     "CUSTOMER_START_DINING",
     "CUSTOMER_FINISH_DINING",
-    "CUSTOMER_WAIT_CAT",
-    "CUSTOMER_START_CAT_INTERACTION",
-    "CUSTOMER_FINISH_CAT_INTERACTION",
     "CUSTOMER_LEAVE",
     "CUSTOMER_ABANDON",
+    # v0.4.0: autonomous cat visits replace customer-initiated interaction
+    "CAT_VISIT_SEAT",
+    "CAT_LEAVE_SEAT",
     "CAT_START_REST",
     "CAT_END_REST",
 }
@@ -64,6 +64,8 @@ def test_metrics_has_all_fields():
         "avgWaitForOrder",
         "avgTotalStayTime",
         "catInteractionRate",
+        "avgCatVisitsPerCustomer",
+        "noCatVisitRate",
         "seatUtilization",
         "staffUtilization",
         "catUtilization",
@@ -147,6 +149,33 @@ def test_event_log_has_arrive_events():
     logs = _run(DEFAULT_CONFIG)["eventLog"]
     arrive_events = [e for e in logs if e["eventType"] == "CUSTOMER_ARRIVE"]
     assert len(arrive_events) > 0
+
+
+def test_cat_visits_happen_autonomously():
+    """v0.4.0: cats proactively visit seated customers. A default 240-min
+    run with 3 cats should produce a non-trivial number of CAT_VISIT_SEAT
+    events and roughly matching CAT_LEAVE_SEAT events."""
+    cfg = DEFAULT_CONFIG
+    logs = _run(cfg)["eventLog"]
+    visits = [e for e in logs if e["eventType"] == "CAT_VISIT_SEAT"]
+    leaves = [e for e in logs if e["eventType"] == "CAT_LEAVE_SEAT"]
+    assert len(visits) > 0, "no cat visits happened — cats may not be spawning"
+    # Every completed visit has a matching leave. At simulation end, up to
+    # `catCount` cats can be mid-visit, so we tolerate that many unclosed
+    # visits.
+    assert len(leaves) >= len(visits) - cfg.catCount
+
+
+def test_cat_visit_events_carry_cat_id_in_resource():
+    """Cat visit / leave events should tag the cat identity in resourceId so
+    the renderer can track which cat went where."""
+    logs = _run(DEFAULT_CONFIG)["eventLog"]
+    visits = [e for e in logs if e["eventType"] == "CAT_VISIT_SEAT"]
+    assert visits, "no visits to inspect"
+    for e in visits:
+        assert "resourceId" in e and e["resourceId"].startswith("貓-"), (
+            f"visit event missing cat resourceId: {e}"
+        )
 
 
 def test_timestamps_within_simulation_duration():

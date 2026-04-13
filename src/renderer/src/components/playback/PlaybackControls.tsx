@@ -140,6 +140,7 @@ function ShortcutHelp() {
           <ShortcutRow keys=", ." label={t('playback:shortcuts.stepEvent')} />
           <ShortcutRow keys="0" label={t('playback:shortcuts.reset')} />
           <ShortcutRow keys="1–5" label={t('playback:shortcuts.speed')} />
+          <ShortcutRow keys="Esc" label={t('playback:shortcuts.closeInspect')} />
           <div className="absolute -bottom-1 right-3 h-2.5 w-2.5 rotate-45 bg-gray-900/95" />
         </div>
       )}

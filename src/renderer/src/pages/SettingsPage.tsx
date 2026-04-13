@@ -215,7 +215,16 @@ export default function SettingsPage({
         {/* ── Cat interaction ────────────────────────── */}
         <div className="card">
           <div className="card-title">{t('settings:sections.catInteraction')}</div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <ParamInput
+              label={paramLabel('catIdleInterval')}
+              value={config.catIdleInterval}
+              onChange={(v) => set('catIdleInterval', Math.max(0.5, v))}
+              min={0.5} max={60} step={0.5}
+              unit={unitMin}
+              tooltip={paramHelp('catIdleInterval')}
+              disabled={isRunning}
+            />
             <ParamInput
               label={paramLabel('catInteractionTime')}
               value={config.catInteractionTime}

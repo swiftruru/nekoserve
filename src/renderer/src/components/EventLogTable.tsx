@@ -21,11 +21,10 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   ORDER_READY:                  'bg-green-100 text-green-700',
   CUSTOMER_START_DINING:        'bg-orange-100 text-orange-700',
   CUSTOMER_FINISH_DINING:       'bg-orange-100 text-orange-700',
-  CUSTOMER_WAIT_CAT:            'bg-pink-100 text-pink-700',
-  CUSTOMER_START_CAT_INTERACTION: 'bg-pink-200 text-pink-800',
-  CUSTOMER_FINISH_CAT_INTERACTION: 'bg-pink-100 text-pink-700',
   CUSTOMER_LEAVE:               'bg-gray-100 text-gray-600',
   CUSTOMER_ABANDON:             'bg-red-100 text-red-700',
+  CAT_VISIT_SEAT:               'bg-pink-200 text-pink-800',
+  CAT_LEAVE_SEAT:               'bg-pink-100 text-pink-700',
   CAT_START_REST:               'bg-indigo-100 text-indigo-700',
   CAT_END_REST:                 'bg-indigo-100 text-indigo-600',
 }

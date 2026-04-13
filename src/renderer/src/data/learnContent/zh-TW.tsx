@@ -94,17 +94,22 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <Formula>
             seats = Resource(env, capacity=seatCount)
             <br />staff = Resource(env, capacity=staffCount)
-            <br />cats  = Resource(env, capacity=catCount)
+            <br />{'# v0.4.0: 貓咪不是 Resource，'}
+            <br />{'# 每隻貓都是獨立的 process'}
+            <br />for i in range(catCount):
+            <br />{'    env.process(cat(i))'}
           </Formula>
-          <P>顧客流程：</P>
+          <P>顧客流程（v0.4.0 版）：</P>
           <UL>
             <LI>request(seats) → 等待或立即入座</LI>
             <LI>request(staff) → 等店員空閒點餐</LI>
-            <LI>request(cats) → 等貓咪可互動</LI>
+            <LI>用餐，期間可能被貓咪拜訪</LI>
+            <LI>等身上所有貓離開才能起身</LI>
           </UL>
           <Note>
-            🔍 三個資源形成三條獨立佇列。
-            <br />哪條佇列等待時間最長 = 該資源是系統瓶頸。
+            🔍 Resource 形成的佇列只有座位與店員。
+            <br />貓咪改成 <B>主動式 agent</B>：自己挑一位入座的顧客走過去停留。
+            <br />因此貓咪不是一條佇列，而是一群獨立的角色。
           </Note>
         </div>
       ),
@@ -178,7 +183,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             <LI>等座位（Wq1）</LI>
             <LI>等點餐完成（Wq2 + 製作時間）</LI>
             <LI>用餐時間（Ws1）</LI>
-            <LI>等貓咪互動（Wq3 + 互動時間）</LI>
+            <LI>等身上所有拜訪中的貓離開（Wq3，取決於當下幾隻貓來拜訪）</LI>
           </UL>
           <P>
             <B>M/M/c 佇列的 Erlang-C 公式</B>給出理論等待時間，
@@ -313,7 +318,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
       title: '顧客旅程事件順序圖',
       content: (
         <div>
-          <P><B>正常完成的顧客旅程：</B></P>
+          <P><B>正常完成的顧客旅程（v0.4.0）：</B></P>
           <div className="text-xs text-gray-600 font-mono bg-gray-50 rounded-lg p-3 my-2 select-text leading-6">
             ARRIVE<br />
             ↓ [若無空座位]<br />
@@ -322,22 +327,29 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             ORDER → 開始製作<br />
             ↓<br />
             ORDER_READY → START_DINING<br />
-            ↓<br />
+            ↓ [用餐期間貓咪可能主動拜訪]<br />
             FINISH_DINING<br />
-            ↓ [等貓咪]<br />
-            WAIT_CAT → START_INTERACTION<br />
-            ↓<br />
-            FINISH_INTERACTION → LEAVE
+            ↓ [等身上所有貓離開]<br />
+            LEAVE
+          </div>
+          <P><B>交錯發生的貓咪事件（獨立於顧客旅程）：</B></P>
+          <div className="text-xs text-gray-600 font-mono bg-pink-50 rounded-lg p-3 my-2 select-text leading-6">
+            CAT_VISIT_SEAT<br />
+            ↓ [互動時間，可能與其他顧客同時發生]<br />
+            CAT_LEAVE_SEAT<br />
+            ↓ [有機率觸發]<br />
+            CAT_START_REST → CAT_END_REST
           </div>
           <P><B>短路（放棄）情境：</B></P>
           <div className="text-xs text-gray-600 font-mono bg-red-50 rounded-lg p-3 my-2 select-text">
             ARRIVE → WAIT_SEAT → ABANDON
           </div>
-          <P>
-            <B>CAT_START_REST / CAT_END_REST</B>
-            是<B>資源狀態事件</B>，不屬於顧客旅程，
-            代表貓咪在互動後進入休息狀態。
-          </P>
+          <Note>
+            💡 <B>CAT_VISIT_SEAT</B> / <B>CAT_LEAVE_SEAT</B> 的 <code className="text-xs bg-orange-100 px-1 rounded">resourceId</code>
+            會帶貓的 ID（例如 <code className="text-xs bg-orange-100 px-1 rounded">貓-2</code>），
+            <code className="text-xs bg-orange-100 px-1 rounded">customerId</code> 是被拜訪的那位顧客。
+            同一位顧客在用餐期間可能被多隻貓輪流或同時拜訪。
+          </Note>
         </div>
       ),
     },
@@ -362,6 +374,144 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <Example>
             💡 課堂實驗：用 seed=42 跑 3 次「平日白天」情境，
             驗證結果完全可重現。再換 seed=123，比較差異。
+          </Example>
+        </div>
+      ),
+    },
+  ],
+
+  // ══════════════════════════════════════════════════════════
+  // 模擬回放頁
+  // ══════════════════════════════════════════════════════════
+  playback: [
+    {
+      id: 'playback-how-to-read',
+      icon: '🎬',
+      title: '動畫怎麼讀',
+      content: (
+        <div>
+          <P>
+            咖啡廳平面圖從左到右分成七個區域，顧客就像一條生產線上的工件，
+            依序經過每一區：
+          </P>
+          <UL>
+            <LI><B>🚪 入口</B>：顧客剛到達的位置</LI>
+            <LI><B>等座位</B>：座位滿了就在這裡排隊</LI>
+            <LI><B>🪑 座位區</B>：N 格，對應 `seatCount` 參數</LI>
+            <LI><B>👩‍🍳 廚房</B>：M 位店員，忙碌時會亮橘色</LI>
+            <LI><B>🐱 貓咪區</B>：K 隻貓的家；貓在這裡閒晃，想拜訪時會主動走到座位旁</LI>
+            <LI><B>🏁 出口</B>：完成整趟或放棄的顧客淡出於此</LI>
+          </UL>
+          <P>每位顧客的 emoji 會隨階段變換：</P>
+          <UL>
+            <LI>🙂 等待座位</LI>
+            <LI>📝 點餐中</LI>
+            <LI>⏳ 等待餐點</LI>
+            <LI>🍽️ 用餐中</LI>
+            <LI>😺 被貓拜訪中（身上有至少一隻貓）</LI>
+            <LI>😿 放棄離開</LI>
+            <LI>👋 離開中</LI>
+          </UL>
+          <Note>
+            🐈 <B>貓咪是自主 agent</B>：每隻貓各自在貓咪區閒晃，間隔時間一到就
+            隨機挑一位正在座位上的顧客走過去停留。同一位顧客可能同時被好幾隻
+            貓拜訪。顧客要等身上的貓全部離開才能起身，因此「貓很黏」會拉長總停留時間。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'playback-controls',
+      icon: '⌨',
+      title: '操作方式',
+      content: (
+        <div>
+          <P>控制列從左到右是：</P>
+          <UL>
+            <LI><B>🔄 重播</B>：時間拉回 0</LI>
+            <LI><B>⏮ / ⏭</B>：跳到上一 / 下一個事件發生的時間點</LI>
+            <LI><B>▶ / ⏸</B>：播放 / 暫停</LI>
+            <LI><B>速度按鈕</B>：0.5× / 1× / 2× / 4× / 8×（預設 4×）</LI>
+          </UL>
+          <P>
+            時間軸拖拉條下方的橘色長條是<B>事件密度圖</B>：
+            越亮的地方表示那段時間發生的事件越多，通常是瓶頸時段或放棄潮。
+            拖拉時會自動暫停，放開後由你決定要不要續播。
+          </P>
+          <P><B>鍵盤快捷鍵（輸入框有焦點時自動停用）：</B></P>
+          <UL>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">Space</code>：播放 / 暫停</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">← →</code>：前後跳 10 分鐘</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">, .</code>：逐事件</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">0</code>：重播</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">1-5</code>：切換速度</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">Esc</code>：關閉詳情卡片</LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'playback-inspect',
+      icon: '🔍',
+      title: '挖掘細節',
+      content: (
+        <div>
+          <P>
+            <B>點座位或貓</B>
+            會彈出一張小卡片，顯示目前坐在那裡（或正在摸的）顧客編號、
+            所在階段、已停留多少模擬分鐘。再點一次同一格即可關閉。
+          </P>
+          <P>
+            <B>說話泡泡</B>會在關鍵事件觸發時浮現約 0.8 分鐘：
+            「來囉 ✨」「點餐了！」「好好吃 🍽️」「摸摸 💕」「不等了 😤」。
+            這些是純 reducer 狀態，拖拉時間軸後會精確重建，
+            不會因為 scrub 而錯位。
+          </P>
+          <P>
+            <B>事件紀錄列連動</B>：回放播放時，
+            事件紀錄頁對應那一列會自動高亮並捲到可視範圍。
+            反向也成立——點事件紀錄裡的任一列，會跳回這裡並把時間設到該事件。
+            兩個分頁共用同一條時間軸。
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'playback-teaching',
+      icon: '🧠',
+      title: '教學切入點',
+      content: (
+        <div>
+          <P>建議在課堂上這樣用這個分頁：</P>
+          <UL>
+            <LI>
+              <B>找瓶頸</B>：調快到 4× 觀察哪個區域最早「塞滿」。
+              通常是座位（容量不足）或貓咪（全都在休息或都跑去拜訪別人了）。
+            </LI>
+            <LI>
+              <B>觀察貓咪行為</B>：把 `catIdleInterval` 調到 2 → 貓變得超黏人，
+              幾乎每位顧客隨時都有貓在身邊；調到 20 → 貓很懶，
+              很多顧客一次都沒被拜訪（noCatVisitRate 會飆高）。
+            </LI>
+            <LI>
+              <B>觀察放棄事件</B>：把 `maxWaitTime` 調小（例如 2 分鐘），
+              再調高 `customerArrivalInterval` 的倒數，就能刻意製造一連串 😿。
+              用逐事件 step 看每一位顧客從到達到放棄的完整序列。
+            </LI>
+            <LI>
+              <B>貓把人留住的效應</B>：顧客必須等身上的貓全走才能離開。
+              調高 `catInteractionTime` 會讓 `avgTotalStayTime` 延長，
+              即使用餐時間完全沒變 —— 這是「貓咪拉長停留」的直接證據。
+            </LI>
+            <LI>
+              <B>比較 1× 和 8×</B>：1× 能看到每隻貓從貓區走到座位再走回來的完整軌跡，
+              8× 則凸顯整體流量與瓶頸形成的時序。
+            </LI>
+          </UL>
+          <Example>
+            💡 搭配事件紀錄頁的搜尋框：輸入單一顧客編號（例如 <code className="text-xs bg-orange-100 px-1 rounded">#12</code>）
+            篩出該顧客的完整事件序列，再回到這裡用時間軸對照，
+            能把 trace 和動畫兩種視角串起來。
           </Example>
         </div>
       ),

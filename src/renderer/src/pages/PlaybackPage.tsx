@@ -193,6 +193,11 @@ export default function PlaybackPage({
       '3': () => setSpeed(SPEED_OPTIONS[2]),
       '4': () => setSpeed(SPEED_OPTIONS[3]),
       '5': () => setSpeed(SPEED_OPTIONS[4]),
+      Escape: () => {
+        // Only act when an inspect popover is open, otherwise stay inert so
+        // Escape remains available for any future global dismiss behaviour.
+        if (focus) setFocus(null)
+      },
     },
     true,
   )

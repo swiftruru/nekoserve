@@ -22,8 +22,12 @@
       "description": "等待座位超時後放棄離開的比例"
     },
     "catInteractionRate": {
-      "label": "貓咪互動率",
-      "description": "成功與貓咪互動的顧客比例"
+      "label": "至少被貓拜訪率",
+      "description": "完成服務的顧客中，至少被一隻貓拜訪過的比例"
+    },
+    "avgCatVisitsPerCustomer": {
+      "label": "平均被貓拜訪次數",
+      "description": "每位完成服務的顧客平均被幾隻貓（次）拜訪"
     },
     "avgTotalStayTime": {
       "label": "平均總停留時間",

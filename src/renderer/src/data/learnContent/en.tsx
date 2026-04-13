@@ -106,17 +106,23 @@ export const LEARN_CONTENT_EN: LearnContent = {
           <Formula>
             seats = Resource(env, capacity=seatCount)
             <br />staff = Resource(env, capacity=staffCount)
-            <br />cats  = Resource(env, capacity=catCount)
+            <br />{'# v0.4.0: cats are NOT a Resource; each cat'}
+            <br />{'# runs its own autonomous process'}
+            <br />for i in range(catCount):
+            <br />{'    env.process(cat(i))'}
           </Formula>
-          <P>Customer flow:</P>
+          <P>Customer flow (v0.4.0):</P>
           <UL>
             <LI>request(seats) → wait for or immediately take a seat</LI>
             <LI>request(staff) → wait for a free staff to take the order</LI>
-            <LI>request(cats) → wait for an available cat</LI>
+            <LI>dine, possibly visited by cats at the seat</LI>
+            <LI>wait for all visiting cats to leave before standing up</LI>
           </UL>
           <Note>
-            🔍 Three resources form three independent queues.
-            <br />The queue with the longest wait is the system bottleneck.
+            🔍 Only seats and staff form queues.
+            <br />Cats are now <B>autonomous agents</B>: each picks a seated customer
+            and walks over to them. There is no cat queue — instead each cat is a
+            little character with its own life cycle.
           </Note>
         </div>
       ),
@@ -197,7 +203,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             <LI>Wait for seat (Wq1)</LI>
             <LI>Wait for order completion (Wq2 + prep time)</LI>
             <LI>Dining (Ws1)</LI>
-            <LI>Wait for cat interaction (Wq3 + interaction time)</LI>
+            <LI>Wait for any visiting cats to leave before standing up (Wq3; varies with how many cats are currently on the customer)</LI>
           </UL>
           <P>
             The <B>Erlang-C formula</B> for M/M/c queues gives a theoretical wait time
@@ -332,7 +338,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
       title: 'Customer journey event map',
       content: (
         <div>
-          <P><B>A complete (happy-path) customer journey:</B></P>
+          <P><B>A complete (happy-path) customer journey (v0.4.0):</B></P>
           <div className="text-xs text-gray-600 font-mono bg-gray-50 rounded-lg p-3 my-2 select-text leading-6">
             ARRIVE<br />
             ↓ [if no free seat]<br />
@@ -341,22 +347,31 @@ export const LEARN_CONTENT_EN: LearnContent = {
             ORDER → start preparing<br />
             ↓<br />
             ORDER_READY → START_DINING<br />
-            ↓<br />
+            ↓ [cats may drop by during dining]<br />
             FINISH_DINING<br />
-            ↓ [wait for cat]<br />
-            WAIT_CAT → START_INTERACTION<br />
-            ↓<br />
-            FINISH_INTERACTION → LEAVE
+            ↓ [wait for any visiting cats to leave]<br />
+            LEAVE
+          </div>
+          <P><B>Interleaved cat events (independent of any single customer):</B></P>
+          <div className="text-xs text-gray-600 font-mono bg-pink-50 rounded-lg p-3 my-2 select-text leading-6">
+            CAT_VISIT_SEAT<br />
+            ↓ [visit duration; may overlap other customers]<br />
+            CAT_LEAVE_SEAT<br />
+            ↓ [probabilistic]<br />
+            CAT_START_REST → CAT_END_REST
           </div>
           <P><B>Short-circuit (abandon) path:</B></P>
           <div className="text-xs text-gray-600 font-mono bg-red-50 rounded-lg p-3 my-2 select-text">
             ARRIVE → WAIT_SEAT → ABANDON
           </div>
-          <P>
-            <B>CAT_START_REST / CAT_END_REST</B> are <B>resource state events</B>,
-            not part of any customer journey; they record a cat entering rest after
-            an interaction.
-          </P>
+          <Note>
+            💡 <B>CAT_VISIT_SEAT</B> / <B>CAT_LEAVE_SEAT</B> carry the cat identity
+            in <code className="text-xs bg-orange-100 px-1 rounded">resourceId</code>
+            (e.g. <code className="text-xs bg-orange-100 px-1 rounded">貓-2</code>);
+            <code className="text-xs bg-orange-100 px-1 rounded">customerId</code> is the
+            customer being visited. A single customer may be visited by several cats
+            during their stay, possibly overlapping in time.
+          </Note>
         </div>
       ),
     },
@@ -382,6 +397,157 @@ export const LEARN_CONTENT_EN: LearnContent = {
             💡 Classroom experiment: run the "Weekday daytime" scenario three times
             with seed=42 and verify the logs are identical. Then switch to seed=123
             and compare.
+          </Example>
+        </div>
+      ),
+    },
+  ],
+
+  // ══════════════════════════════════════════════════════════
+  // Simulation Playback page
+  // ══════════════════════════════════════════════════════════
+  playback: [
+    {
+      id: 'playback-how-to-read',
+      icon: '🎬',
+      title: 'Reading the animation',
+      content: (
+        <div>
+          <P>
+            The café floor plan runs left-to-right through seven zones.
+            Customers flow through them like parts on an assembly line:
+          </P>
+          <UL>
+            <LI><B>🚪 Door</B>: where customers arrive</LI>
+            <LI><B>Seat queue</B>: where they wait when all seats are full</LI>
+            <LI><B>🪑 Seats</B>: N cells, matching the `seatCount` parameter</LI>
+            <LI><B>👩‍🍳 Kitchen</B>: M staff dots that light up orange when busy</LI>
+            <LI><B>🐱 Cat zone</B>: home base for K cats; each wanders out to a seat when it decides to visit</LI>
+            <LI><B>🏁 Exit</B>: served or abandoned customers fade out here</LI>
+          </UL>
+          <P>Each customer's emoji swaps to match their current stage:</P>
+          <UL>
+            <LI>🙂 Waiting for seat</LI>
+            <LI>📝 Ordering</LI>
+            <LI>⏳ Waiting for food</LI>
+            <LI>🍽️ Dining</LI>
+            <LI>😺 Being visited by at least one cat</LI>
+            <LI>😿 Abandoning</LI>
+            <LI>👋 Leaving</LI>
+          </UL>
+          <Note>
+            🐈 <B>Cats are autonomous agents</B>. Each cat wanders in the cat
+            zone, waits an exponential idle interval, then picks a random
+            seated customer and walks over. A customer may be visited by
+            multiple cats at once, and must wait for all of them to leave
+            before standing up — so "clingy cats" directly inflate total stay time.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'playback-controls',
+      icon: '⌨',
+      title: 'Controls',
+      content: (
+        <div>
+          <P>The transport bar, left to right:</P>
+          <UL>
+            <LI><B>🔄 Reset</B>: rewind to t=0</LI>
+            <LI><B>⏮ / ⏭</B>: jump to the previous / next event timestamp</LI>
+            <LI><B>▶ / ⏸</B>: play / pause</LI>
+            <LI><B>Speed</B>: 0.5× / 1× / 2× / 4× / 8× (default 4×)</LI>
+          </UL>
+          <P>
+            The orange bars under the scrubber form an <B>event-density
+            heatmap</B>: brighter columns mean more events fired in that
+            window, which usually marks bottlenecks or waves of abandons.
+            Dragging the scrubber pauses playback so you can inspect a
+            specific moment.
+          </P>
+          <P><B>Keyboard shortcuts (disabled while an input is focused):</B></P>
+          <UL>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">Space</code>: play / pause</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">← →</code>: seek ±10 minutes</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">, .</code>: step events</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">0</code>: reset</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">1-5</code>: change speed</LI>
+            <LI><code className="text-xs bg-orange-100 px-1 rounded">Esc</code>: close inspect card</LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'playback-inspect',
+      icon: '🔍',
+      title: 'Digging for details',
+      content: (
+        <div>
+          <P>
+            <B>Click any seat or cat</B> to open a small card showing the
+            current occupant's ID, stage and elapsed stay time. Click the
+            same slot again (or the background) to dismiss.
+          </P>
+          <P>
+            <B>Speech bubbles</B> float above customers for about 0.8 sim
+            minutes at key moments: "Here! ✨", "Ordering!", "Yum 🍽️",
+            "So soft 💕", "Giving up 😤". They live in the reducer, so
+            scrubbing the timeline always rebuilds the exact set of bubbles
+            that should be visible at any moment.
+          </P>
+          <P>
+            <B>Event log linking</B>: while playback is running, the matching
+            row in the Event Log page is highlighted and auto-scrolled into
+            view. The reverse also works — click any row in the log and the
+            playback cursor seeks to that event. Both pages share a single
+            timeline.
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'playback-teaching',
+      icon: '🧠',
+      title: 'Teaching angles',
+      content: (
+        <div>
+          <P>Ways to use the playback page in class:</P>
+          <UL>
+            <LI>
+              <B>Find the bottleneck</B>: run at 4× and watch which zone
+              saturates first — usually seats (capacity), or cats (all
+              resting or already visiting other customers).
+            </LI>
+            <LI>
+              <B>Tune cat friendliness</B>: drop `catIdleInterval` to 2 and
+              watch cats become hyper-clingy (almost every customer has a
+              cat on them); raise it to 20 and see `noCatVisitRate` climb
+              as customers leave untouched.
+            </LI>
+            <LI>
+              <B>Provoke abandons</B>: lower `maxWaitTime` (say, 2 minutes),
+              raise arrival rate, and you'll see a wave of 😿. Use the step
+              buttons to walk through each abandoning customer one event at
+              a time.
+            </LI>
+            <LI>
+              <B>"Cats keep people seated" effect</B>: raise
+              `catInteractionTime` and `avgTotalStayTime` rises even though
+              dining time is unchanged — direct evidence that cats inflate
+              occupancy.
+            </LI>
+            <LI>
+              <B>Compare 1× vs 8×</B>: 1× lets you watch individual cats
+              walk from their zone to a seat and back; 8× emphasises the
+              aggregate flow and bottleneck formation.
+            </LI>
+          </UL>
+          <Example>
+            💡 Pair with the Event Log search box: type a single customer's
+            ID (for example <code className="text-xs bg-orange-100 px-1 rounded">#12</code>)
+            to isolate their entire event chain, then come back here and
+            match it against the animation's timeline. This links the trace
+            and the visual views into a single narrative.
           </Example>
         </div>
       ),

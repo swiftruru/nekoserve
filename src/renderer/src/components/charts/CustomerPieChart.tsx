@@ -42,7 +42,7 @@ export default function CustomerPieChart({
     {
       name: t('results:charts.customerPie.catInteracted'),
       value: catInteracted,
-      eventTypes: ['CUSTOMER_FINISH_CAT_INTERACTION'],
+      eventTypes: ['CAT_VISIT_SEAT'],
     },
     {
       name: t('results:charts.customerPie.noInteraction'),

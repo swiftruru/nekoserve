@@ -5,6 +5,7 @@ import {
   LEAVE_LINGER_MIN,
   type BubbleKind,
   type CafeState,
+  type CatSlot,
   type CustomerRuntime,
 } from '../../utils/replay'
 
@@ -13,6 +14,12 @@ import {
  * reducer. Customers are <g> nodes whose `transform` is updated every frame;
  * CSS transitions smooth the movement between zones so the reducer stays
  * discrete while the animation stays fluid.
+ *
+ * v0.4.0: cats are autonomous agents too. When a cat is in the `visiting`
+ * state its sprite is drawn at its target customer's seat (with a small
+ * offset so the customer avatar is still visible), not in the cat zone.
+ * CSS transforms animate the cat smoothly from the zone to the seat and
+ * back — same mechanism as customer avatars.
  */
 
 export type FocusTarget =
@@ -29,18 +36,17 @@ interface CafeSceneProps {
 const VIEW_W = 1000
 const VIEW_H = 500
 
-// Zone anchor points (visual centers) — keep in sync with CafeScene background
+// Zone anchor points (visual centers)
 const DOOR = { x: 60, y: 250 }
 const EXIT = { x: 940, y: 250 }
 const ABANDON = { x: 60, y: 380 }
 
 const QUEUE_SEAT = { x: 170, y: 90, step: 26 }
-const QUEUE_CAT = { x: 620, y: 290, step: 22 }
 
 const SEAT_GRID = { x: 260, y: 100, cellW: 44, cellH: 46, cols: 6 }
-const CAT_GRID = { x: 740, y: 100, cellW: 60, cellH: 70, cols: 2 }
+const CAT_GRID = { x: 760, y: 110, cellW: 70, cellH: 80, cols: 2 }
 
-const KITCHEN = { x: 620, y: 90, stepX: 40 }
+const KITCHEN = { x: 620, y: 130, stepX: 40 }
 
 function seatPos(slotIdx: number): { x: number; y: number } {
   const col = slotIdx % SEAT_GRID.cols
@@ -51,13 +57,36 @@ function seatPos(slotIdx: number): { x: number; y: number } {
   }
 }
 
-function catPos(slotIdx: number): { x: number; y: number } {
+function catHomePos(slotIdx: number): { x: number; y: number } {
   const col = slotIdx % CAT_GRID.cols
   const row = Math.floor(slotIdx / CAT_GRID.cols)
   return {
     x: CAT_GRID.x + col * CAT_GRID.cellW,
     y: CAT_GRID.y + row * CAT_GRID.cellH,
   }
+}
+
+/**
+ * Where a cat sprite should be drawn given its current runtime state. When
+ * visiting, we park the cat slightly to the right of the target customer's
+ * seat so the customer's own avatar stays readable; when idle / resting,
+ * the cat sits in its assigned cat-zone cell.
+ */
+function catXY(
+  cat: CatSlot,
+  state: CafeState,
+): { x: number; y: number } {
+  if (cat.state === 'visiting' && cat.visitingCustomerId !== null) {
+    const customer = state.customers[cat.visitingCustomerId]
+    if (customer && customer.seatSlot !== undefined) {
+      const sp = seatPos(customer.seatSlot)
+      // Offset the cat 16 px right of the seat center so the two avatars
+      // don't overlap. Clamp to the seat grid so cats on rightmost column
+      // don't punch into the kitchen zone.
+      return { x: Math.min(sp.x + 16, SEAT_GRID.x + 5 * SEAT_GRID.cellW + 16), y: sp.y }
+    }
+  }
+  return catHomePos(cat.slotIdx)
 }
 
 function customerXY(
@@ -77,26 +106,27 @@ function customerXY(
     case 'waitingFood':
     case 'dining':
       return c.seatSlot !== undefined ? seatPos(c.seatSlot) : DOOR
-    case 'waitingCat': {
-      const idx = state.queueCat.indexOf(c.id)
-      const q = idx >= 0 ? idx : 0
-      return { x: QUEUE_CAT.x, y: QUEUE_CAT.y + q * QUEUE_CAT.step }
-    }
-    case 'interacting':
-      return c.catSlot !== undefined ? catPos(c.catSlot) : EXIT
     case 'leaving':
-      return EXIT
+      // Customers are held at their seat until all visiting cats have left,
+      // then they physically walk to the exit. Once the customer is gone
+      // from the seat (seatSlot cleared by CUSTOMER_LEAVE), they animate
+      // from the seat toward the exit.
+      return c.seatSlot !== undefined ? seatPos(c.seatSlot) : EXIT
     case 'abandoned':
       return ABANDON
   }
 }
 
-function avatarEmoji(stage: CustomerRuntime['stage']): string {
-  switch (stage) {
+function avatarEmoji(c: CustomerRuntime): string {
+  // A customer being actively visited by any cat shows the "happy cat"
+  // face regardless of underlying stage — it feels more rewarding than
+  // staying on 🍽️ while a cat is on their lap.
+  if (c.visitingCats.size > 0 && c.stage !== 'leaving' && c.stage !== 'abandoned') {
+    return '😺'
+  }
+  switch (c.stage) {
     case 'dining':
       return '🍽️'
-    case 'interacting':
-      return '😺'
     case 'abandoned':
       return '😿'
     case 'ordering':
@@ -106,26 +136,25 @@ function avatarEmoji(stage: CustomerRuntime['stage']): string {
     case 'leaving':
       return '👋'
     case 'waitingSeat':
-    case 'waitingCat':
       return '🙂'
     default:
       return '🙂'
   }
 }
 
-function chipColor(stage: CustomerRuntime['stage']): string {
-  switch (stage) {
+function chipColor(c: CustomerRuntime): string {
+  if (c.visitingCats.size > 0 && c.stage !== 'leaving' && c.stage !== 'abandoned') {
+    return '#bbf7d0' // green-200 — cat on lap
+  }
+  switch (c.stage) {
     case 'waitingSeat':
     case 'waitingFood':
-    case 'waitingCat':
       return '#fed7aa'
     case 'seated':
     case 'ordering':
       return '#fdba74'
     case 'dining':
       return '#fbcfe8'
-    case 'interacting':
-      return '#bbf7d0'
     case 'abandoned':
       return '#fca5a5'
     case 'leaving':
@@ -151,17 +180,9 @@ export default function CafeScene({
   const { t } = useTranslation('playback')
 
   const seatOcc = state.seats.filter((s) => s.customerId !== null).length
-  const catsBusy = state.cats.filter((c) => c.state !== 'idle').length
+  const catsActive = state.cats.filter((c) => c.state !== 'idle').length
 
-  // Index the active bubbles by customer so customer rendering is O(1) per.
-  const bubblesByCustomer = new Map<number, BubbleKind[]>()
-  for (const b of state.activeBubbles) {
-    const list = bubblesByCustomer.get(b.customerId) ?? []
-    list.push(b.kind)
-    bubblesByCustomer.set(b.customerId, list)
-  }
-
-  // Bubble fade helper — youngest bubble wins if multiple fired for same id.
+  // Freshest bubble per customer (youngest wins on overlap)
   const freshestBubble = new Map<number, { kind: BubbleKind; opacity: number }>()
   for (const b of state.activeBubbles) {
     const elapsed = state.time - b.firedAt
@@ -173,7 +194,6 @@ export default function CafeScene({
   }
 
   function handleBackgroundClick() {
-    // Clicking the floor (not a seat/cat) clears any focus selection.
     onSelectFocus(null)
   }
 
@@ -247,14 +267,16 @@ export default function CafeScene({
           </text>
         </ZoneCard>
 
-        {/* Kitchen */}
-        <ZoneCard x="560" y="60" w="150" h="170" label={t('playback:zones.kitchen')}>
+        {/* Kitchen (full-height now that the cat queue is gone) */}
+        <ZoneCard x="520" y="60" w="200" h="380" label={t('playback:zones.kitchen')}>
           {Array.from({ length: config.staffCount }, (_, i) => {
             const busy = i < state.staffBusyCount
+            const col = i % 3
+            const row = Math.floor(i / 3)
             return (
               <g
                 key={`staff-${i}`}
-                transform={`translate(${KITCHEN.x - 55 + i * KITCHEN.stepX}, ${KITCHEN.y + 20})`}
+                transform={`translate(${KITCHEN.x - 70 + col * KITCHEN.stepX}, ${KITCHEN.y + row * 50})`}
               >
                 <circle
                   r="16"
@@ -266,73 +288,35 @@ export default function CafeScene({
               </g>
             )
           })}
-          <text x="635" y="210" textAnchor="middle" fontSize="11" fill="#9a3412">
+          <text x="620" y="340" textAnchor="middle" fontSize="11" fill="#9a3412">
             {t('playback:labels.staffBusy', {
               busy: state.staffBusyCount,
               total: config.staffCount,
             })}
           </text>
-        </ZoneCard>
-
-        {/* Cat queue */}
-        <ZoneCard x="560" y="250" w="150" h="190" label={t('playback:zones.queueCat')}>
-          <text x="635" y="425" textAnchor="middle" fontSize="11" fill="#9a3412">
-            × {state.queueCat.length}
+          <text x="620" y="356" textAnchor="middle" fontSize="10" fill="#9a3412" opacity="0.8">
+            {t('playback:labels.catVisitsTotal', { count: state.counters.catVisits })}
           </text>
         </ZoneCard>
 
-        {/* Cat area */}
-        <ZoneCard x="720" y="60" w="180" h="380" label={t('playback:zones.cats')}>
-          {state.cats.map((cat) => {
-            const p = catPos(cat.slotIdx)
-            const busy = cat.state === 'busy'
-            const resting = cat.state === 'resting'
-            const bg = resting ? '#e0e7ff' : busy ? '#bbf7d0' : '#fff7ed'
-            const stroke = resting ? '#6366f1' : busy ? '#16a34a' : '#fed7aa'
-            const isFocus =
-              focus?.kind === 'cat' && focus.slotIdx === cat.slotIdx
-            return (
-              <g
-                key={`cat-${cat.slotIdx}`}
-                transform={`translate(${p.x - 22}, ${p.y - 24})`}
-                className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onSelectFocus({ kind: 'cat', slotIdx: cat.slotIdx })
-                }}
-              >
-                <rect
-                  width="44"
-                  height="48"
-                  rx="10"
-                  fill={bg}
-                  stroke={isFocus ? '#ea580c' : stroke}
-                  strokeWidth={isFocus ? '3' : '1.5'}
-                />
-                <text x="22" y="30" textAnchor="middle" fontSize="24">
-                  {resting ? '💤' : '🐱'}
-                </text>
-                {busy && (
-                  <text x="34" y="14" textAnchor="middle" fontSize="12">💖</text>
-                )}
-              </g>
-            )
-          })}
-          <text x="810" y="430" textAnchor="middle" fontSize="11" fill="#9a3412">
+        {/* Cat home zone — cats live here when idle or resting, and fly out
+            to seats when visiting. */}
+        <ZoneCard x="740" y="60" w="170" h="380" label={t('playback:zones.cats')}>
+          <text x="825" y="430" textAnchor="middle" fontSize="11" fill="#9a3412">
             {t('playback:labels.catsBusy', {
-              busy: catsBusy,
+              busy: catsActive,
               total: config.catCount,
             })}
           </text>
         </ZoneCard>
 
         {/* Exit */}
-        <ZoneCard x="910" y="200" w="80" h="110" label={t('playback:zones.exit')}>
-          <text x="950" y="250" textAnchor="middle" fontSize="32">🏁</text>
-          <text x="950" y="285" textAnchor="middle" fontSize="10" fill="#16a34a">
+        <ZoneCard x="920" y="200" w="70" h="110" label={t('playback:zones.exit')}>
+          <text x="955" y="250" textAnchor="middle" fontSize="28">🏁</text>
+          <text x="955" y="285" textAnchor="middle" fontSize="10" fill="#16a34a">
             {t('playback:labels.served')} {state.counters.served}
           </text>
-          <text x="950" y="300" textAnchor="middle" fontSize="10" fill="#dc2626">
+          <text x="955" y="300" textAnchor="middle" fontSize="10" fill="#dc2626">
             {t('playback:labels.abandoned')} {state.counters.abandoned}
           </text>
         </ZoneCard>
@@ -341,7 +325,7 @@ export default function CafeScene({
         {Object.values(state.customers).map((c) => {
           const { x, y } = customerXY(c, state)
           const opacity = customerOpacity(c, state.time)
-          const color = chipColor(c.stage)
+          const color = chipColor(c)
           const bubble = freshestBubble.get(c.id)
           return (
             <g
@@ -362,7 +346,7 @@ export default function CafeScene({
                 opacity="0.92"
               />
               <text textAnchor="middle" y="5" fontSize="15">
-                {avatarEmoji(c.stage)}
+                {avatarEmoji(c)}
               </text>
               <text
                 textAnchor="middle"
@@ -379,6 +363,59 @@ export default function CafeScene({
                   opacity={bubble.opacity}
                 />
               )}
+            </g>
+          )
+        })}
+
+        {/* ── Cat sprites (drawn AFTER customers so they sit on top when
+            visiting a seat) ──────────────────────────────────────── */}
+        {state.cats.map((cat) => {
+          const { x, y } = catXY(cat, state)
+          const isFocus =
+            focus?.kind === 'cat' && focus.slotIdx === cat.slotIdx
+          const resting = cat.state === 'resting'
+          const visiting = cat.state === 'visiting'
+          const bg = resting ? '#e0e7ff' : visiting ? '#bbf7d0' : '#fff7ed'
+          const stroke = resting ? '#6366f1' : visiting ? '#16a34a' : '#fed7aa'
+          return (
+            <g
+              key={`cat-${cat.slotIdx}`}
+              transform={`translate(${x - 18}, ${y - 18})`}
+              className="cursor-pointer"
+              style={{
+                transition:
+                  'transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+                willChange: 'transform',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectFocus({ kind: 'cat', slotIdx: cat.slotIdx })
+              }}
+            >
+              <rect
+                width="36"
+                height="36"
+                rx="10"
+                fill={bg}
+                stroke={isFocus ? '#ea580c' : stroke}
+                strokeWidth={isFocus ? '3' : '1.5'}
+              />
+              <text x="18" y="24" textAnchor="middle" fontSize="20">
+                {resting ? '💤' : '🐱'}
+              </text>
+              {visiting && (
+                <text x="30" y="10" textAnchor="middle" fontSize="11">💖</text>
+              )}
+              <text
+                textAnchor="middle"
+                x="18"
+                y="-4"
+                fontSize="9"
+                fill="#7c2d12"
+                fontWeight="600"
+              >
+                #{cat.slotIdx + 1}
+              </text>
             </g>
           )
         })}
@@ -429,9 +466,7 @@ function ZoneCard({ x, y, w, h, label, children }: ZoneCardProps) {
 }
 
 /**
- * Pill-shaped speech bubble anchored above a customer. Width is fixed at
- * 60 px so the estimate-fit is good enough for short strings; opacity is
- * driven by the TTL sweep in replay.ts.
+ * Pill-shaped speech bubble anchored above a customer.
  */
 function SpeechBubble({ text, opacity }: { text: string; opacity: number }) {
   return (

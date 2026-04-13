@@ -4,18 +4,23 @@ import type { EventLogItem, SimulationConfig } from '../types'
  * Pure reducer that rebuilds a café floor snapshot from the time-sorted
  * event log. Consumed by PlaybackPage to drive the SVG animation.
  *
- * Why a reducer instead of trusting the Python simulator's resource ids:
- * `simulator-python/simulator/core.py:140` emits `座位-{seats.count}` where
- * `seats.count` is the number of *currently occupied* seats at the moment
- * the event fires. Two customers can end up tagged `座位-1` at the same
- * time, and the tag has no relation to a physical seat slot. We therefore
- * assign our own stable virtual slot indices on CUSTOMER_SEATED and free
- * them on CUSTOMER_FINISH_DINING. Cats are assigned the same way because
- * the simulator emits no cat id at all.
+ * v0.4.0 rewrite
+ * --------------
+ * Cats are now autonomous — the Python simulator emits `CAT_VISIT_SEAT`
+ * with `resourceId = "貓-N"` whenever a cat physically walks over to a
+ * seated customer, and `CAT_LEAVE_SEAT` when it wanders off. A cat may
+ * visit several customers per stay, and a customer may be visited by
+ * several cats at once. The three old events (`CUSTOMER_WAIT_CAT`,
+ * `CUSTOMER_START_CAT_INTERACTION`, `CUSTOMER_FINISH_CAT_INTERACTION`)
+ * are gone and so are the associated customer stages.
  *
- * The reducer walks events in chronological order so a `replayUpTo(t)`
- * always produces the same output for the same (events, t) pair — this is
- * what lets scrubbing and reset work deterministically.
+ * What we still have to work around: the seat label (`座位-N`) is still
+ * the "count of currently-occupied seats at emit time", NOT a stable
+ * slot identity — see `simulator-python/simulator/core.py`. So we
+ * maintain virtual seat slots via a free-pool allocator.
+ *
+ * Cat identity, however, IS carried now: `resourceId = "貓-N"` is
+ * parseable and 1-indexed. We map it onto a 0-indexed cat slot array.
  */
 
 export type CustomerStage =
@@ -25,8 +30,6 @@ export type CustomerStage =
   | 'ordering'
   | 'waitingFood'
   | 'dining'
-  | 'waitingCat'
-  | 'interacting'
   | 'leaving'
   | 'abandoned'
 
@@ -34,8 +37,11 @@ export interface CustomerRuntime {
   id: number
   stage: CustomerStage
   seatSlot?: number
-  catSlot?: number
   enteredAt: number
+  /** Cat ids currently sitting with this customer. */
+  visitingCats: Set<number>
+  /** Total cat visits received during this stay (monotonic counter). */
+  visitCount: number
   /** Sim-minute at which the customer left or abandoned, used for fade-out. */
   leftAt?: number
 }
@@ -45,15 +51,43 @@ export interface SeatSlot {
   customerId: number | null
 }
 
+/**
+ * A cat's animation state.
+ *   - `idle`: wandering in the cat zone (home position)
+ *   - `visiting`: physically next to a seated customer
+ *   - `resting`: sleeping in the cat zone (💤)
+ */
+export type CatState = 'idle' | 'visiting' | 'resting'
+
 export interface CatSlot {
+  /** 0-indexed; `catId` in events is 1-indexed. */
   slotIdx: number
-  state: 'idle' | 'busy' | 'resting'
+  state: CatState
   /**
-   * Customer currently associated with this cat slot. Stays populated while
-   * the cat is `busy` or `resting` so CAT_START_REST / CAT_END_REST can find
-   * the right slot by customerId — SimPy events don't carry cat identity.
+   * Customer the cat is currently visiting (only while `state === 'visiting'`).
    */
-  customerId: number | null
+  visitingCustomerId: number | null
+}
+
+export interface CafeState {
+  time: number
+  seats: SeatSlot[]
+  cats: CatSlot[]
+  staffBusyCount: number
+  queueSeat: number[]
+  customers: Record<number, CustomerRuntime>
+  /** Short-lived speech bubbles attached to customers by the reducer. */
+  activeBubbles: Bubble[]
+  lastEvent: EventLogItem | null
+  /** How many events have been applied so far — drives the "N / M" counter. */
+  appliedCount: number
+  counters: {
+    arrived: number
+    served: number
+    abandoned: number
+    /** Total cat visits completed so far (cumulative). */
+    catVisits: number
+  }
 }
 
 /**
@@ -65,7 +99,7 @@ export type BubbleKind =
   | 'arrive'
   | 'order'
   | 'dining'
-  | 'petting'
+  | 'catArrive'
   | 'abandon'
 
 export interface Bubble {
@@ -77,49 +111,22 @@ export interface Bubble {
 /** How long a bubble stays visible, in sim-minutes. */
 export const BUBBLE_TTL_MIN = 0.8
 
-export interface CafeState {
-  time: number
-  seats: SeatSlot[]
-  cats: CatSlot[]
-  staffBusyCount: number
-  queueSeat: number[]
-  queueCat: number[]
-  customers: Record<number, CustomerRuntime>
-  /** Short-lived speech bubbles attached to customers by the reducer. */
-  activeBubbles: Bubble[]
-  lastEvent: EventLogItem | null
-  /** How many events have been applied so far — drives the "N / M" counter. */
-  appliedCount: number
-  counters: {
-    arrived: number
-    served: number
-    abandoned: number
-  }
-}
-
 /**
- * Precomputed lookup table derived once per simulation result. Tells us
- * whether a given customer's cat interaction will be followed by a rest
- * period, so CUSTOMER_FINISH_CAT_INTERACTION can decide immediately whether
- * to release the cat slot or keep it reserved for the upcoming rest.
+ * Precomputed lookup table derived once per simulation result. Currently
+ * just carries the config and raw event list; retained as a named struct
+ * because future optimisations (snapshot index for huge logs) can live
+ * here without touching call sites.
  */
 export interface ReplayContext {
   config: SimulationConfig
   events: readonly EventLogItem[]
-  catRestsByCustomer: Set<number>
 }
 
 export function buildReplayContext(
   events: readonly EventLogItem[],
   config: SimulationConfig,
 ): ReplayContext {
-  const catRestsByCustomer = new Set<number>()
-  for (const event of events) {
-    if (event.eventType === 'CAT_START_REST') {
-      catRestsByCustomer.add(event.customerId)
-    }
-  }
-  return { config, events, catRestsByCustomer }
+  return { config, events }
 }
 
 export function initialState(config: SimulationConfig): CafeState {
@@ -131,21 +138,20 @@ export function initialState(config: SimulationConfig): CafeState {
     })),
     cats: Array.from({ length: config.catCount }, (_, i) => ({
       slotIdx: i,
-      state: 'idle' as const,
-      customerId: null,
+      state: 'idle' as CatState,
+      visitingCustomerId: null,
     })),
     staffBusyCount: 0,
     queueSeat: [],
-    queueCat: [],
     customers: {},
     activeBubbles: [],
     lastEvent: null,
     appliedCount: 0,
-    counters: { arrived: 0, served: 0, abandoned: 0 },
+    counters: { arrived: 0, served: 0, abandoned: 0, catVisits: 0 },
   }
 }
 
-// ─── Allocators ──────────────────────────────────────────────────────────
+// ─── Seat allocator ──────────────────────────────────────────────────────
 
 function allocateSeat(seats: SeatSlot[], customerId: number): number | null {
   for (const slot of seats) {
@@ -162,30 +168,35 @@ function releaseSeat(seats: SeatSlot[], slotIdx: number): void {
   if (slot) slot.customerId = null
 }
 
-function allocateCat(cats: CatSlot[], customerId: number): number | null {
-  for (const slot of cats) {
-    if (slot.state === 'idle' && slot.customerId === null) {
-      slot.state = 'busy'
-      slot.customerId = customerId
-      return slot.slotIdx
-    }
-  }
-  return null
+// ─── Cat identity parsing ────────────────────────────────────────────────
+// The Python simulator emits `resourceId = "貓-N"` (1-indexed). We convert
+// it into a 0-indexed slotIdx for our cats array. If the parse fails we
+// bail out silently — the event will be applied as a no-op, and the scene
+// degrades gracefully.
+
+function parseCatSlotIdx(resourceId: string | undefined): number | null {
+  if (!resourceId) return null
+  // Accept the Traditional Chinese form "貓-N" as well as a pure-ASCII
+  // "cat-N" form in case the simulator is retrofitted to English.
+  const match = resourceId.match(/^(?:貓|cat)-(\d+)$/)
+  if (!match) return null
+  const oneBased = parseInt(match[1], 10)
+  if (Number.isNaN(oneBased) || oneBased < 1) return null
+  return oneBased - 1
 }
 
-function findCatSlotByCustomer(cats: CatSlot[], customerId: number): CatSlot | undefined {
-  return cats.find((c) => c.customerId === customerId)
-}
-
-function releaseCatSlot(slot: CatSlot): void {
-  slot.state = 'idle'
-  slot.customerId = null
-}
+// ─── Customer + bubble helpers ───────────────────────────────────────────
 
 function ensureCustomer(state: CafeState, id: number, now: number): CustomerRuntime {
   let c = state.customers[id]
   if (!c) {
-    c = { id, stage: 'arriving', enteredAt: now }
+    c = {
+      id,
+      stage: 'arriving',
+      enteredAt: now,
+      visitingCats: new Set<number>(),
+      visitCount: 0,
+    }
     state.customers[id] = c
   }
   return c
@@ -209,8 +220,8 @@ function pushBubble(
 
 /**
  * Applies a single event to the state. Mutates the passed draft for speed;
- * callers that need immutability should clone first (replayUpTo re-runs from
- * a fresh initial state each call, so mutation is safe there).
+ * `replayUpTo` re-runs from a fresh initial state each call, so mutation
+ * is safe there.
  */
 export function applyEvent(
   draft: CafeState,
@@ -261,8 +272,6 @@ export function applyEvent(
     case 'ORDER_START_PREPARE': {
       const c = ensureCustomer(draft, cid, event.timestamp)
       c.stage = 'waitingFood'
-      // Ordering done; prep grabs a staff slot next. Net effect on busy
-      // count is zero (one released, one re-acquired) so we leave it.
       break
     }
 
@@ -282,46 +291,19 @@ export function applyEvent(
 
     case 'CUSTOMER_FINISH_DINING': {
       const c = ensureCustomer(draft, cid, event.timestamp)
-      if (c.seatSlot !== undefined) {
-        releaseSeat(draft.seats, c.seatSlot)
-        c.seatSlot = undefined
-      }
-      c.stage = 'waitingCat'
-      break
-    }
-
-    case 'CUSTOMER_WAIT_CAT': {
-      const c = ensureCustomer(draft, cid, event.timestamp)
-      c.stage = 'waitingCat'
-      if (!draft.queueCat.includes(cid)) draft.queueCat.push(cid)
-      break
-    }
-
-    case 'CUSTOMER_START_CAT_INTERACTION': {
-      const c = ensureCustomer(draft, cid, event.timestamp)
-      removeFromQueue(draft.queueCat, cid)
-      const slot = allocateCat(draft.cats, cid)
-      if (slot !== null) c.catSlot = slot
-      c.stage = 'interacting'
-      pushBubble(draft, cid, 'petting', event.timestamp)
-      break
-    }
-
-    case 'CUSTOMER_FINISH_CAT_INTERACTION': {
-      const c = ensureCustomer(draft, cid, event.timestamp)
+      // The customer stays in the seat until every visiting cat has left,
+      // so we leave `seatSlot` populated and just flip the stage. Seat is
+      // released on CUSTOMER_LEAVE.
       c.stage = 'leaving'
-      // If this customer's cat will NOT rest, free the slot now. Otherwise
-      // leave it populated so CAT_START_REST can flip it to 'resting'.
-      if (!ctx.catRestsByCustomer.has(cid)) {
-        const slot = findCatSlotByCustomer(draft.cats, cid)
-        if (slot) releaseCatSlot(slot)
-      }
-      c.catSlot = undefined
       break
     }
 
     case 'CUSTOMER_LEAVE': {
       const c = ensureCustomer(draft, cid, event.timestamp)
+      if (c.seatSlot !== undefined) {
+        releaseSeat(draft.seats, c.seatSlot)
+        c.seatSlot = undefined
+      }
       c.stage = 'leaving'
       c.leftAt = event.timestamp
       draft.counters.served += 1
@@ -338,15 +320,49 @@ export function applyEvent(
       break
     }
 
+    case 'CAT_VISIT_SEAT': {
+      const catIdx = parseCatSlotIdx(event.resourceId)
+      if (catIdx === null || catIdx >= draft.cats.length) break
+      const catSlot = draft.cats[catIdx]
+      catSlot.state = 'visiting'
+      catSlot.visitingCustomerId = cid
+      const c = ensureCustomer(draft, cid, event.timestamp)
+      c.visitingCats.add(catIdx)
+      c.visitCount += 1
+      draft.counters.catVisits += 1
+      pushBubble(draft, cid, 'catArrive', event.timestamp)
+      break
+    }
+
+    case 'CAT_LEAVE_SEAT': {
+      const catIdx = parseCatSlotIdx(event.resourceId)
+      if (catIdx === null || catIdx >= draft.cats.length) break
+      const catSlot = draft.cats[catIdx]
+      catSlot.state = 'idle'
+      catSlot.visitingCustomerId = null
+      const c = draft.customers[cid]
+      if (c) c.visitingCats.delete(catIdx)
+      break
+    }
+
     case 'CAT_START_REST': {
-      const slot = findCatSlotByCustomer(draft.cats, cid)
-      if (slot) slot.state = 'resting'
+      // cid is the cat's own id (1-indexed), not a customer id.
+      const catIdx = parseCatSlotIdx(event.resourceId)
+      if (catIdx === null || catIdx >= draft.cats.length) break
+      const catSlot = draft.cats[catIdx]
+      catSlot.state = 'resting'
+      catSlot.visitingCustomerId = null
       break
     }
 
     case 'CAT_END_REST': {
-      const slot = findCatSlotByCustomer(draft.cats, cid)
-      if (slot) releaseCatSlot(slot)
+      const catIdx = parseCatSlotIdx(event.resourceId)
+      if (catIdx === null || catIdx >= draft.cats.length) break
+      const catSlot = draft.cats[catIdx]
+      if (catSlot.state === 'resting') {
+        catSlot.state = 'idle'
+        catSlot.visitingCustomerId = null
+      }
       break
     }
   }

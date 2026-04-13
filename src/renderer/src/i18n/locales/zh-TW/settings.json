@@ -40,12 +40,16 @@
       "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。顧客用餐完畢所需時間。"
     },
     "catInteractionTime": {
-      "label": "互動平均時間",
-      "help": "Normal 分佈，std = mean × 0.2。顧客與貓咪互動（玩耍）的時間。"
+      "label": "單次拜訪時間",
+      "help": "Normal 分佈，std = mean × 0.2。貓咪主動走到顧客座位旁停留的平均時間（分鐘）。"
+    },
+    "catIdleInterval": {
+      "label": "貓咪空閒間隔",
+      "help": "Exponential 分佈的 mean。每隻貓在兩次拜訪之間的平均閒晃時間（分鐘），越短表示貓越黏人。"
     },
     "catRestProbability": {
       "label": "休息觸發機率",
-      "help": "每次互動結束後，貓咪進入休息狀態的機率（0–1）。休息中的貓咪不可互動。"
+      "help": "每次拜訪結束後，貓咪進入休息狀態的機率（0–1）。休息中的貓咪不會主動拜訪任何顧客。"
     },
     "catRestDuration": {
       "label": "休息平均時間",

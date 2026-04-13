@@ -27,7 +27,8 @@
     "seek10": "Seek \u00b110 min",
     "stepEvent": "Step events",
     "reset": "Reset",
-    "speed": "Change speed"
+    "speed": "Change speed",
+    "closeInspect": "Close inspect card"
   },
   "zones": {
     "door": "Door",
@@ -44,7 +45,8 @@
     "abandoned": "Left",
     "staffBusy": "{{busy}} / {{total}} busy",
     "seatsOccupied": "{{occ}} / {{total}} seated",
-    "catsBusy": "{{busy}} / {{total}} busy"
+    "catsBusy": "{{busy}} / {{total}} out visiting",
+    "catVisitsTotal": "{{count}} visits so far"
   },
   "stages": {
     "arriving": "Arriving",
@@ -53,8 +55,6 @@
     "ordering": "Ordering",
     "waitingFood": "Waiting for food",
     "dining": "Dining",
-    "waitingCat": "Waiting for cat",
-    "interacting": "Playing with cat",
     "leaving": "Leaving",
     "abandoned": "Abandoned"
   },
@@ -62,7 +62,7 @@
     "arrive": "Here! \u2728",
     "order": "Ordering!",
     "dining": "Yum \ud83c\udf7d\ufe0f",
-    "petting": "So soft \ud83d\udc95",
+    "catArrive": "Cat here \ud83d\udc95",
     "abandon": "Giving up \ud83d\ude24"
   },
   "inspect": {

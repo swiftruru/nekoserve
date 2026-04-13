@@ -27,7 +27,8 @@
     "seek10": "前後跳 10 分鐘",
     "stepEvent": "逐事件",
     "reset": "重播",
-    "speed": "切換速度"
+    "speed": "切換速度",
+    "closeInspect": "關閉詳情卡片"
   },
   "zones": {
     "door": "入口",
@@ -44,7 +45,8 @@
     "abandoned": "已離去",
     "staffBusy": "{{busy}} / {{total}} 忙碌",
     "seatsOccupied": "{{occ}} / {{total}} 入座",
-    "catsBusy": "{{busy}} / {{total}} 互動中"
+    "catsBusy": "{{busy}} / {{total}} 外出",
+    "catVisitsTotal": "累計拜訪 {{count}} 次"
   },
   "stages": {
     "arriving": "剛到",
@@ -53,8 +55,6 @@
     "ordering": "點餐",
     "waitingFood": "等餐點",
     "dining": "用餐中",
-    "waitingCat": "等貓咪",
-    "interacting": "摸貓中",
     "leaving": "離開中",
     "abandoned": "放棄離去"
   },
@@ -62,7 +62,7 @@
     "arrive": "來囉 ✨",
     "order": "點餐了！",
     "dining": "好好吃 🍽️",
-    "petting": "摸摸 💕",
+    "catArrive": "貓來了 💕",
     "abandon": "不等了 😤"
   },
   "inspect": {

@@ -22,8 +22,12 @@
       "description": "Share of customers who gave up after waiting for a seat"
     },
     "catInteractionRate": {
-      "label": "Cat interaction rate",
-      "description": "Share of customers who successfully played with a cat"
+      "label": "Visited-by-cat rate",
+      "description": "Share of served customers who got at least one cat visit"
+    },
+    "avgCatVisitsPerCustomer": {
+      "label": "Avg. cat visits",
+      "description": "Average number of cat visits per served customer"
     },
     "avgTotalStayTime": {
       "label": "Avg. total stay",

@@ -23,9 +23,11 @@ export interface SimulationConfig {
   preparationTime: number
   /** 用餐平均時間（分鐘）— Normal 分佈 mean */
   diningTime: number
-  /** 貓咪互動平均時間（分鐘）— Normal 分佈 mean */
+  /** 貓咪單次拜訪平均時間（分鐘）— Normal 分佈 mean */
   catInteractionTime: number
-  /** 每次互動後貓咪進入休息的機率 (0–1) */
+  /** 每隻貓兩次拜訪之間的平均空閒時間（分鐘）— Exponential 分佈 mean */
+  catIdleInterval: number
+  /** 每次拜訪後貓咪進入休息的機率 (0–1) */
   catRestProbability: number
   /** 貓咪休息持續時間 mean（分鐘）— Normal 分佈 mean */
   catRestDuration: number
@@ -48,8 +50,12 @@ export interface MetricSummary {
   avgWaitForOrder: number
   /** 平均總停留時間（分鐘） */
   avgTotalStayTime: number
-  /** 顧客成功與貓咪互動比例 (0–1)，以完成服務顧客為分母 */
+  /** 至少被一隻貓拜訪過一次的顧客比例 (0–1)，以完成服務顧客為分母 */
   catInteractionRate: number
+  /** 平均每位完成服務的顧客被幾隻貓拜訪 */
+  avgCatVisitsPerCustomer: number
+  /** 完整用餐但一次都沒被貓拜訪的比例 (0–1) */
+  noCatVisitRate: number
   /** 座位利用率 (0–1) */
   seatUtilization: number
   /** 店員利用率 (0–1) */
@@ -73,11 +79,14 @@ export type EventType =
   | 'ORDER_READY'
   | 'CUSTOMER_START_DINING'
   | 'CUSTOMER_FINISH_DINING'
-  | 'CUSTOMER_WAIT_CAT'
-  | 'CUSTOMER_START_CAT_INTERACTION'
-  | 'CUSTOMER_FINISH_CAT_INTERACTION'
   | 'CUSTOMER_LEAVE'
   | 'CUSTOMER_ABANDON'
+  // v0.4.0: cats autonomously visit seated customers. These events
+  // replace the old customer-initiated CUSTOMER_WAIT_CAT /
+  // CUSTOMER_START_CAT_INTERACTION / CUSTOMER_FINISH_CAT_INTERACTION
+  // triple. `resourceId` carries the cat identity (e.g. "貓-2").
+  | 'CAT_VISIT_SEAT'
+  | 'CAT_LEAVE_SEAT'
   | 'CAT_START_REST'
   | 'CAT_END_REST'
 

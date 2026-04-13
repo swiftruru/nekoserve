@@ -61,10 +61,11 @@ First-launch tips for unsigned builds:
 ### Simulation Core
 
 - Discrete Event Simulation powered by **Python SimPy 4**
-- Full customer lifecycle: arrive → queue → seated → order → dine → cat interaction → leave
+- Customer lifecycle: arrive → queue → seated → order → dine → wait for visiting cats to leave → depart
+- **Autonomous cat agents** (v0.4.0): each cat is its own long-running SimPy process that idles for `catIdleInterval` minutes, then picks a random seated customer and walks over for a `catInteractionTime`-minute visit. A customer may be visited by several cats at once, and must wait for all of them to leave before standing up — so the "cat on my lap" effect directly inflates `avgTotalStayTime`.
 - Poisson arrival process (exponential inter-arrival times)
 - Normal-distributed service times with 20% standard deviation
-- Cat rest mechanic (probability-based post-interaction rest, modelled as a sub-process on a dynamic-capacity Container)
+- Cat rest mechanic: probabilistic post-visit rest per cat, tracked per cat identity
 - Configurable random seed for reproducible results
 
 ### UI & Pages
@@ -93,9 +94,11 @@ First-launch tips for unsigned builds:
 
 A dedicated **🎞️ Simulation Playback** page animates the full event log on a hand-drawn SVG café floor plan. Running a simulation now lands the user on this page and auto-starts playback from `t=0`; a one-click **View Results →** button in the header jumps to the statistics page for users who only want the numbers.
 
-**Scene layout** — door → seat queue → N-cell seat grid → kitchen (M staff dots, lit when busy) → cat queue → K-cell cat zone → exit. Every customer is drawn as an emoji avatar (`🙂` waiting, `📝` ordering, `⏳` waiting for food, `🍽️` dining, `😺` playing with a cat, `😿` abandoning, `👋` leaving) on a stage-colored chip, and moves between zones with a 320 ms GPU-composited CSS transition.
+**Scene layout** — door → seat queue → N-cell seat grid → kitchen (M staff dots, lit when busy) → K-cell cat zone → exit. Every customer is drawn as an emoji avatar (`🙂` waiting, `📝` ordering, `⏳` waiting for food, `🍽️` dining, `😺` cat on lap, `😿` abandoning, `👋` leaving) on a stage-colored chip, and moves between zones with a 320 ms GPU-composited CSS transition.
 
-**Speech bubbles** — at key moments the customer floats a short bilingual bubble (`來囉 ✨` / `點餐了！` / `好好吃 🍽️` / `摸摸 💕` / `不等了 😤`). Bubbles are stored in reducer state, not a side effect, so scrubbing the timeline deterministically rebuilds whichever bubbles should be visible at that exact sim-minute.
+**Autonomous cat sprites** — each cat has its own sprite that lives in the cat zone by default and flies out to a customer's seat when `CAT_VISIT_SEAT` fires, then walks back when `CAT_LEAVE_SEAT` fires. A cat may also enter 💤 rest between visits. Same rAF-driven transform animation as customers, just a second layer on top so cats sit above customer avatars when they land.
+
+**Speech bubbles** — at key moments the customer floats a short bilingual bubble (`來囉 ✨` / `點餐了！` / `好好吃 🍽️` / `貓來了 💕` / `不等了 😤`). Bubbles are stored in reducer state, not a side effect, so scrubbing the timeline deterministically rebuilds whichever bubbles should be visible at that exact sim-minute.
 
 **Playback transport** — play / pause, reset, five speed presets (0.5× / 1× / 2× / 4× / 8×, default 4×), step to previous / next event (`⏮` `⏭`), and a draggable **timeline scrubber** with a 60-bin event-density heatmap underneath so students can spot the busiest moments at a glance.
 
@@ -118,7 +121,7 @@ The hook guards against firing shortcuts while any `<input>` / `<textarea>` / `c
 - While Playback is playing, the corresponding `EventLogTable` row is highlighted (`bg-orange-100 ring-2`) and auto-scrolled into view (debounced 150 ms so rAF-driven updates don't thrash the scroll container).
 - Clicking any row in the Event Log jumps straight to Playback with `simTime` seeded at that row's exact timestamp.
 
-The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/renderer/src/utils/replay.ts`](src/renderer/src/utils/replay.ts) plus an `rAF`-driven [`usePlaybackClock`](src/renderer/src/hooks/usePlaybackClock.ts). The reducer maintains its own **virtual seat / cat slot allocators** because the Python simulator's `座位-N` resourceId label is actually the count of currently-occupied seats at the moment the event fired (not a stable slot identity, see `simulator-python/simulator/core.py:140`), and cat events carry no cat identity at all. Allocators are deterministic under re-replay, so scrubbing the timeline produces the same scene every time.
+The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/renderer/src/utils/replay.ts`](src/renderer/src/utils/replay.ts) plus an `rAF`-driven [`usePlaybackClock`](src/renderer/src/hooks/usePlaybackClock.ts). The reducer maintains its own **virtual seat slot allocator** because the Python simulator's `座位-N` resourceId label is the count of currently-occupied seats at the moment the event fired — not a stable slot identity, see `simulator-python/simulator/core.py`. Cat events, however, now carry cat identity in `resourceId = "貓-N"` (v0.4.0), so the reducer maps cats directly onto stable cat slots. Allocators are deterministic under re-replay, so scrubbing the timeline produces the same scene every time.
 
 ### Export
 

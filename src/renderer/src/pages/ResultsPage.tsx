@@ -91,7 +91,7 @@ export default function ResultsPage({ result, history, onChartClick }: ResultsPa
       {viewMode !== 'compare' && (<>
 
       {/* ── KPI Grid ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         <KpiCard
           label={t('results:kpi.totalCustomersArrived.label')}
           value={metrics.totalCustomersArrived}
@@ -120,6 +120,12 @@ export default function ResultsPage({ result, history, onChartClick }: ResultsPa
           icon="🐱"
           highlight={metrics.catInteractionRate > 0.7 ? 'good' : metrics.catInteractionRate < 0.3 ? 'warning' : 'normal'}
           description={t('results:kpi.catInteractionRate.description')}
+        />
+        <KpiCard
+          label={t('results:kpi.avgCatVisitsPerCustomer.label')}
+          value={metrics.avgCatVisitsPerCustomer.toFixed(2)}
+          icon="💖"
+          description={t('results:kpi.avgCatVisitsPerCustomer.description')}
         />
         <KpiCard
           label={t('results:kpi.avgTotalStayTime.label')}

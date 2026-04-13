@@ -1,12 +1,20 @@
 """
-NekoServe Simulator — Core SimPy Simulation Engine
+NekoServe Simulator — Core SimPy Simulation Engine (v0.4.0)
 
-All simulation rules live here. UI must NOT reimplement this logic.
+In this version cats are autonomous SimPy processes that wander between
+seated customers on their own: each cat picks a random currently-seated
+customer, walks to their seat, stays for `catInteractionTime` minutes,
+then either rests or goes back to idle-wandering. A customer no longer
+"waits for a cat" — they finish their meal and leave whenever the cat(s)
+currently visiting them have all departed.
 
 Random distribution spec (strict):
   - Customer arrival:    Exponential(mean = customerArrivalInterval)
+  - Cat idle between visits: Exponential(mean = catIdleInterval)
   - All service times:   Normal(mean, std=mean*0.2), clamped to min=1
-  - Cat rest trigger:    Bernoulli(catRestProbability) after each interaction
+  - Cat rest trigger:    Bernoulli(catRestProbability) after each visit
+  - Cat target selection: Uniform random over currently-seated customers
+    that are not in the middle of leaving
 """
 
 import random
@@ -25,43 +33,28 @@ def _normal(rng: random.Random, mean: float) -> float:
     return max(1.0, rng.gauss(mean, mean * 0.2))
 
 
+# How often the "waiting for cats to finish visiting" poll ticks, in sim
+# minutes. Small enough that leaving feels responsive, large enough not to
+# flood the scheduler.
+_VISITOR_POLL_INTERVAL = 0.1
+
+
 # ──────────────────────────────────────────────────────────────
 # Simulation
 # ──────────────────────────────────────────────────────────────
 
 def run_simulation(config_dict: dict) -> dict:
-    """
-    Execute the cat-café discrete-event simulation.
-
-    Parameters
-    ----------
-    config_dict : dict
-        JSON-serialisable dict matching SimulationConfig fields.
-
-    Returns
-    -------
-    dict
-        JSON-serialisable dict matching SimulationResult shape.
-
-    Raises
-    ------
-    ValueError
-        If config values are out of range (caught by __main__ → INVALID_CONFIG).
-    RuntimeError
-        On unexpected simulation failure (caught by __main__ → SIMULATION_ERROR).
-    """
+    """Execute the cat-café discrete-event simulation."""
     config = SimulationConfig.from_dict(config_dict)
     config.validate()
 
     rng = random.Random(config.randomSeed)
     env = simpy.Environment()
 
-    # ── Resources ──────────────────────────────────────────
     seats = simpy.Resource(env, capacity=config.seatCount)
     staff = simpy.Resource(env, capacity=config.staffCount)
-    # Cats modelled as Container so we can programmatically add/remove
-    # capacity to simulate rest periods.
-    cats = simpy.Container(env, capacity=config.catCount, init=config.catCount)
+    # Cats are no longer a pooled Resource/Container; each cat is an
+    # individual long-running SimPy process (see `cat()` below).
 
     # ── Accumulators ───────────────────────────────────────
     event_log: list[dict] = []
@@ -69,16 +62,30 @@ def run_simulation(config_dict: dict) -> dict:
     total_arrived = 0
     total_served = 0
     total_abandoned = 0
-    total_cat_interactions = 0
+    total_cat_visits = 0
+    customers_with_visit = 0
 
-    # Cumulative busy-time for utilisation calculations
-    total_seat_busy = 0.0    # sum of seat-occupied minutes across customers
-    total_staff_busy = 0.0   # sum of staff-occupied minutes
-    total_cat_busy = 0.0     # sum of cat-busy minutes (interaction + rest)
+    total_seat_busy = 0.0
+    total_staff_busy = 0.0
+    total_cat_busy = 0.0
 
     wait_seat_times: list[float] = []
     wait_order_times: list[float] = []
     stay_times: list[float] = []
+
+    # Registry of currently-seated customers, keyed by customer id. Cat
+    # processes pick a target from this dict; customer processes insert
+    # themselves on seating and delete themselves after all visiting cats
+    # have left. Each entry:
+    #
+    #   {
+    #     "id": int,
+    #     "seat_label": str,       # e.g. "座位-3"
+    #     "visitors": set[int],    # cat ids currently on this customer
+    #     "visit_count": int,      # total cats that have visited this stay
+    #     "leaving": bool,         # dining done; no new visitors allowed
+    #   }
+    seated: dict[int, dict[str, Any]] = {}
 
     # ── Log helper ─────────────────────────────────────────
     def log(timestamp: float, event_type: str, customer_id: int,
@@ -93,23 +100,11 @@ def run_simulation(config_dict: dict) -> dict:
             entry["resourceId"] = resource_id
         event_log.append(entry)
 
-    # ── Cat rest process ───────────────────────────────────
-    def cat_rest(last_customer_id: int):
-        nonlocal total_cat_busy
-        rest_dur = _normal(rng, config.catRestDuration)
-        log(env.now, "CAT_START_REST", last_customer_id,
-            f"貓咪開始休息（預計 {rest_dur:.1f} 分鐘）")
-        total_cat_busy += rest_dur
-        yield env.timeout(rest_dur)
-        log(env.now, "CAT_END_REST", last_customer_id,
-            "貓咪休息結束，恢復可互動狀態")
-        cats.put(1)
-
     # ── Customer process ───────────────────────────────────
     def customer(cid: int):
         nonlocal total_arrived, total_served, total_abandoned
-        nonlocal total_seat_busy, total_staff_busy, total_cat_busy
-        nonlocal total_cat_interactions
+        nonlocal total_seat_busy, total_staff_busy
+        nonlocal customers_with_visit, total_cat_visits
 
         total_arrived += 1
         arrive_time = env.now
@@ -118,14 +113,12 @@ def run_simulation(config_dict: dict) -> dict:
         log(arrive_time, "CUSTOMER_WAIT_SEAT", cid,
             f"顧客 {cid} 等候座位中")
 
-        # ── Phase 1: Wait for seat (with abandonment timeout) ──
+        # Phase 1: Wait for seat, with abandonment timeout
         seat_req = seats.request()
         abandon_ev = env.timeout(config.maxWaitTime)
-
         yield seat_req | abandon_ev
 
         if not seat_req.triggered:
-            # Timed out — abandon
             seat_req.cancel()
             total_abandoned += 1
             log(env.now, "CUSTOMER_ABANDON", cid,
@@ -135,36 +128,45 @@ def run_simulation(config_dict: dict) -> dict:
         wait_seat = env.now - arrive_time
         wait_seat_times.append(wait_seat)
         seated_at = env.now
+        seat_label = f"座位-{seats.count}"
         log(env.now, "CUSTOMER_SEATED", cid,
             f"顧客 {cid} 入座（等待 {wait_seat:.1f} 分鐘）",
-            f"座位-{seats.count}")
+            seat_label)
 
-        # ── Phase 2: Order (staff occupied for ordering) ───
+        # Register into the seated registry so cat processes can target us.
+        record: dict[str, Any] = {
+            "id": cid,
+            "seat_label": seat_label,
+            "visitors": set(),
+            "visit_count": 0,
+            "leaving": False,
+        }
+        seated[cid] = record
+
+        # Phase 2: Order (staff occupied briefly)
         log(env.now, "CUSTOMER_ORDER", cid, f"顧客 {cid} 呼叫店員點餐")
         order_start = env.now
-
         with staff.request() as s_req:
             yield s_req
             order_dur = _normal(rng, config.orderTime)
             total_staff_busy += order_dur
             yield env.timeout(order_dur)
-
         log(env.now, "ORDER_START_PREPARE", cid,
             f"顧客 {cid} 完成點餐，餐點開始製作")
 
-        # ── Phase 3: Preparation (staff occupied for prep) ─
+        # Phase 3: Preparation
         with staff.request() as s_req:
             yield s_req
             prep_dur = _normal(rng, config.preparationTime)
             total_staff_busy += prep_dur
             yield env.timeout(prep_dur)
-
         wait_order = env.now - order_start
         wait_order_times.append(wait_order)
         log(env.now, "ORDER_READY", cid,
             f"顧客 {cid} 的餐點完成（等待 {wait_order:.1f} 分鐘）")
 
-        # ── Phase 4: Dining ────────────────────────────────
+        # Phase 4: Dining — cats may start visiting any time while seated,
+        # but especially during this phase once the customer is settled.
         log(env.now, "CUSTOMER_START_DINING", cid,
             f"顧客 {cid} 開始用餐")
         dining_dur = _normal(rng, config.diningTime)
@@ -172,36 +174,77 @@ def run_simulation(config_dict: dict) -> dict:
         log(env.now, "CUSTOMER_FINISH_DINING", cid,
             f"顧客 {cid} 用餐完畢")
 
-        # Record seat utilisation (seated → finish dining)
+        # Phase 5: Wait for any cats still on our lap to finish their visit,
+        # then stand up. Cats that want to start a new visit after this
+        # point will skip us because `leaving = True`.
+        record["leaving"] = True
+        while record["visitors"]:
+            yield env.timeout(_VISITOR_POLL_INTERVAL)
+
+        # Collect stats before cleanup
         total_seat_busy += env.now - seated_at
+        if record["visit_count"] > 0:
+            customers_with_visit += 1
+        total_cat_visits += record["visit_count"]
+
+        # Release seat, unregister, log departure
+        del seated[cid]
         seats.release(seat_req)
 
-        # ── Phase 5: Cat interaction ───────────────────────
-        log(env.now, "CUSTOMER_WAIT_CAT", cid,
-            f"顧客 {cid} 等待與貓咪互動")
-        yield cats.get(1)
-
-        interact_dur = _normal(rng, config.catInteractionTime)
-        log(env.now, "CUSTOMER_START_CAT_INTERACTION", cid,
-            f"顧客 {cid} 開始與貓咪互動（預計 {interact_dur:.1f} 分鐘）")
-        total_cat_busy += interact_dur
-        yield env.timeout(interact_dur)
-        total_cat_interactions += 1  # count only after interaction completes
-        log(env.now, "CUSTOMER_FINISH_CAT_INTERACTION", cid,
-            f"顧客 {cid} 完成貓咪互動")
-
-        # Cat may rest after interaction
-        if rng.random() < config.catRestProbability:
-            env.process(cat_rest(cid))
-        else:
-            cats.put(1)
-
-        # ── Done ───────────────────────────────────────────
         total_stay = env.now - arrive_time
         stay_times.append(total_stay)
         total_served += 1
         log(env.now, "CUSTOMER_LEAVE", cid,
-            f"顧客 {cid} 離開咖啡廳（總停留 {total_stay:.1f} 分鐘）")
+            f"顧客 {cid} 離開咖啡廳（總停留 {total_stay:.1f} 分鐘，"
+            f"被 {record['visit_count']} 隻貓拜訪）")
+
+    # ── Cat process ────────────────────────────────────────
+    def cat(cat_id: int):
+        nonlocal total_cat_busy
+        cat_label = f"貓-{cat_id}"
+
+        while True:
+            # Wander around / idle, then look for someone to visit.
+            idle_dur = rng.expovariate(1.0 / config.catIdleInterval)
+            yield env.timeout(idle_dur)
+
+            # Pick a target uniformly from currently-seated, non-leaving
+            # customers. If nobody is available we just go back to idle.
+            candidates = [rec for rec in seated.values() if not rec["leaving"]]
+            if not candidates:
+                continue
+            target = rng.choice(candidates)
+            target_id = target["id"]
+
+            target["visitors"].add(cat_id)
+            target["visit_count"] += 1
+
+            visit_dur = _normal(rng, config.catInteractionTime)
+            log(env.now, "CAT_VISIT_SEAT", target_id,
+                f"{cat_label} 走到顧客 {target_id} 的座位",
+                cat_label)
+            total_cat_busy += visit_dur
+            yield env.timeout(visit_dur)
+            log(env.now, "CAT_LEAVE_SEAT", target_id,
+                f"{cat_label} 離開顧客 {target_id} 的座位",
+                cat_label)
+
+            # Detach from whoever we were visiting (the customer may have
+            # already been cleaned up if they were waiting on other cats).
+            if target_id in seated:
+                seated[target_id]["visitors"].discard(cat_id)
+
+            # Possibly nap for a while.
+            if rng.random() < config.catRestProbability:
+                rest_dur = _normal(rng, config.catRestDuration)
+                log(env.now, "CAT_START_REST", cat_id,
+                    f"{cat_label} 開始休息（預計 {rest_dur:.1f} 分鐘）",
+                    cat_label)
+                total_cat_busy += rest_dur
+                yield env.timeout(rest_dur)
+                log(env.now, "CAT_END_REST", cat_id,
+                    f"{cat_label} 休息結束，恢復活動",
+                    cat_label)
 
     # ── Customer generator ─────────────────────────────────
     def generator():
@@ -214,6 +257,9 @@ def run_simulation(config_dict: dict) -> dict:
             env.process(customer(cid))
             cid += 1
 
+    # Boot cat processes, then start the customer generator.
+    for i in range(1, config.catCount + 1):
+        env.process(cat(i))
     env.process(generator())
     env.run(until=config.simulationDuration)
 
@@ -228,7 +274,15 @@ def run_simulation(config_dict: dict) -> dict:
         return round(min(raw, 1.0), 4)
 
     cat_interaction_rate = (
-        round(total_cat_interactions / total_served, 4)
+        round(customers_with_visit / total_served, 4)
+        if total_served > 0 else 0.0
+    )
+    avg_cat_visits_per_customer = (
+        round(total_cat_visits / total_served, 2)
+        if total_served > 0 else 0.0
+    )
+    no_cat_visit_rate = (
+        round((total_served - customers_with_visit) / total_served, 4)
         if total_served > 0 else 0.0
     )
     abandon_rate = (
@@ -243,6 +297,8 @@ def run_simulation(config_dict: dict) -> dict:
             "avgWaitForOrder": avg(wait_order_times),
             "avgTotalStayTime": avg(stay_times),
             "catInteractionRate": cat_interaction_rate,
+            "avgCatVisitsPerCustomer": avg_cat_visits_per_customer,
+            "noCatVisitRate": no_cat_visit_rate,
             "seatUtilization": safe_util(total_seat_busy, config.seatCount),
             "staffUtilization": safe_util(total_staff_busy, config.staffCount),
             "catUtilization": safe_util(total_cat_busy, config.catCount),

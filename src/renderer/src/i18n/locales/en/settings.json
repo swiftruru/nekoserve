@@ -40,12 +40,16 @@
       "help": "Normal distribution, std = mean × 0.2, min 1 min. Time a customer spends eating."
     },
     "catInteractionTime": {
-      "label": "Avg. interaction time",
-      "help": "Normal distribution, std = mean × 0.2. Time a customer spends playing with a cat."
+      "label": "Avg. visit duration",
+      "help": "Normal distribution, std = mean × 0.2. Average minutes a cat spends at a customer's seat during one visit."
+    },
+    "catIdleInterval": {
+      "label": "Cat idle interval",
+      "help": "Exponential mean. Average minutes a cat wanders before picking its next customer. Shorter means friendlier cats."
     },
     "catRestProbability": {
       "label": "Rest trigger probability",
-      "help": "Probability (0–1) that a cat enters rest after each interaction. Resting cats are unavailable."
+      "help": "Probability (0–1) that a cat enters rest after finishing a visit. Resting cats do not initiate new visits."
     },
     "catRestDuration": {
       "label": "Avg. rest duration",

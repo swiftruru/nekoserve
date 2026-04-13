@@ -18,12 +18,13 @@ class SimulationConfig:
     customerArrivalInterval: float = 5.0   # Exponential mean (minutes)
     orderTime: float = 3.0                 # Normal mean (minutes)
     preparationTime: float = 8.0           # Normal mean (minutes)
-    diningTime: float = 15.0              # Normal mean (minutes)
-    catInteractionTime: float = 10.0       # Normal mean (minutes)
+    diningTime: float = 15.0               # Normal mean (minutes)
+    catInteractionTime: float = 10.0       # Normal mean per visit (minutes)
+    catIdleInterval: float = 4.0           # Exponential mean between visits (minutes)
     catRestProbability: float = 0.3        # 0–1
     catRestDuration: float = 15.0          # Normal mean (minutes)
-    maxWaitTime: float = 20.0             # minutes
-    simulationDuration: float = 240.0     # minutes
+    maxWaitTime: float = 20.0              # minutes
+    simulationDuration: float = 240.0      # minutes
     randomSeed: int = 42
 
     def to_dict(self) -> dict:
@@ -53,6 +54,8 @@ class SimulationConfig:
             raise ValueError("diningTime 必須 > 0")
         if self.catInteractionTime <= 0:
             raise ValueError("catInteractionTime 必須 > 0")
+        if self.catIdleInterval <= 0:
+            raise ValueError("catIdleInterval 必須 > 0")
         if not (0.0 <= self.catRestProbability <= 1.0):
             raise ValueError("catRestProbability 必須在 0–1 之間")
         if self.catRestDuration <= 0:
@@ -76,6 +79,7 @@ SCENARIO_WEEKDAY = SimulationConfig(
     preparationTime=8.0,
     diningTime=15.0,
     catInteractionTime=10.0,
+    catIdleInterval=4.0,
     catRestProbability=0.2,
     catRestDuration=10.0,
     maxWaitTime=25.0,
@@ -92,6 +96,7 @@ SCENARIO_HOLIDAY_RUSH = SimulationConfig(
     preparationTime=10.0,
     diningTime=20.0,
     catInteractionTime=8.0,
+    catIdleInterval=3.0,
     catRestProbability=0.3,
     catRestDuration=15.0,
     maxWaitTime=15.0,
@@ -108,6 +113,7 @@ SCENARIO_CAT_NAP = SimulationConfig(
     preparationTime=8.0,
     diningTime=15.0,
     catInteractionTime=10.0,
+    catIdleInterval=6.0,
     catRestProbability=0.7,
     catRestDuration=25.0,
     maxWaitTime=20.0,

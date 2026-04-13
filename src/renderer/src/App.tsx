@@ -37,9 +37,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'settings',   icon: '⚙️' },
+  { id: 'playback',   icon: '🎞️' },
   { id: 'results',    icon: '📊' },
   { id: 'eventlog',   icon: '📋' },
-  { id: 'playback',   icon: '🎞️' },
   { id: 'howitworks', icon: '🎬' },
   { id: 'about',      icon: 'ℹ️' },
 ]
@@ -95,6 +95,8 @@ export default function App() {
   }
 
   function handleSkipToResults() {
+    // Clear any lingering chart-click filter so the Results page is clean.
+    setPendingEventFilter(null)
     setPage('results')
   }
 
@@ -116,6 +118,9 @@ export default function App() {
    * playback cursor to that event and switches to the Playback page.
    */
   function handleEventLogRowClick(timestamp: number) {
+    // Row click is an explicit navigation; drop any lingering chart-click
+    // filter so returning to the Event Log later shows the full log again.
+    setPendingEventFilter(null)
     setPlaybackTime(timestamp)
     setPage('playback')
   }
@@ -178,6 +183,7 @@ export default function App() {
               key={item.id}
               onClick={() => !disabled && handleNavigate(item.id)}
               disabled={disabled}
+              title={disabled ? t('nav:needsRunHint') : undefined}
               className={[
                 'flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-150',
                 page === item.id
@@ -189,9 +195,6 @@ export default function App() {
             >
               <span>{item.icon}</span>
               {t(`nav:${item.id}` as const)}
-              {needsResult && !resultsAvailable && (
-                <span className="text-xs text-gray-300 ml-1">{t('nav:needsRunHint')}</span>
-              )}
             </button>
           )
         })}
