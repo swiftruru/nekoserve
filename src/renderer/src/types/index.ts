@@ -11,7 +11,7 @@ export type {
 } from '@shared/contracts/types'
 
 // ── Page navigation ───────────────────────────────────────────
-export type Page = 'settings' | 'results' | 'eventlog' | 'about'
+export type Page = 'settings' | 'results' | 'eventlog' | 'howitworks' | 'about'
 
 // ── Simulation state machine ──────────────────────────────────
 export type SimulationStatus = 'idle' | 'running' | 'success' | 'error'

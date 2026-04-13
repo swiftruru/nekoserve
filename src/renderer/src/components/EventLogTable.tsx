@@ -176,10 +176,10 @@ export default function EventLogTable({ events, initialFilter }: EventLogTablePr
                     </span>
                   </td>
                   <td className="px-4 py-2 text-gray-500">
-                    {e.customerId > 0 ? `#${e.customerId}` : '—'}
+                    {e.customerId > 0 ? `#${e.customerId}` : '–'}
                   </td>
                   <td className="px-4 py-2 text-gray-500 text-xs">
-                    {e.resourceId ?? '—'}
+                    {e.resourceId ?? '–'}
                   </td>
                   <td className="px-4 py-2 text-gray-700" data-selectable>
                     {description}

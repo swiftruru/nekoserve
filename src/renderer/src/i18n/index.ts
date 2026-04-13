@@ -11,6 +11,7 @@ import zhTW_scenarios from './locales/zh-TW/scenarios.json'
 import zhTW_results from './locales/zh-TW/results.json'
 import zhTW_about from './locales/zh-TW/about.json'
 import zhTW_learn from './locales/zh-TW/learn.json'
+import zhTW_howItWorks from './locales/zh-TW/howItWorks.json'
 
 import en_common from './locales/en/common.json'
 import en_nav from './locales/en/nav.json'
@@ -22,6 +23,7 @@ import en_scenarios from './locales/en/scenarios.json'
 import en_results from './locales/en/results.json'
 import en_about from './locales/en/about.json'
 import en_learn from './locales/en/learn.json'
+import en_howItWorks from './locales/en/howItWorks.json'
 
 import { registerFormatters } from './formatters'
 
@@ -42,6 +44,7 @@ export const namespaces = [
   'results',
   'about',
   'learn',
+  'howItWorks',
 ] as const
 
 export const resources = {
@@ -56,6 +59,7 @@ export const resources = {
     results: zhTW_results,
     about: zhTW_about,
     learn: zhTW_learn,
+    howItWorks: zhTW_howItWorks,
   },
   en: {
     common: en_common,
@@ -68,6 +72,7 @@ export const resources = {
     results: en_results,
     about: en_about,
     learn: en_learn,
+    howItWorks: en_howItWorks,
   },
 } as const
 
@@ -83,7 +88,7 @@ function pickInitialLocale(): AppLocale {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'zh-TW' || stored === 'en') return stored
   } catch {
-    /* localStorage unavailable — fall through */
+    /* localStorage unavailable, fall through */
   }
   const fromMain =
     typeof window !== 'undefined'
@@ -129,7 +134,7 @@ i18n.on('languageChanged', (lng) => {
       }
     ).electronAPI?.notifyLocaleChanged?.(lng)
   } catch {
-    /* ignore — preload may not yet expose the bridge in some tests */
+    /* ignore: preload may not yet expose the bridge in some tests */
   }
 })
 

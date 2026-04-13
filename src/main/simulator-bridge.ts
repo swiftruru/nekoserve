@@ -1,5 +1,5 @@
 /**
- * NekoServe — Simulator Bridge
+ * NekoServe simulator bridge
  *
  * Manages the lifecycle of the Python simulator process:
  *   - Resolves the correct executable path (dev vs packaged, per platform)

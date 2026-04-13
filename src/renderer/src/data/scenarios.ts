@@ -2,7 +2,7 @@ import type { ScenarioPreset } from '../types'
 
 // Built-in scenarios: `name` and `description` on these presets are only
 // used as a dev-side fallback. The UI resolves display text via the
-// `scenarios` i18n namespace keyed by `id` — see ScenarioButtons.tsx.
+// `scenarios` i18n namespace keyed by `id`. See ScenarioButtons.tsx.
 export const SCENARIOS: ScenarioPreset[] = [
   {
     id: 'weekday',

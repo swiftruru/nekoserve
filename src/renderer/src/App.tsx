@@ -6,6 +6,7 @@ import { SCENARIOS, DEFAULT_CONFIG } from './data/scenarios'
 import SettingsPage from './pages/SettingsPage'
 import ResultsPage from './pages/ResultsPage'
 import EventLogPage from './pages/EventLogPage'
+import HowItWorksPage from './pages/HowItWorksPage'
 import AboutPage from './pages/AboutPage'
 import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
@@ -32,10 +33,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'settings', icon: '⚙️' },
-  { id: 'results',  icon: '📊' },
-  { id: 'eventlog', icon: '📋' },
-  { id: 'about',    icon: 'ℹ️' },
+  { id: 'settings',   icon: '⚙️' },
+  { id: 'results',    icon: '📊' },
+  { id: 'eventlog',   icon: '📋' },
+  { id: 'howitworks', icon: '🎬' },
+  { id: 'about',      icon: 'ℹ️' },
 ]
 
 // ──────────────────────────────────────────────────────────────
@@ -184,6 +186,7 @@ export default function App() {
               initialFilter={pendingEventFilter ?? undefined}
             />
           )}
+          {page === 'howitworks' && <HowItWorksPage />}
           {page === 'about' && <AboutPage />}
         </main>
 

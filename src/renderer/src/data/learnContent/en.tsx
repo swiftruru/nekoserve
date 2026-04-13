@@ -1,9 +1,10 @@
 /**
- * NekoServe — Learning sidebar content (English)
+ * NekoServe learning sidebar content (English).
  * Classroom-note style: formulas, examples, and the "why this design" reasoning.
  */
 
 import { Formula, Example, Note, P, B, UL, LI, type LearnContent } from './shared'
+import { BlockMath } from '../../components/Math'
 
 export const LEARN_CONTENT_EN: LearnContent = {
 
@@ -19,7 +20,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
         <div>
           <P>
             <B>Discrete-event simulation (DES)</B> models system state changes as a
-            sequence of events. Between any two events the system state is frozen — time
+            sequence of events. Between any two events the system state is frozen, and time
             jumps directly to the moment of the next event.
           </P>
           <P>
@@ -53,7 +54,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             The <B>inter-arrival time</B> of a Poisson process is exponentially
             distributed:
           </P>
-          <Formula>T ~ Exponential(λ), where λ = 1 / mean interval</Formula>
+          <BlockMath formula={String.raw`T \sim \text{Exp}(\lambda), \quad \lambda = \frac{1}{\bar{T}}`} />
           <P>
             The exponential distribution is <B>memoryless</B>: no matter how long you
             have already waited, the distribution of the wait for the next arrival is
@@ -74,18 +75,18 @@ export const LEARN_CONTENT_EN: LearnContent = {
       content: (
         <div>
           <P>
-            Service times — order, food prep, dining, interaction — usually cluster
+            Service times (order, food prep, dining, interaction) usually cluster
             around a mean with modest spread. A <B>normal distribution</B> is a natural
             fit:
           </P>
-          <Formula>T ~ Normal(μ, σ²), σ = μ × 0.2</Formula>
+          <BlockMath formula={String.raw`T \sim \mathcal{N}(\mu,\, \sigma^2), \quad \sigma = 0.2\,\mu`} />
           <P>
             This simulator fixes the standard deviation at 20% of the mean and clamps
             negative draws with <code className="text-xs bg-gray-100 px-1 rounded">max(1, sample)</code>.
           </P>
           <P><B>Why not exponential here?</B></P>
           <UL>
-            <LI>Service times have a natural lower bound — nothing finishes in 0 s</LI>
+            <LI>Service times have a natural lower bound; nothing finishes in 0 s</LI>
             <LI>Trained staff have tight, not long-tailed, service times</LI>
           </UL>
         </div>
@@ -130,7 +131,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             Little's Law is the cornerstone of queueing theory, linking three
             steady-state quantities:
           </P>
-          <Formula>N = λ × W</Formula>
+          <BlockMath formula={String.raw`N = \lambda \cdot W`} />
           <UL>
             <LI><B>N</B>: average number of customers in the system</LI>
             <LI><B>λ</B>: effective arrival rate (customers/min)</LI>
@@ -164,7 +165,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             <B>Utilization ρ</B> measures how busy a resource is and is the core
             efficiency indicator of a service system:
           </P>
-          <Formula>ρ = λ / (μ × c)</Formula>
+          <BlockMath formula={String.raw`\rho = \dfrac{\lambda}{\mu \, c}`} />
           <UL>
             <LI><B>λ</B>: arrival rate</LI>
             <LI><B>μ</B>: service rate of a single server</LI>
@@ -175,7 +176,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             <br />In an M/M/1 queue, wait time at ρ=0.9 is <B>9×</B> that at ρ=0.5!
           </Note>
           <P>
-            Don't chase 100% utilization — any tiny perturbation then creates a long
+            Don't chase 100% utilization, because any tiny perturbation then creates a long
             queue. A healthy range is usually 0.7 – 0.85.
           </P>
         </div>
@@ -204,7 +205,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           </P>
           <Example>
             💡 Heuristic: if "wait for seat" dwarfs the other components, seats are
-            the bottleneck — adding seats will have the largest impact.
+            the bottleneck, so adding seats will have the largest impact.
           </Example>
         </div>
       ),
@@ -243,7 +244,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
         <div>
           <P>
             System-wide <B>throughput</B> is determined by the most constrained
-            resource — the <B>bottleneck</B>.
+            resource, the <B>bottleneck</B>.
           </P>
           <UL>
             <LI>Find the resource with the highest utilization</LI>
@@ -353,7 +354,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           </div>
           <P>
             <B>CAT_START_REST / CAT_END_REST</B> are <B>resource state events</B>,
-            not part of any customer journey — they record a cat entering rest after
+            not part of any customer journey; they record a cat entering rest after
             an interaction.
           </P>
         </div>
@@ -390,6 +391,10 @@ export const LEARN_CONTENT_EN: LearnContent = {
   // ══════════════════════════════════════════════════════════
   // About page
   // ══════════════════════════════════════════════════════════
+  // The "How it Works" page is itself a long-form learning essay, so the sidebar
+  // deliberately has no extra notes for it; readers focus on the main content.
+  howitworks: [],
+
   about: [
     {
       id: 'queueing-theory',
@@ -438,8 +443,8 @@ export const LEARN_CONTENT_EN: LearnContent = {
           <Note>
             📖 Further reading:
             <br />• SimPy docs: simpy.readthedocs.io
-            <br />• <i>Introduction to Simulation</i> — Banks et al.
-            <br />• <i>Queueing Systems</i> — Kleinrock
+            <br />• <i>Introduction to Simulation</i>, Banks et al.
+            <br />• <i>Queueing Systems</i>, Kleinrock
           </Note>
         </div>
       ),

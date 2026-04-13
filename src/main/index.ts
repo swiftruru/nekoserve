@@ -48,7 +48,7 @@ function saveWindowState(win: BrowserWindow): void {
 }
 
 // ──────────────────────────────────────────────────────────────
-// App identity — must be set before app is ready
+// App identity (must be set before app is ready)
 // ──────────────────────────────────────────────────────────────
 
 app.setName('NekoServe')
@@ -272,7 +272,7 @@ function createWindow(): void {
 // ──────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-  // Set Dock icon on macOS (dev mode — packaged app uses the bundle icon)
+  // Set Dock icon on macOS (dev mode only; packaged app uses the bundle icon)
   if (process.platform === 'darwin' && !app.isPackaged) {
     const icon = nativeImage.createFromPath(getIconPath())
     if (!icon.isEmpty()) {

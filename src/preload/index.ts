@@ -1,5 +1,5 @@
 /**
- * NekoServe — Preload Script
+ * NekoServe preload script
  *
  * Exposes a minimal, explicitly typed API to the renderer via contextBridge.
  * The renderer MUST NOT access ipcRenderer, Node, or any Electron internals directly.
@@ -75,7 +75,7 @@ const electronAPI = {
     try {
       ipcRenderer.send('locale-changed', locale)
     } catch {
-      /* ignore — main process may not yet be ready */
+      /* ignore: main process may not yet be ready */
     }
   },
 }

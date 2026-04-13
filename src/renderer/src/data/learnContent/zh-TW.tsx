@@ -1,9 +1,10 @@
 /**
- * NekoServe — 學習知識側邊欄內容（繁體中文）
- * 課堂筆記風格：有公式、有範例、有「為什麼這樣設計」的解釋
+ * NekoServe learning sidebar content (Traditional Chinese).
+ * Classroom-notebook style: formulas, examples, and "why this design" reasoning.
  */
 
 import { Formula, Example, Note, P, B, UL, LI, type LearnContent } from './shared'
+import { BlockMath } from '../../components/Math'
 
 export const LEARN_CONTENT_ZH_TW: LearnContent = {
 
@@ -20,7 +21,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <P>
             <B>離散事件模擬（Discrete-Event Simulation, DES）</B>
             把系統狀態的改變建模為一連串
-            「事件」。兩個事件之間，系統狀態完全靜止——時間直接跳到下一個事件發生的時刻。
+            「事件」。兩個事件之間，系統狀態完全靜止，時間直接跳到下一個事件發生的時刻。
           </P>
           <P>這與「連續模擬」（例如微分方程）的差異在於：DES 不需要對每一個微小時間步長積分，計算效率高。</P>
           <Note>
@@ -49,7 +50,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <P>
             泊松過程的到達<B>間隔時間</B>服從指數分佈：
           </P>
-          <Formula>T ~ Exponential(λ)，其中 λ = 1 / 平均間隔</Formula>
+          <BlockMath formula={String.raw`T \sim \text{Exp}(\lambda), \quad \lambda = \frac{1}{\bar{T}}`} />
           <P>指數分佈具有<B>無記憶性</B>：不管已等多久，下一位顧客到來的機率分佈相同。</P>
           <Example>
             💡 範例：設定「平均到達間隔 = 8 分鐘」
@@ -70,7 +71,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             通常圍繞一個均值波動，適合用
             <B>常態分佈（Normal Distribution）</B>建模：
           </P>
-          <Formula>T ~ Normal(μ, σ²)，σ = μ × 0.2</Formula>
+          <BlockMath formula={String.raw`T \sim \mathcal{N}(\mu,\, \sigma^2), \quad \sigma = 0.2\,\mu`} />
           <P>本模擬固定標準差為均值的 20%，並以 <code className="text-xs bg-gray-100 px-1 rounded">max(1, sample)</code> 截斷負值。</P>
           <P><B>為什麼不用指數分佈？</B></P>
           <UL>
@@ -117,7 +118,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <P>
             利特爾定律是排隊論的基石，描述穩態系統中三個量的關係：
           </P>
-          <Formula>N = λ × W</Formula>
+          <BlockMath formula={String.raw`N = \lambda \cdot W`} />
           <UL>
             <LI><B>N</B>：系統中的平均顧客數</LI>
             <LI><B>λ</B>：有效到達率（人/分鐘）</LI>
@@ -148,7 +149,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             <B>利用率（Utilization）ρ</B>
             表示資源的忙碌程度，是系統效率的核心指標：
           </P>
-          <Formula>ρ = λ / (μ × c)</Formula>
+          <BlockMath formula={String.raw`\rho = \dfrac{\lambda}{\mu \, c}`} />
           <UL>
             <LI><B>λ</B>：到達率</LI>
             <LI><B>μ</B>：單一資源的服務率</LI>
@@ -158,7 +159,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             ⚠️ ρ 超過 0.9 非常危險：
             <br />在 M/M/1 佇列中，ρ=0.9 時等待時間是 ρ=0.5 時的 <B>9 倍</B>！
           </Note>
-          <P>不要追求 100% 利用率——那樣任何小波動都會造成長龍。理想值通常在 0.7–0.85 之間。</P>
+          <P>不要追求 100% 利用率，那樣任何小波動都會造成長龍。理想值通常在 0.7–0.85 之間。</P>
         </div>
       ),
     },
@@ -225,7 +226,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
         <div>
           <P>
             系統的整體<B>吞吐量（Throughput）</B>
-            由最緊張的資源——即<B>瓶頸</B>——決定。
+            由最緊張的資源（即<B>瓶頸</B>）決定。
           </P>
           <UL>
             <LI>找出利用率最高的資源</LI>
@@ -370,6 +371,10 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
   // ══════════════════════════════════════════════════════════
   // 關於頁
   // ══════════════════════════════════════════════════════════
+  // The "運作原理" page is itself a long-form learning essay, so the sidebar
+  // deliberately has no extra notes for it; readers focus on the main content.
+  howitworks: [],
+
   about: [
     {
       id: 'queueing-theory',
@@ -418,8 +423,8 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <Note>
             📖 延伸閱讀：
             <br />• SimPy 官方文件：simpy.readthedocs.io
-            <br />• 《Introduction to Simulation》— Banks et al.
-            <br />• 《Queueing Systems》— Kleinrock
+            <br />• 《Introduction to Simulation》, Banks et al.
+            <br />• 《Queueing Systems》, Kleinrock
           </Note>
         </div>
       ),

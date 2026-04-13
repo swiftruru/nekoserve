@@ -1,5 +1,5 @@
 /**
- * NekoServe — Main-process i18n
+ * NekoServe main-process i18n
  *
  * A tiny synchronous string table for the Electron main process (application
  * menu + About dialog). Kept intentionally separate from the renderer's
@@ -79,7 +79,7 @@ const ZH_TW: MainStrings = {
     ok: '確定',
   },
   window: {
-    title: 'NekoServe — 貓咪咖啡廳模擬系統',
+    title: 'NekoServe｜貓咪咖啡廳模擬系統',
   },
 }
 
@@ -111,7 +111,7 @@ const EN: MainStrings = {
     ok: 'OK',
   },
   window: {
-    title: 'NekoServe — Cat café simulation',
+    title: 'NekoServe | Cat café simulation',
   },
 }
 

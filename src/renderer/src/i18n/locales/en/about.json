@@ -24,7 +24,7 @@
   },
   "description": {
     "title": "📖 About the project",
-    "body": "NekoServe is a desktop application that simulates the customer service flow of a cat café. Using discrete-event simulation, it faithfully reproduces the full journey of each customer — arrival, queueing, seating, ordering, dining, interacting with cats, and leaving — and computes key service metrics. It is designed for classroom demonstration and service-system analysis."
+    "body": "NekoServe is a desktop application that simulates the customer service flow of a cat café. Using discrete-event simulation, it faithfully reproduces the full journey of each customer (arrival, queueing, seating, ordering, dining, interacting with cats, and leaving) and computes key service metrics. It is designed for classroom demonstration and service-system analysis."
   },
   "architecture": {
     "title": "🏗️ System architecture",
@@ -60,6 +60,6 @@
     "principle4Item3": "<strong>Sanity-check with Little's Law</strong>: N ≈ λ × W. Large deviations usually mean the run was too short.",
     "principle5Title": "Principle 5: relieving bottlenecks",
     "principle5BodyA": "Find the resource with the highest utilization (seats / staff / cats) and expand its capacity first. By the Theory of Constraints, investing in non-bottleneck resources barely moves system throughput.",
-    "principle5BodyB": "Example: seats 95% utilized, staff 60% utilized — adding staff won't shorten the seat queue. Add seats first, or shorten dining time to turn tables faster."
+    "principle5BodyB": "Example: seats 95% utilized, staff 60% utilized. Adding staff will not shorten the seat queue; add seats first, or shorten dining time to turn tables faster."
   }
 }

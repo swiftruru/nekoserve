@@ -1,7 +1,7 @@
 {
   "weekday": {
     "name": "Weekday daytime",
-    "description": "Relaxed pace — long inter-arrival times and moderate load on staff and cats."
+    "description": "Relaxed pace, with long inter-arrival times and moderate load on staff and cats."
   },
   "holiday-rush": {
     "name": "Holiday rush",

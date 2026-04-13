@@ -2,6 +2,7 @@
   "settings": "Settings",
   "results": "Results",
   "eventlog": "Event Log",
+  "howitworks": "How it Works",
   "about": "About",
   "needsRunHint": "(run a simulation first)"
 }
