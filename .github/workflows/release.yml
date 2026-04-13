@@ -1,10 +1,10 @@
 name: Release NekoServe
 
 # Triggered by pushing a semver tag (e.g. v0.2.0, v1.0.0).
-# Builds macOS + Windows desktop apps (bundling the PyInstaller Python
-# simulator) in parallel, then publishes a single GitHub Release whose
-# body is read from changelog/vX.Y.Z.md and whose assets are the
-# packaged installers / portable executables.
+# Builds macOS + Windows + Linux desktop apps (bundling the PyInstaller
+# Python simulator) in parallel, then publishes a single GitHub Release
+# whose body is read from changelog/vX.Y.Z.md and whose assets are the
+# packaged installers / portable executables / AppImage.
 on:
   push:
     tags:
@@ -30,7 +30,7 @@ env:
 
 jobs:
   # ────────────────────────────────────────────────────────────
-  # 1) Build matrix: macOS + Windows in parallel.
+  # 1) Build matrix: macOS + Windows + Linux in parallel.
   #    Each job uploads its packaged files as a workflow artifact
   #    for the downstream `publish` job to collect.
   # ────────────────────────────────────────────────────────────
@@ -50,6 +50,11 @@ jobs:
             pack_script: ci:pack:win
             simulator_script: powershell -ExecutionPolicy Bypass -File scripts/build-simulator.ps1
             python_path_check: dist\simulator\simulator.exe
+          - os: ubuntu-latest
+            platform: linux
+            pack_script: ci:pack:linux
+            simulator_script: bash scripts/build-simulator.sh
+            python_path_check: dist/simulator/simulator
 
     runs-on: ${{ matrix.os }}
 
@@ -79,6 +84,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      # electron-builder's AppImage target needs libfuse2 on the Ubuntu runner.
+      - name: Install FUSE (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fuse libfuse2
 
       - name: Install Node dependencies
         run: npm ci
@@ -145,6 +157,7 @@ jobs:
             dist/desktop/NekoServe-*.dmg
             dist/desktop/NekoServe-*.zip
             dist/desktop/NekoServe-*.exe
+            dist/desktop/NekoServe-*.AppImage
           if-no-files-found: error
           retention-days: 14
 
@@ -218,3 +231,4 @@ jobs:
             release-assets/NekoServe-*.dmg
             release-assets/NekoServe-*.zip
             release-assets/NekoServe-*.exe
+            release-assets/NekoServe-*.AppImage
