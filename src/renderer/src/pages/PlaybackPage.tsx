@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationResult } from '../types'
 import { buildReplayContext, replayUpTo } from '../utils/replay'
+import { buildSnapshotSeries } from '../utils/snapshotSeries'
 import { usePlaybackClock } from '../hooks/usePlaybackClock'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import CafeScene, { type FocusTarget } from '../components/playback/CafeScene'
@@ -10,6 +11,7 @@ import PlaybackControls, {
 } from '../components/playback/PlaybackControls'
 import TimelineScrubber from '../components/playback/TimelineScrubber'
 import InspectPopover from '../components/playback/InspectPopover'
+import LearningOverlay from '../components/learning/LearningOverlay'
 
 /**
  * Animated replay of a completed simulation (v0.3).
@@ -56,7 +58,7 @@ export default function PlaybackPage({
   onAutoStartConsumed,
   onSkipToResults,
 }: PlaybackPageProps) {
-  const { t } = useTranslation(['playback', 'events'])
+  const { t } = useTranslation(['playback', 'events', 'learnMode'])
   const { config, eventLog } = result
 
   const ctx = useMemo(
@@ -77,6 +79,15 @@ export default function PlaybackPage({
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState<number>(DEFAULT_SPEED)
   const [focus, setFocus] = useState<FocusTarget | null>(null)
+  const [learningMode, setLearningMode] = useState(false)
+
+  // Precompute metric snapshots once per simulation result. The Learning
+  // Overlay concept cards pull from this series in O(log N) per frame
+  // instead of each card re-running replayUpTo.
+  const snapshotSeries = useMemo(
+    () => buildSnapshotSeries(ctx, config.simulationDuration, 1),
+    [ctx, config.simulationDuration],
+  )
 
   const handleEnd = useCallback(() => setPlaying(false), [])
 
@@ -228,15 +239,30 @@ export default function PlaybackPage({
             <div className="card-title">{t('playback:title')}</div>
             <p className="text-sm text-gray-500 mb-3">{t('playback:subtitle')}</p>
           </div>
-          {onSkipToResults && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onSkipToResults}
-              className="btn-secondary text-sm whitespace-nowrap"
+              onClick={() => setLearningMode((v) => !v)}
+              className={
+                'text-sm whitespace-nowrap px-3 py-1.5 rounded-lg border font-semibold transition-colors ' +
+                (learningMode
+                  ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
+                  : 'bg-white text-orange-700 border-orange-300 hover:border-orange-500')
+              }
+              aria-pressed={learningMode}
             >
-              📊 {t('playback:skipToResults')}
+              🎓 {t('learnMode:toggle')}
             </button>
-          )}
+            {onSkipToResults && (
+              <button
+                type="button"
+                onClick={onSkipToResults}
+                className="btn-secondary text-sm whitespace-nowrap"
+              >
+                📊 {t('playback:skipToResults')}
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
           <div>
@@ -259,20 +285,45 @@ export default function PlaybackPage({
         </div>
       </div>
 
-      {/* ── Scene + inspect popover ───────────────────────── */}
-      <div className="card p-3 relative">
-        <CafeScene
-          state={state}
-          config={config}
-          focus={focus}
-          onSelectFocus={handleSelectFocus}
-          speed={speed}
-        />
-        {focus && (
-          <InspectPopover
-            focus={focus}
+      {/* ── Scene + Learning Mode side-by-side ──────────────
+          When Learning Mode is on at lg+ viewports, scene and
+          concept cards render as 3fr/2fr columns so the user sees
+          both at once. Otherwise scene takes the full row and the
+          learning overlay sits below the controls. */}
+      <div
+        className={
+          learningMode
+            ? 'grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-4 items-start'
+            : ''
+        }
+      >
+        <div className="card p-3 relative">
+          <CafeScene
             state={state}
-            onClose={() => setFocus(null)}
+            config={config}
+            focus={focus}
+            onSelectFocus={handleSelectFocus}
+            speed={speed}
+          />
+          {focus && (
+            <InspectPopover
+              focus={focus}
+              state={state}
+              onClose={() => setFocus(null)}
+            />
+          )}
+        </div>
+
+        {learningMode && (
+          <LearningOverlay
+            open={learningMode}
+            onToggle={() => setLearningMode((v) => !v)}
+            state={state}
+            simTime={simTime}
+            series={snapshotSeries}
+            config={config}
+            eventLog={eventLog}
+            compact
           />
         )}
       </div>
@@ -305,6 +356,7 @@ export default function PlaybackPage({
         onStepPrev={stepPrev}
         onStepNext={stepNext}
       />
+
     </div>
   )
 }

@@ -64,10 +64,23 @@ export default function EventLogTable({
     setSelectedTypes(new Set())
   }
 
+  // Translate language-neutral resource ids ("cat-3", "seat-1") and
+  // their legacy zh-TW forms ("貓-3", "座位-1") into the active locale's
+  // display form ("Cat #3" / "Seat #1" / "貓 #3" / "座位 #1"). Returns
+  // the raw id unchanged if it doesn't match a known pattern.
+  function formatResourceId(raw: string | undefined): string {
+    if (!raw) return ''
+    const catMatch = raw.match(/^(?:cat|貓)-(\d+)$/)
+    if (catMatch) return t('events:resource.cat', { n: catMatch[1] })
+    const seatMatch = raw.match(/^(?:seat|座位)-(\d+)$/)
+    if (seatMatch) return t('events:resource.seat', { n: seatMatch[1] })
+    return raw
+  }
+
   function describeEvent(e: EventLogItem): string {
     return t(`events:${e.eventType}` as const, {
       customerId: e.customerId,
-      resourceId: e.resourceId ?? '',
+      resourceId: formatResourceId(e.resourceId),
       defaultValue: e.description ?? '',
     })
   }
@@ -250,7 +263,7 @@ export default function EventLogTable({
                       {e.customerId > 0 ? `#${e.customerId}` : '–'}
                     </td>
                     <td className="px-4 py-2 text-gray-500 text-xs">
-                      {e.resourceId ?? '–'}
+                      {e.resourceId ? formatResourceId(e.resourceId) : '–'}
                     </td>
                     <td className="px-4 py-2 text-gray-700" data-selectable>
                       {description}

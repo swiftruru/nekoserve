@@ -49,7 +49,8 @@
     "catVisitsTotal": "累計拜訪 {{count}} 次",
     "allCatsOut": "（貓咪全員外出拜訪中）",
     "simulationEnded": "模擬結束",
-    "simulationEndedHint": "打烊瞬間還有 {{count}} 位顧客在服務中，流程被時間截斷"
+    "simulationEndedHint": "打烊瞬間還有 {{count}} 位顧客在服務中，流程被時間截斷",
+    "queueBadge": "👥 {{count}} 位等候"
   },
   "stages": {
     "arriving": "剛到",

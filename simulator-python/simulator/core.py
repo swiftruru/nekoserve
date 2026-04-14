@@ -128,7 +128,8 @@ def run_simulation(config_dict: dict) -> dict:
         wait_seat = env.now - arrive_time
         wait_seat_times.append(wait_seat)
         seated_at = env.now
-        seat_label = f"座位-{seats.count}"
+        # Locale-neutral resource id; the renderer formats it via i18n.
+        seat_label = f"seat-{seats.count}"
         log(env.now, "CUSTOMER_SEATED", cid,
             f"顧客 {cid} 入座（等待 {wait_seat:.1f} 分鐘）",
             seat_label)
@@ -201,7 +202,9 @@ def run_simulation(config_dict: dict) -> dict:
     # ── Cat process ────────────────────────────────────────
     def cat(cat_id: int):
         nonlocal total_cat_busy
-        cat_label = f"貓-{cat_id}"
+        # Locale-neutral resource id; the renderer formats it as
+        # "Cat #N" / "貓 #N" via i18n based on the active language.
+        cat_label = f"cat-{cat_id}"
 
         while True:
             # Wander around / idle, then look for someone to visit.

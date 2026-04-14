@@ -28,5 +28,9 @@
     "CAT_LEAVE_SEAT": "Cat leave",
     "CAT_START_REST": "Cat rest",
     "CAT_END_REST": "Rest end"
+  },
+  "resource": {
+    "cat": "Cat #{{n}}",
+    "seat": "Seat #{{n}}"
   }
 }

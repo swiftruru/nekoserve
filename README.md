@@ -75,7 +75,7 @@ First-launch tips for unsigned builds:
 | **⚙️ Simulation Settings** | 13 configurable parameters, 3 built-in scenario presets, custom presets persisted in `localStorage` |
 | **📊 Statistics Results** | 10 KPI cards, 3 Recharts visualizations (utilization, wait time, customer outcome pie), up-to-3-run side-by-side comparison |
 | **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter, localized keyword search, row highlight synced to the Playback cursor |
-| **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Customer emoji avatars move between door, seat queue, seat grid, kitchen, cat zone and exit in real time; play / pause / speed / scrub / step; click a seat or cat to inspect the current occupant; keyboard shortcuts for every transport action |
+| **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Characters walk through real aisles (no more ghosting through walls), ambient decorations react to time of day, and an optional side-by-side **Live Learning Mode** overlay shows four live DES concept cards (Event-driven clock, Queue length, Little's Law, Utilization) with a Beginner / Pro level toggle |
 | **🎬 How it Works** | Dedicated system-simulation walkthrough: event-driven clock, entity as process, queueing vs service, dynamic capacity, end-of-run aggregation (with KaTeX-rendered formulas and small SimPy code excerpts) |
 | **ℹ️ About** | Course background, tech stack, architecture overview, experiment design principles |
 
@@ -121,7 +121,35 @@ The hook guards against firing shortcuts while any `<input>` / `<textarea>` / `c
 - While Playback is playing, the corresponding `EventLogTable` row is highlighted (`bg-orange-100 ring-2`) and auto-scrolled into view (debounced 150 ms so rAF-driven updates don't thrash the scroll container).
 - Clicking any row in the Event Log jumps straight to Playback with `simTime` seeded at that row's exact timestamp.
 
-The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/renderer/src/utils/replay.ts`](src/renderer/src/utils/replay.ts) plus an `rAF`-driven [`usePlaybackClock`](src/renderer/src/hooks/usePlaybackClock.ts). The reducer maintains its own **virtual seat slot allocator** because the Python simulator's `座位-N` resourceId label is the count of currently-occupied seats at the moment the event fired — not a stable slot identity, see `simulator-python/simulator/core.py`. Cat events, however, now carry cat identity in `resourceId = "貓-N"` (v0.4.0), so the reducer maps cats directly onto stable cat slots. Allocators are deterministic under re-replay, so scrubbing the timeline produces the same scene every time.
+The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/renderer/src/utils/replay.ts`](src/renderer/src/utils/replay.ts) plus an `rAF`-driven [`usePlaybackClock`](src/renderer/src/hooks/usePlaybackClock.ts). The reducer maintains its own **virtual seat slot allocator** because the Python simulator's `seat-N` resourceId label is the count of currently-occupied seats at the moment the event fired — not a stable slot identity, see `simulator-python/simulator/core.py`. Cat events, however, now carry cat identity in `resourceId = "cat-N"` (v0.4.0, locale-neutralized in v0.5.0), so the reducer maps cats directly onto stable cat slots. Allocators are deterministic under re-replay, so scrubbing the timeline produces the same scene every time.
+
+**Real walking paths** (v0.5.0) — every character follows a piecewise-linear L-shaped path through real aisles instead of ghosting diagonally through zone cards. Each customer / cat state transition snapshots `stageStartPos` into the reducer so a dedicated `pointOnPath(path, progress)` interpolator can move them along arc length at uniform speed. CSS `transform` transition is disabled while walking (per-frame JS positioning takes over) and re-enabled when stationary for smooth queue shuffles. Door-adjacent paths stay at door height until they reach the queue column so new customers visibly walk in instead of falling from the ceiling.
+
+**Dramatic event moments** (v0.5.0) — `CUSTOMER_ABANDON` now plays a full 1-sim-minute mini-skit: the customer **stomps three times in place**, **angry smoke trails above their head** for the whole walk, they **slowly storm out the bottom aisle**, **slam through the front door** with a scaleX wobble + fade, and leave a **dust cloud** at the door. Implemented as a new `'abandonDrama'` scene-pulse kind with its own 1-sim-minute TTL; `PULSE_TTL_MIN` became a per-kind `Record` to support the mixed-duration world.
+
+**Ambient scene decorations** (v0.5.0) — the background now has time-of-day-aware atmosphere: 14 🌸 cherry blossom petals drift diagonally across the whole scene (always on), 9 🧶 yarn balls hang from the ceiling with a gentle sway (always on), 3 🦋 butterflies flutter in a figure-8 during the first ~45% of sim time, and 7 ✨ fireflies twinkle with a yellow glow during the final ~40%. All pure CSS keyframes, zero React re-render cost, disabled by `prefers-reduced-motion`.
+
+### Live Learning Mode (v0.5.0)
+
+A dedicated **🎓 Live learning mode** overlay lives in the Playback page and turns the simulation into an actual teaching tool. Toggling it on splits the page into a 60/40 grid — scene on the left, four live concept cards on the right that update as the simulation plays.
+
+**Four live concept cards**:
+
+| Card | Concept | What it shows |
+|---|---|---|
+| **⏱️ Event-driven clock** | DES time is not continuous | Mini event timeline with the nearest 9 events, current cursor, and the "next event in +X.XX min" countdown |
+| **📈 Queue length L(t)** | Queue dynamics | SVG polyline of queue length across the full run, color-coded current-time dot (blue / orange / red by severity) |
+| **⚖️ Little's Law** | The universal identity `L = λ × W` | Three live numbers computed over a rolling 60-minute window, with the identity printed with actual values plugged in. Shows ✓ when within 20% tolerance, "warming up…" during the first 15 sim-min |
+| **🔥 Utilization ρ** | Bottleneck detection | Three bars for seat / staff / cat resources, color-coded, with a 🔥 flag on whichever resource is the bottleneck |
+
+**Beginner / Pro level toggle** — a pill switcher in the overlay header flips the whole panel between two completely different presentations of the same data:
+
+- **🐣 Beginner** — metaphor-driven views for students new to DES. Little's Law gets a water cup SVG (drops flowing in from above, water level = current L, drain at bottom = wait time); Queue Length shows a literal 👤 emoji queue; Utilization labels each resource with a mood emoji ("totally free / plenty of room / getting busy / over capacity"); Event Clock highlights the countdown with a one-line plain-language hint. The "Tell me more ▼" expand shows a **plain-language word formula** in a soft pill, no Greek letters, no KaTeX.
+- **🎓 Pro** (default) — the full professional view with L / λ / W / ρ symbols and KaTeX-rendered formulas in the expand (`L = λ · W`, `\bar{L} = (1/T) \int L(t) dt`, `\rho = \text{busy} / (c \cdot T)`, `t_{next} = \min\{t_{arrive}, t_{seat}, \ldots\}`). This is what a teacher wants to demo.
+
+Same simulation, two completely different presentations. Flip the switch and the whole overlay updates instantly.
+
+**Architecture** — a new `buildSnapshotSeries(ctx, duration, stepMin=1)` utility pre-computes metric snapshots every sim-minute when the result loads (480 snapshots × ~500 events = ~240k reducer steps, sub-second on modern JS). Each concept card then does an O(log N) binary search (`snapshotAt`) per frame plus `avgOverWindow` / `deltaOverWindow` helpers for rolling-window computations. No card ever re-runs `replayUpTo` on its own. All files live in [`src/renderer/src/components/learning/`](src/renderer/src/components/learning/) and pull copy from a new `learnMode` i18n namespace with full Beginner / Pro bilingual coverage.
 
 ### Export
 

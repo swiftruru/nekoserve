@@ -1,0 +1,76 @@
+{
+  "toggle": "Live learning mode",
+  "toggleHint": "Show live DES metrics next to the scene (complements the static Learning Notes drawer)",
+  "expand": "Details ▼",
+  "collapse": "Hide details ▲",
+  "friendlyExpand": "Tell me more ▼",
+  "friendlyCollapse": "Hide details ▲",
+  "level": {
+    "friendly": "Beginner",
+    "expert": "Pro"
+  },
+  "concepts": {
+    "eventClock": {
+      "title": "Event-driven clock",
+      "summary": "Time jumps from one event to the next instead of ticking continuously.",
+      "nextIn": "Next event in",
+      "unitMin": "min",
+      "eventsApplied": "events applied",
+      "friendlyNext": "Next thing happens in",
+      "friendlyHint": "DES time doesn't tick like a stopwatch — it leaps straight to the next event. That's why fast-forward feels instant.",
+      "friendlyFormula": "Next jump = the earliest thing in the queue of upcoming events",
+      "friendlyExpertDef": "Imagine a to-do list of scheduled events, each with a planned time. The clock skips straight to the earliest one on the list — nothing in between needs computing.",
+      "friendlyExpertWhy": "Because idle time costs nothing, simulating an entire day of the café can finish in milliseconds.",
+      "expertDef": "The simulation clock advances to the earliest scheduled event. Between events nothing needs to be computed — idle time is effectively free.",
+      "expertWhy": "This is what lets DES scale: a model can simulate days in milliseconds as long as events stay sparse."
+    },
+    "queueLength": {
+      "title": "Queue length L(t)",
+      "summary": "How long the line is right now, and how it grew over the run.",
+      "people": "people waiting",
+      "yMax": "peak {{n}}",
+      "emptyQueue": "nobody in line right now 🌿",
+      "friendlyPeak": "busiest so far: {{n}} people 🔥",
+      "friendlyFormula": "Average queue length = add up the count at every moment ÷ total time",
+      "friendlyExpertDef": "Don't just look at \"how many people right now\" — look at \"how many on average across the whole run\". Add the queue size at every moment, divide by total time.",
+      "friendlyExpertWhy": "A rising curve means customers arrive faster than the shop can serve them. A falling curve means the shop is catching up.",
+      "expertDef": "L(t) is the number of customers in the system at time t. Its time-average L̄ is what Little's Law refers to.",
+      "expertWhy": "A rising L means arrivals outpace service; a falling L means the system is draining its backlog."
+    },
+    "littlesLaw": {
+      "title": "Little's Law",
+      "summary": "A universal identity: long-run average customers equals arrival rate times average wait.",
+      "unitPeople": "people",
+      "unitPerMin": "/ min",
+      "unitMin": "min",
+      "warmingUp": "warming up…",
+      "friendlyIn": "pouring in",
+      "friendlyStay": "each stays",
+      "friendlyEquation": "{{lambda}} people flow in per minute × they stay {{w}} min ≈ {{l}} people in the cup",
+      "friendlyFormula": "People in the cup = arrivals per minute × minutes each one stays",
+      "friendlyExpertDef": "Picture a water cup: drops flow in from above (0.8 per minute), each drop stays a while (7 minutes), then drains out the bottom. The water level always equals \"inflow × stay time\".",
+      "friendlyExpertWhy": "It's a magical theorem: no matter how complex the shop's internals are, this relationship always holds. Measure any two and you get the third for free.",
+      "expertDef": "L, λ, and W are all time-averaged over a long-enough window. The identity holds for any stable queueing system regardless of distribution.",
+      "expertWhy": "Measure any two of L, λ, W and you get the third for free. It's the workhorse of operational analysis."
+    },
+    "utilization": {
+      "title": "Utilization ρ",
+      "summary": "How busy each resource is. The most-used one is the bottleneck.",
+      "seat": "Seats",
+      "staff": "Staff",
+      "cat": "Cats",
+      "friendlyHint": "The busiest row is the bottleneck — expanding it is the only way to speed up the whole place.",
+      "friendlyFormula": "Busyness = actual usage time ÷ total available time",
+      "friendlyExpertDef": "Example: 10 seats open all day gives 10 × 24 = 240 seat-hours available. If customers actually used 180 of those hours, seat busyness = 180 ÷ 240 = 75%.",
+      "friendlyExpertWhy": "Once busyness crosses 85%, even a small extra bump in arrivals blows the queue up. The only way to actually speed up the shop is to expand the busiest resource.",
+      "moods": {
+        "hot": "over capacity!",
+        "warm": "getting busy",
+        "calm": "plenty of room",
+        "idle": "totally free"
+      },
+      "expertDef": "ρ is the fraction of total capacity-time spent serving customers. For a multi-server station with c servers it's averaged across all c.",
+      "expertWhy": "Once ρ passes ~0.85, small variations in arrivals cause disproportionate queue blowups. The bottleneck resource is where throughput improvements actually pay off."
+    }
+  }
+}

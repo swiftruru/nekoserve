@@ -49,7 +49,8 @@
     "catVisitsTotal": "{{count}} visits so far",
     "allCatsOut": "(all cats out visiting)",
     "simulationEnded": "Simulation ended",
-    "simulationEndedHint": "{{count}} customers were still mid-service at closing time; their processes were cut off"
+    "simulationEndedHint": "{{count}} customers were still mid-service at closing time; their processes were cut off",
+    "queueBadge": "👥 {{count}} waiting"
   },
   "stages": {
     "arriving": "Arriving",

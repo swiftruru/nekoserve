@@ -28,5 +28,9 @@
     "CAT_LEAVE_SEAT": "貓咪離開",
     "CAT_START_REST": "貓咪休息",
     "CAT_END_REST": "休息結束"
+  },
+  "resource": {
+    "cat": "貓 #{{n}}",
+    "seat": "座位 #{{n}}"
   }
 }
