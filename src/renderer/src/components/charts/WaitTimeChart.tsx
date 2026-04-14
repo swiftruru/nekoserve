@@ -46,7 +46,14 @@ export default function WaitTimeChart({
             formatter={(v: number) => [`${v.toFixed(1)} ${minUnit}`, '']}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
-          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+          <Bar
+            dataKey="value"
+            radius={[6, 6, 0, 0]}
+            isAnimationActive
+            animationBegin={100}
+            animationDuration={800}
+            animationEasing="ease-out"
+          >
             {data.map((_, i) => (
               <Cell key={i} fill={COLORS[i]} />
             ))}

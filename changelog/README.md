@@ -11,6 +11,7 @@ Each released version of NekoServe has its own standalone markdown file in this 
 
 ## Versions
 
+- [v0.6.0](v0.6.0.md) — "Teach the Results" pass: Hero Verdict + Bottleneck callout, 4-section Results rebuild, count-up animations, queue length + wait histograms + clickable key moments timeline, utilization time series, Kingman theory-vs-simulation callout, cat-visited stay distribution, and an inline glossary tooltip system covering 14 DES terms. _2026-04-14_
 - [v0.5.0](v0.5.0.md) — "Live Classroom" Playback pass: real walking paths, CUSTOMER_ABANDON mini-skit, ambient scene decorations, and a Live Learning Mode overlay with 4 live DES concept cards and a Beginner / Pro toggle. _2026-04-14_
 - [v0.4.1](v0.4.1.md) — "Clearly Cute" Playback polish: idle bob, pop-in/out, character variety, floating hearts, kitchen steam, zone feedback, transport fixes, CI retry wrapping. _2026-04-14_
 - [v0.4.0](v0.4.0.md) — Autonomous cat agents: each cat is its own SimPy process with idle / visiting / rest states, carried identity via `resourceId = "貓-N"`, and measurable impact on `avgTotalStayTime`. _2026-04-14_

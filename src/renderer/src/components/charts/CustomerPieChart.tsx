@@ -88,6 +88,10 @@ export default function CustomerPieChart({
             outerRadius={78}
             paddingAngle={3}
             dataKey="value"
+            isAnimationActive
+            animationBegin={100}
+            animationDuration={800}
+            animationEasing="ease-out"
           >
             {data.map((entry, i) => (
               <Cell

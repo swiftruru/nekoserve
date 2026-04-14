@@ -8,6 +8,233 @@
     "single": "Single run",
     "compare": "Compare ({{count}})"
   },
+  "level": {
+    "friendly": "Beginner",
+    "expert": "Pro"
+  },
+  "section": {
+    "expandFriendly": "Tell me more ▼",
+    "expandExpert": "Details ▼",
+    "collapse": "Collapse ▲",
+    "flow": {
+      "title": "📊 Flow: who arrived, who stayed",
+      "summary": "How many customers arrived, how many completed service, and how many gave up."
+    },
+    "wait": {
+      "title": "⏱ Wait time: where customers' time went",
+      "summary": "From arrival to departure — time split across waiting for a seat, waiting for food, eating, and other delays."
+    },
+    "utilization": {
+      "title": "🔥 Utilization: who's busiest",
+      "summary": "How busy seats, staff, and cats were. The busiest one sets the pace for the whole café."
+    },
+    "cat": {
+      "title": "🐱 Cat interaction: who got a visit",
+      "summary": "Cat visit rate and average visits per customer. More cat time costs customers longer stays."
+    }
+  },
+  "verdict": {
+    "bottleneckResource": {
+      "seat": "Seats",
+      "staff": "Staff",
+      "cat": "Cats"
+    },
+    "healthy": {
+      "label": "Healthy run",
+      "friendly": "🎉 This run went smoothly! {{arrived}} customers arrived, {{served}} completed service, and only {{abandonedPct}}% gave up. Every resource still had breathing room — the café ran comfortably.",
+      "expert": "✓ Healthy run — {{arrived}} arrived, {{served}} served ({{servedPct}}%), abandon rate {{abandonedPct}}%. Max utilization {{rho}}% ({{bottleneck}}) well below the 85% Kingman heavy-load threshold."
+    },
+    "strained": {
+      "label": "Under strain",
+      "friendly": "⚠️ The café is under pressure. {{arrived}} arrived, {{served}} served, but {{abandonedPct}}% gave up before getting a seat. The bottleneck is {{bottleneck}} at {{rho}}% — one more busy minute and it would crack.",
+      "expert": "⚠️ Strained — {{arrived}} arrived, {{served}} served ({{servedPct}}%), abandon {{abandonedPct}}%. Bottleneck: {{bottleneck}} at {{rho}}%, approaching the 85% Kingman breakdown point where queue length blows up non-linearly."
+    },
+    "overloaded": {
+      "label": "Overloaded",
+      "friendly": "🚨 The café got hammered. {{arrived}} arrived, only {{served}} ({{servedPct}}%) completed service, and **{{abandonedPct}}% walked out without even sitting down**. {{bottleneck}} is pinned at {{rho}}% — the only way to make the café faster is to expand it.",
+      "expert": "🚨 Overloaded — {{arrived}} arrived, only {{served}} served ({{servedPct}}%), abandon rate {{abandonedPct}}%. Critical bottleneck: {{bottleneck}} at {{rho}}% → effective throughput capped. Expanding this resource is the only lever; expanding others gives ~0 marginal improvement."
+    }
+  },
+  "bottleneck": {
+    "title": "Bottleneck detected",
+    "arrow": "← this is the bottleneck",
+    "hint": {
+      "friendly": "Once any resource crosses 85% busy, even a small bump in arrivals makes the queue explode. That's not an exaggeration — it's what queueing theory predicts mathematically.",
+      "expert": "Kingman's formula: W_q ≈ (ρ / (1 − ρ)) × service variance term. As ρ → 1, queue length diverges. The 85% threshold is where the non-linearity starts to bite."
+    },
+    "advice": {
+      "seat": {
+        "friendly": "Increase seat count. Adding staff or cats does nothing — customers never get to that stage because they can't even sit down.",
+        "expert": "Increase `seatCount`; staff or cat expansion does not help because customers never reach the service phase — the constraint is seat capacity, not service speed."
+      },
+      "staff": {
+        "friendly": "Increase staff count to speed up ordering and cooking. Adding seats just makes the queue look longer — those extra customers won't be served any faster.",
+        "expert": "Increase `staffCount`; adding seats just extends the order queue (Little's Law: more L in the waitingFood stage). Staff throughput is the binding constraint."
+      },
+      "cat": {
+        "friendly": "Cat utilization is maxed out — the cats can't keep up. Add more cats to raise the visit rate so more customers get petted.",
+        "expert": "Increase `catCount`; cat availability is the constraint on `catInteractionRate`. Other levers (interaction time, idle interval) only shift the rate curve, not its ceiling."
+      }
+    }
+  },
+  "flowDiagram": {
+    "arrived": "Arrived",
+    "served": "Completed service",
+    "abandoned": "Gave up",
+    "inFlight": "Still in shop at end of sim"
+  },
+  "stayBreakdown": {
+    "title": "Where a customer's time goes",
+    "waitSeat": "Waiting for seat",
+    "waitOrder": "Waiting for food",
+    "dining": "Dining",
+    "other": "Other (incl. cat)"
+  },
+  "queueTimeSeries": {
+    "title": "Queue length over time L(t)",
+    "yMax": "peak {{n}}",
+    "peakLabel": "Queue peaked at {{n}} people around minute {{t}}"
+  },
+  "waitHistogram": {
+    "titleWaitSeat": "How long each customer waited for a seat",
+    "titleWaitOrder": "How long each customer waited for food",
+    "titleStay": "How long each customer stayed",
+    "totalCount": "{{n}} customers",
+    "empty": "No completed-service data yet",
+    "tooltip": "{{from}}-{{to}} {{unit}}: {{count}} customers",
+    "meanLabel": "avg {{value}}",
+    "hint": "The average is a single point; the shape of the distribution tells the real story — a long tail means a few customers waited much longer than most."
+  },
+  "keyMoments": {
+    "title": "Key moments",
+    "clickHint": "click a bubble to jump to that instant",
+    "jumpHint": "Want to see what the café looked like at a specific moment? Click any bubble to jump into the Playback replay right there.",
+    "quietMiddle": "Quiet running",
+    "clusterLabel": "{{n}} key moments at the same instant",
+    "labels": {
+      "firstArrive": "First customer arrived",
+      "peakQueue": "Queue peak ({{n}} waiting)",
+      "firstAbandon": "First abandon",
+      "peakBusy": "Busiest moment ({{n}} staff working)",
+      "lastServed": "Last customer served"
+    }
+  },
+  "kingman": {
+    "title": "Theory vs simulation (Kingman approximation)",
+    "predictedLabel": "Kingman predicts",
+    "actualLabel": "Simulator actual",
+    "unstable": "Unstable system (ρ ≥ 1)",
+    "unstableHint": "Utilization reached {{rho}}%; theory predicts queue length to grow without bound. The simulator truncated the blow-up via maxWaitTime.",
+    "verdict": {
+      "close": "✓ Theory and observed wait differ by just {{delta}}% — Kingman's approximation works well in this regime",
+      "diverge": "⚠ {{delta}}% gap: Kingman's Poisson + exponential-service assumptions diverge from NekoServe's actual behaviour",
+      "fail": "🔥 {{delta}}% gap: cat visits, abandon timeouts, and truncated-normal service all break Kingman's base assumptions — this is exactly why DES is more practical than pure theory"
+    }
+  },
+  "utilTimeSeries": {
+    "title": "Resource utilization over time",
+    "seat": "Seats",
+    "staff": "Staff",
+    "cat": "Cats",
+    "avg": "avg",
+    "peak": "peak"
+  },
+  "stayDist": {
+    "title": "Stay time distribution: cat-visited vs not",
+    "withCat": "With cat visit 🐱",
+    "withoutCat": "No cat visit",
+    "empty": "Not enough data to compare",
+    "tooltip": "{{from}}-{{to}} {{unit}}: {{count}} customers",
+    "deltaBoth": "Cat-visited average stay: {{withCat}} min; without a visit: {{withoutCat}} min — delta {{delta}} min",
+    "onlyWithCat": "Every customer met a cat this run (avg stay {{avg}} min)",
+    "onlyWithoutCat": "No customer met a cat this run (avg stay {{avg}} min)"
+  },
+  "glossary": {
+    "terms": {
+      "kingman": {
+        "label": "Kingman's approximation",
+        "def": "A simple formula for estimating queue wait time. It shows wait grows proportional to utilization divided by (1 minus utilization) — so once utilization nears 100%, wait times explode. Derived by John Kingman in 1961."
+      },
+      "littlesLaw": {
+        "label": "Little's Law",
+        "def": "The foundational identity of queueing theory: average number in system = arrival rate × average stay time. It holds regardless of the complexity of the system or the shape of the probability distributions. Proven by John Little in 1961."
+      },
+      "poisson": {
+        "label": "Poisson process",
+        "def": "A mathematical model of 'random events happening over time'. On average λ per time unit, but in practice sometimes you get a burst, sometimes silence. NekoServe uses this to generate customer arrivals, which is why several customers may show up together and then nobody for a while."
+      },
+      "utilization": {
+        "label": "Utilization ρ (rho)",
+        "def": "The fraction of time a resource is busy, from 0% to 100%. Once ρ crosses 85%, even small bumps in arrivals can blow the queue up non-linearly — that's why real-world operators rarely run resources flat out."
+      },
+      "lambdaRate": {
+        "label": "Arrival rate λ (lambda)",
+        "def": "Average number of customers arriving per time unit. For example λ = 0.5/min means one customer roughly every two minutes. λ is the single parameter of a Poisson arrival process."
+      },
+      "waitTime": {
+        "label": "W_q (queue wait time)",
+        "def": "The time a customer spends waiting in the queue before service begins. In Little's Law it's part of W (W = wait + service). For M/M/c systems, W_q can be computed exactly via the Erlang-C formula."
+      },
+      "queueLength": {
+        "label": "Queue length L(t)",
+        "def": "Number of customers in the system at time t. L(t) fluctuates over time; its time-averaged value L̄ is what Little's Law refers to."
+      },
+      "mmc": {
+        "label": "M/M/c model",
+        "def": "Classic queueing-theory notation: first M = Markovian (Poisson) arrivals, second M = Markovian (exponential) service times, c = number of servers. NekoServe's staff station can be approximated as M/M/c with c = staffCount."
+      },
+      "simpy": {
+        "label": "SimPy and env.run",
+        "def": "SimPy is Python's discrete-event simulation framework. `env.run(until=T)` advances the simulation clock to time T, handling all scheduled events along the way. Any processes still running when the clock hits T get truncated."
+      },
+      "des": {
+        "label": "DES (Discrete Event Simulation)",
+        "def": "A simulation method where the clock doesn't tick second-by-second — it jumps straight to the next scheduled event. Idle stretches are skipped, so you can simulate a full day in milliseconds."
+      },
+      "exponential": {
+        "label": "Exponential distribution",
+        "def": "The probability distribution of 'time between random events'. Its key property is memorylessness — how long you've been waiting doesn't change how long you'll keep waiting. Inter-arrival times in a Poisson process follow this distribution."
+      },
+      "erlangC": {
+        "label": "Erlang-C formula",
+        "def": "Computes the exact probability that an arriving customer has to wait in an M/M/c system. Directly connected to W_q and is the standard tool for sizing call centers, emergency rooms, and other multi-server queues."
+      },
+      "inFlight": {
+        "label": "In-flight customers",
+        "def": "Customers who hadn't finished their full journey when the simulation clock hit its upper bound. They might still be dining, waiting for staff, or being visited by a cat. SimPy's env.run forcibly truncates their process, so they count as neither served nor abandoned."
+      },
+      "bottleneck": {
+        "label": "Bottleneck",
+        "def": "The resource with the highest utilization; it caps overall system throughput. Expanding the bottleneck directly increases capacity; expanding any other resource does nothing. In NekoServe this could be seats, staff, or cats."
+      }
+    }
+  },
+  "sectionExpand": {
+    "flow": {
+      "friendly": "NekoServe uses a Poisson process to generate customer arrivals: on average λ people per minute, but in practice sometimes two arrive at once and sometimes nobody shows for a while. That's \"random but statistically predictable\". Customers still inside the café at the end of the simulation are called in-flight — they didn't finish because env.run(until=...) cut the clock off.",
+      "friendlyFormula": "arrivals = served + gave up + still in-flight at end",
+      "expert": "Arrivals follow a Poisson process: on average one customer every fixed interval, but actual inter-arrival times are independent exponential random variables. When the simulation clock hits its upper bound, SimPy's env.run truncates any customer processes still mid-flow — those neither served nor abandoned are the residual term in the formula below.",
+      "expertFormula": "\\lambda = \\frac{1}{\\text{arrivalInterval}}, \\quad X_k \\sim \\text{Exp}(\\lambda), \\quad N(t) \\sim \\text{Poisson}(\\lambda t)"
+    },
+    "wait": {
+      "friendly": "Total time in café = waiting for a seat + waiting for food + eating + time spent frozen by a cat on your lap. Waits grow when the resource is busy. Cats physically trap the customer for the duration of each visit, which is why more cats inflate the average stay time.",
+      "friendlyFormula": "total stay ≈ wait seat + wait food + dining + other (incl. cat)",
+      "expert": "Little's Law is the time-averaged identity: the average number in the system equals the effective arrival rate times the average stay time. Under the M/M/c approximation, every wait phase scales with utilization: higher utilization means longer waits. Cat visits pin a customer in the dining stage for extra time, effectively adding a cat-delay term to the average stay.",
+      "expertFormula": "L = \\lambda W, \\quad W = W_q + \\tfrac{1}{\\mu}, \\quad W_q(M/M/c) \\sim \\text{Erlang-C}(c, \\rho)"
+    },
+    "utilization": {
+      "friendly": "Utilization is the percentage of time a resource is busy. 100% means no slack at all; 0% means completely idle. Higher is NOT always better — once you cross 85%, even tiny bursts of arrivals cause the queue to explode, because there's no slack to absorb the variance. The busiest resource is the bottleneck; expanding it is the only way to speed up the whole café.",
+      "friendlyFormula": "utilization = actual busy time ÷ total available time",
+      "expert": "For a multi-server station with c servers, utilization equals arrival rate times mean service time divided by server count. Kingman's approximation shows queue wait grows proportional to utilization divided by (1 minus utilization) — that's why crossing 85% makes queues blow up non-linearly. System throughput is capped at server count divided by mean service time, so expanding any non-bottleneck resource gives zero benefit.",
+      "expertFormula": "\\rho = \\frac{\\lambda \\cdot E[S]}{c}, \\quad W_q \\approx \\frac{\\rho}{1 - \\rho} \\cdot \\frac{C_a^2 + C_s^2}{2} \\cdot E[S]"
+    },
+    "cat": {
+      "friendly": "Cat visit rate = the share of customers visited by at least one cat. Higher is good for happiness but bad for stay time — each visit locks the customer in place. To get both high visit rate AND reasonable stay time, you need more cats (catCount) or shorter interaction time (catInteractionTime).",
+      "friendlyFormula": "visit rate = customers visited by a cat ÷ total served customers",
+      "expert": "Cats have been autonomous SimPy processes since v0.4.0, cycling through idle, visiting, and optional resting states. Each visit keeps a customer locked in the dining stage for the full interaction time, directly inflating average total stay time but leaving staff and seat service rates completely untouched. Cat utilization tracks the fraction of total simulation time spent busy (visiting plus resting).",
+      "expertFormula": "\\text{visitRate}_{\\text{eff}} \\leq \\frac{\\text{catCount}}{\\text{idleInterval} + \\text{visitTime} + p_{\\text{rest}} \\cdot \\text{restTime}}"
+    }
+  },
   "kpi": {
     "totalCustomersArrived": {
       "label": "Total arrivals",

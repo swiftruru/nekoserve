@@ -125,6 +125,19 @@ export default function App() {
     setPage('playback')
   }
 
+  /**
+   * Called from ResultsPage when the user clicks a key-moment bubble
+   * in the Flow section timeline. Same semantics as an event log row
+   * click: seek shared cursor to the target sim-time then switch to
+   * Playback. The target page auto-pauses at that time instead of
+   * playing — see PlaybackPage's `autoStartPending` gate.
+   */
+  function handleJumpToPlayback(simTime: number) {
+    setPendingEventFilter(null)
+    setPlaybackTime(simTime)
+    setPage('playback')
+  }
+
   const resultsAvailable = status === 'success' && result !== null
 
   return (
@@ -233,6 +246,7 @@ export default function App() {
                 result={result}
                 history={history}
                 onChartClick={handleChartClick}
+                onJumpToPlayback={handleJumpToPlayback}
               />
             )}
             {page === 'eventlog' && result && (

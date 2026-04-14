@@ -8,6 +8,239 @@
     "single": "單次結果",
     "compare": "對比 ({{count}})"
   },
+  "level": {
+    "friendly": "小白",
+    "expert": "專業"
+  },
+  "section": {
+    "expandFriendly": "更多說明 ▼",
+    "expandExpert": "展開細節 ▼",
+    "collapse": "收起 ▲",
+    "flow": {
+      "title": "📊 流量：誰來了、誰留下",
+      "summary": "這段時間有多少人抵達、順利完成服務，又有多少人半路放棄。"
+    },
+    "wait": {
+      "title": "⏱ 等待時間：顧客時間花在哪",
+      "summary": "從進門到離開，顧客的時間分別花在等座、等餐、用餐、和其他延遲上。"
+    },
+    "utilization": {
+      "title": "🔥 資源利用率：哪個最忙",
+      "summary": "座位、店員、貓咪各自忙成什麼樣。最忙的那個決定整間店的節奏。"
+    },
+    "cat": {
+      "title": "🐱 貓咪互動：有多少人摸到貓",
+      "summary": "貓咪拜訪率與平均拜訪次數。貓越常來，代價是顧客停留時間被拉長。"
+    }
+  },
+  "verdict": {
+    "bottleneckResource": {
+      "seat": "座位",
+      "staff": "店員",
+      "cat": "貓咪"
+    },
+    "healthy": {
+      "label": "模擬順利",
+      "friendly": "🎉 這次模擬跑得很順！{{arrived}} 人抵達、{{served}} 人完成服務，只有 {{abandonedPct}}% 放棄。店內資源都還有空間，整體運作健康。",
+      "expert": "✓ 健康執行：抵達 {{arrived}} 人、服務完成 {{served}} 人（{{servedPct}}%），放棄率 {{abandonedPct}}%。最大利用率 {{rho}}%（{{bottleneck}}），遠低於 85% Kingman 重負荷臨界值。"
+    },
+    "strained": {
+      "label": "有壓力",
+      "friendly": "⚠️ 店開始有點吃緊了。{{arrived}} 人抵達、{{served}} 人完成服務，{{abandonedPct}}% 的人等不到位子就走了。瓶頸是「{{bottleneck}}」{{rho}}%，差一點就撐不住。",
+      "expert": "⚠️ 承壓執行：抵達 {{arrived}} 人、服務完成 {{served}} 人（{{servedPct}}%），放棄率 {{abandonedPct}}%。瓶頸：{{bottleneck}} 利用率 {{rho}}%，逼近 85% Kingman 臨界，超過後排隊長度將以非線性速度暴增。"
+    },
+    "overloaded": {
+      "label": "被打爆",
+      "friendly": "🚨 這次店被打爆了！{{arrived}} 人抵達，只有 {{served}} 人（{{servedPct}}%）完成服務，**{{abandonedPct}}% 的人放棄排隊就走了**。主因是「{{bottleneck}}」已經忙到 {{rho}}% — 想讓店跑得更順，擴充它才有用。",
+      "expert": "🚨 超載執行：抵達 {{arrived}} 人，僅服務完成 {{served}} 人（{{servedPct}}%），放棄率 {{abandonedPct}}%。關鍵瓶頸：{{bottleneck}} 利用率 {{rho}}%，有效吞吐量已封頂。擴充此資源是唯一有效槓桿，擴充其他資源的邊際效益趨近於零。"
+    }
+  },
+  "bottleneck": {
+    "title": "瓶頸偵測",
+    "arrow": "← 這裡是瓶頸",
+    "hint": {
+      "friendly": "一旦利用率超過 85%，只要稍微多來幾位客人，隊伍就會爆炸變很長。這不是誇飾，是排隊理論的數學結果。",
+      "expert": "Kingman 近似：W_q ≈ (ρ / (1 − ρ)) × 服務變異項。當 ρ → 1 時排隊長度發散。85% 是非線性效應開始顯著的臨界點。"
+    },
+    "advice": {
+      "seat": {
+        "friendly": "擴充座位數（+seatCount）才能讓更多人坐下。加店員沒用，因為顧客根本還沒坐下就先卡住了。",
+        "expert": "應增加 `seatCount`。擴充店員或貓咪皆無效，因為顧客根本還未進入服務階段 — 限制是座位容量，不是服務速度。"
+      },
+      "staff": {
+        "friendly": "擴充店員（+staffCount）才能加快點餐與出餐。加座位反而只會讓隊伍看起來更長，因為塞進來的人也服務不到。",
+        "expert": "應增加 `staffCount`。擴充座位只會拉長等餐隊伍（Little's Law：waitingFood 階段 L 變大）。店員吞吐量才是真正的 binding constraint。"
+      },
+      "cat": {
+        "friendly": "貓咪利用率滿了代表貓已經忙不過來了。加貓（+catCount）才能提升拜訪率，讓更多顧客摸到貓。",
+        "expert": "應增加 `catCount`。貓的可用性是 `catInteractionRate` 的限制因子；調整 interactionTime / idleInterval 只能平移速率曲線，無法提高上限。"
+      }
+    }
+  },
+  "flowDiagram": {
+    "arrived": "抵達",
+    "served": "完成服務",
+    "abandoned": "放棄離開",
+    "inFlight": "模擬結束時仍在店內"
+  },
+  "stayBreakdown": {
+    "title": "顧客時間花在哪裡",
+    "waitSeat": "等座位",
+    "waitOrder": "等餐點",
+    "dining": "用餐",
+    "other": "其他延遲（含貓）"
+  },
+  "queueTimeSeries": {
+    "title": "隊列長度隨時間變化 L(t)",
+    "yMax": "尖峰 {{n}} 人",
+    "peakLabel": "最擠時有 {{n}} 人在排隊，發生在第 {{t}} 分鐘"
+  },
+  "waitHistogram": {
+    "titleWaitSeat": "每個顧客等座位等了多久",
+    "titleWaitOrder": "每個顧客等餐點等了多久",
+    "titleStay": "每個顧客停留多久",
+    "totalCount": "{{n}} 人",
+    "empty": "還沒有完成服務的顧客資料",
+    "tooltip": "{{from}}-{{to}} {{unit}}：{{count}} 人",
+    "meanLabel": "平均 {{value}}",
+    "hint": "平均值只是一個點，分布的形狀才說出故事 — 長尾代表有少數人等超久。"
+  },
+  "keyMoments": {
+    "title": "關鍵時刻",
+    "clickHint": "點氣泡跳到那一刻",
+    "jumpHint": "想知道那一刻店裡在發生什麼？點任一氣泡跳到 Playback 觀看。",
+    "quietMiddle": "店內平順運作",
+    "clusterLabel": "同一時刻有 {{n}} 個關鍵事件",
+    "labels": {
+      "firstArrive": "首位顧客抵達",
+      "peakQueue": "排隊尖峰（{{n}} 人）",
+      "firstAbandon": "第一位放棄",
+      "peakBusy": "店員最忙（{{n}} 人都在工作）",
+      "lastServed": "末位完成服務"
+    }
+  },
+  "kingman": {
+    "title": "理論 vs 實測（Kingman 近似）",
+    "predictedLabel": "理論預測等待",
+    "actualLabel": "實際等餐時間",
+    "unstable": "系統不穩定（ρ ≥ 1）",
+    "unstableHint": "利用率達到 {{rho}}%，理論上排隊會無限增長。實際模擬用 maxWaitTime 截斷了失控的狀況。",
+    "verdict": {
+      "close": "✓ 理論與實測差距 {{delta}}%，Kingman 近似在這個情境下很準",
+      "diverge": "⚠ 差距 {{delta}}%：Kingman 的 Poisson + 指數服務假設跟 NekoServe 的實際行為已有偏差",
+      "fail": "🔥 差距 {{delta}}%：貓咪拜訪、放棄機制、截斷正態服務等特徵讓 Kingman 的基本假設失效 — 這正是 DES 比純理論更實用的原因"
+    }
+  },
+  "utilTimeSeries": {
+    "title": "各資源利用率隨時間變化",
+    "seat": "座位",
+    "staff": "店員",
+    "cat": "貓咪",
+    "avg": "平均",
+    "peak": "尖峰"
+  },
+  "stayDist": {
+    "title": "停留時間分布：被貓拜訪 vs 沒被拜訪",
+    "withCat": "有被貓拜訪 🐱",
+    "withoutCat": "沒被貓拜訪",
+    "empty": "還沒有足夠的資料比較",
+    "tooltip": "{{from}}-{{to}} {{unit}}：{{count}} 人",
+    "deltaBoth": "有貓的人平均停留 {{withCat}} 分；沒貓的人 {{withoutCat}} 分 — 差距 {{delta}} 分",
+    "onlyWithCat": "這次每位顧客都被貓拜訪過（平均停留 {{avg}} 分）",
+    "onlyWithoutCat": "這次沒有顧客被貓拜訪（平均停留 {{avg}} 分）"
+  },
+  "glossary": {
+    "terms": {
+      "kingman": {
+        "label": "Kingman 近似公式",
+        "def": "用來估算排隊等待時間的一條近似公式。它告訴你：等待時間跟「利用率除以 1 減利用率」成正比 — 也就是說一旦利用率接近 100%，等待會爆炸性成長。由 John Kingman 在 1961 年提出。"
+      },
+      "littlesLaw": {
+        "label": "Little's Law（Little 定理）",
+        "def": "排隊理論的核心恆等式：系統中平均人數 = 抵達率 × 平均停留時間。不管系統多複雜、機率分布是什麼，這條恆等式都成立。由 John Little 在 1961 年證明。"
+      },
+      "poisson": {
+        "label": "Poisson 過程",
+        "def": "一種描述「隨機事件隨時間發生」的數學模型。每單位時間平均發生 λ 次，但實際上有時候多有時候少。NekoServe 用它產生顧客抵達時間，所以會看到有時候一下子來兩個、有時候好一陣子沒人。"
+      },
+      "utilization": {
+        "label": "利用率 ρ（rho）",
+        "def": "資源忙碌時間占總時間的比例，從 0% 到 100%。ρ 超過 85% 後，只要抵達稍有波動就會讓隊伍爆炸變長 — 這是為什麼現實中大家不會把資源開到 100%。"
+      },
+      "lambdaRate": {
+        "label": "抵達率 λ（lambda）",
+        "def": "每單位時間平均有幾個顧客抵達。例如 λ = 0.5 人/分，代表平均每 2 分鐘來一個人。λ 是 Poisson 過程的唯一參數。"
+      },
+      "waitTime": {
+        "label": "W_q（排隊等待時間）",
+        "def": "顧客從進入隊列到開始被服務的時間。在 Little's Law 裡是 W 的一部分（W = 等待 + 服務時間）。M/M/c 系統下 W_q 可由 Erlang-C 公式精確計算。"
+      },
+      "queueLength": {
+        "label": "隊列長度 L(t)",
+        "def": "在時間 t 時系統中的顧客數。L(t) 隨時間起伏，其時間平均值 L̄ 就是 Little's Law 裡提到的那個 L。"
+      },
+      "mmc": {
+        "label": "M/M/c 模型",
+        "def": "排隊理論的經典符號：第一個 M 是抵達過程是 Markovian（Poisson），第二個 M 是服務時間是 Markovian（指數分布），c 是伺服器數量。NekoServe 的店員站可近似看成 M/M/c（c = staffCount）。"
+      },
+      "simpy": {
+        "label": "SimPy 與 env.run",
+        "def": "SimPy 是 Python 的離散事件模擬框架。`env.run(until=T)` 會把模擬時鐘推進到時間 T，期間自動處理所有事件。時間一到，尚未完成的 process 會被截斷。"
+      },
+      "des": {
+        "label": "DES（離散事件模擬）",
+        "def": "Discrete Event Simulation：一種模擬方法，模擬時鐘不是一秒一秒走的，而是跳到下一個「事件發生的時間」。中間沒事的時段完全跳過，所以可以在毫秒內模擬一整天的咖啡廳。"
+      },
+      "exponential": {
+        "label": "指數分布（Exponential）",
+        "def": "用來描述「隨機事件之間的間隔時間」的機率分布。它的特點是「無記憶性」 — 已經等多久都不影響還要等多久。Poisson 過程的抵達間隔就服從指數分布。"
+      },
+      "erlangC": {
+        "label": "Erlang-C 公式",
+        "def": "計算 M/M/c 系統中「顧客必須等待」的機率的公式。與 W_q 的精確值直接關連，是電話中心、急診室等多伺服器排隊系統的標準計算工具。"
+      },
+      "inFlight": {
+        "label": "in-flight（流程尚未完成的顧客）",
+        "def": "模擬時間上限到達時，還沒跑完完整顧客流程的人。可能還在用餐、等店員、或跟貓互動。SimPy 的 env.run 會把他們的 process 強制截斷，所以他們既不算服務完成也不算放棄。"
+      },
+      "bottleneck": {
+        "label": "瓶頸（Bottleneck）",
+        "def": "系統中利用率最高的資源，決定整體吞吐量的上限。擴充瓶頸能直接提升產能，擴充非瓶頸則完全沒有效果。在 NekoServe 裡可能是座位、店員、或貓咪。"
+      }
+    }
+  },
+  "sectionExpand": {
+    "flow": {
+      "friendly": "NekoServe 用 Poisson 過程模擬顧客抵達：平均每分鐘來 λ 個人，但實際上有時候兩個一起來、有時候一個都沒有。這叫做「隨機但可預期的平均」。模擬結束時仍然在店裡的人叫做 in-flight，是因為時間被 env.run(until=...) 截斷了，他們還沒跑完完整的流程。",
+      "friendlyFormula": "抵達 = 完成服務 + 放棄離開 + 中途結束時還在店內",
+      "expert": "抵達流程是一個 Poisson 過程：平均每一段固定時間會有一個顧客上門，但實際抵達時間是彼此獨立的指數分布隨機變數。模擬時間上限一到，SimPy 的 env.run 會把還沒跑完整個顧客流程的人都截斷掉 — 這些既不算服務完成也不算放棄的顧客，就是下方公式裡的殘差項。",
+      "expertFormula": "\\lambda = \\frac{1}{\\text{arrivalInterval}}, \\quad X_k \\sim \\text{Exp}(\\lambda), \\quad N(t) \\sim \\text{Poisson}(\\lambda t)"
+    },
+    "wait": {
+      "friendly": "顧客在店裡的總時間 = 等座 + 等餐 + 吃飯 + 貓咪拜訪打擾的時間。等座和等餐都是「排隊等資源」的結果，資源越忙等越久。貓會跳到顧客身上停留，這段時間顧客動彈不得，所以貓越多平均停留時間越長。",
+      "friendlyFormula": "總停留 ≈ 等座 + 等餐 + 用餐 + 其他（含貓）",
+      "expert": "Little's Law 是時間平均的恆等式：系統中平均人數等於有效抵達率乘以平均停留時間。在 M/M/c 近似下，每個排隊階段的等待時間都跟利用率有關，利用率越高等待越長。貓咪拜訪會把顧客鎖在用餐階段額外一段時間，實質上是在平均停留時間上加了一個貓咪延遲分量。",
+      "expertFormula": "L = \\lambda W, \\quad W = W_q + \\tfrac{1}{\\mu}, \\quad W_q(M/M/c) \\sim \\text{Erlang-C}(c, \\rho)"
+    },
+    "utilization": {
+      "friendly": "利用率就是「這個資源有多忙」的百分比。100% 代表完全忙死、沒有空檔；0% 代表完全閒置。看起來越高越好？錯！一旦超過 85%，隊伍就會像洪水一樣爆炸增長，因為隨機波動沒有緩衝空間了。最忙的那個資源就是瓶頸，擴充它才能加快整間店。",
+      "friendlyFormula": "利用率 = 實際忙碌時間 ÷ 總可用時間",
+      "expert": "對於有 c 個伺服器的多伺服器站，利用率等於抵達速率乘以平均服務時間再除以伺服器數量。Kingman 近似告訴我們：等待時間跟「利用率除以 1 減利用率」成正比 — 這就是為什麼利用率一旦超過 85%，隊伍就會以非線性速度爆炸增長。系統的吞吐量上限是伺服器數量除以平均服務時間，擴充任何非瓶頸資源對整體吞吐量完全沒有幫助。",
+      "expertFormula": "\\rho = \\frac{\\lambda \\cdot E[S]}{c}, \\quad W_q \\approx \\frac{\\rho}{1 - \\rho} \\cdot \\frac{C_a^2 + C_s^2}{2} \\cdot E[S]"
+    },
+    "cat": {
+      "friendly": "被貓拜訪率 = 有多少比例的顧客被至少一隻貓跳過來過。拜訪率高是好事（顧客開心），但每次貓拜訪會拉長顧客的停留時間，這時間也算在平均停留裡。想要拜訪率高又不想停留時間爆炸，只能靠更多的貓（catCount）或更短的互動時間（catInteractionTime）。",
+      "friendlyFormula": "被貓拜訪率 = 有被貓拜訪的人數 ÷ 總完成服務人數",
+      "expert": "貓咪從 v0.4.0 起是自主的 SimPy process，循環為閒置、拜訪、可選休息三個狀態。每次拜訪都會把顧客鎖在用餐階段額外一段互動時間，直接拉高平均總停留時間，但完全不影響店員與座位的服務速率。貓咪利用率追蹤的是忙碌（拜訪加休息）時間占總模擬時間的比例。",
+      "expertFormula": "\\text{visitRate}_{\\text{eff}} \\leq \\frac{\\text{catCount}}{\\text{idleInterval} + \\text{visitTime} + p_{\\text{rest}} \\cdot \\text{restTime}}"
+    }
+  },
+  "comparison": {
+    "title": "對比檢視",
+    "indicator": "指標",
+    "legend": "綠色 = 較佳值・紅色 = 較差值（僅在有明顯差異時標示）",
+    "configSummary": "{{seats}} 座・{{staff}} 員・{{cats}} 貓"
+  },
   "kpi": {
     "totalCustomersArrived": {
       "label": "總到達人數",
@@ -53,12 +286,6 @@
       "label": "貓咪利用率",
       "description": "貓咪忙碌（互動+休息）時間的比例"
     }
-  },
-  "comparison": {
-    "title": "對比檢視",
-    "indicator": "指標",
-    "legend": "綠色 = 較佳值・紅色 = 較差值（僅在有明顯差異時標示）",
-    "configSummary": "{{seats}} 座・{{staff}} 員・{{cats}} 貓"
   },
   "configSummary": {
     "title": "📄 本次模擬參數摘要",
