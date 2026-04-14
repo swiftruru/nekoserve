@@ -33,15 +33,18 @@ jobs:
     steps:
       - name: Check head commit message
         id: check
+        # Pass the commit message via env to avoid shell injection from
+        # parentheses / quotes / backticks in the subject line.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_MSG: ${{ github.event.head_commit.message }}
         run: |
-          # Only short-circuit push events. PRs and manual dispatches
-          # always run the full build pipeline.
-          if [[ "${{ github.event_name }}" != "push" ]]; then
-            echo "Event is ${{ github.event_name }} — running full build."
+          if [[ "$EVENT_NAME" != "push" ]]; then
+            echo "Event is $EVENT_NAME — running full build."
             echo "is_release_commit=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          MSG=$(printf '%s' "${{ github.event.head_commit.message }}" | head -n 1)
+          MSG=$(printf '%s' "$HEAD_MSG" | head -n 1)
           echo "First line of commit: $MSG"
           if printf '%s' "$MSG" | grep -qE '\(v[0-9]+\.[0-9]+\.[0-9]+\)'; then
             echo "is_release_commit=true" >> "$GITHUB_OUTPUT"
