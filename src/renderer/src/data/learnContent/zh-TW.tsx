@@ -3,7 +3,7 @@
  * Classroom-notebook style: formulas, examples, and "why this design" reasoning.
  */
 
-import { Formula, Example, Note, P, B, UL, LI, type LearnContent } from './shared'
+import { Formula, Example, Note, P, B, UL, LI, Ref, type LearnContent } from './shared'
 import { BlockMath } from '../../components/Math'
 
 export const LEARN_CONTENT_ZH_TW: LearnContent = {
@@ -135,6 +135,194 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             <br />→ 系統中同時約有 N = 6 位顧客
             <br />→ 要容納他們，需要至少 6 個座位
           </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'scenario-assumption',
+      icon: '📘',
+      title: '關於這些數字，先說在前頭',
+      content: (
+        <div>
+          <P>
+            我做這個 app 的時候，沒有真的跑去一間貓咪咖啡廳蹲點計時。
+            設定頁上看到的每個數字，不管是座位 10 張、到達間隔 8 分鐘，
+            還是貓咪 4 分鐘找一次人，都是我憑常識、對小店的生活觀察，
+            以及對貓的想像所訂出來的。它們屬於<B>情境假設</B>，不是實地量測的資料。
+          </P>
+          <P>
+            我為什麼還是這樣做？因為這個 app 的目的從頭到尾都不是「預測某家真實店家」，
+            而是想讓人透過互動去體會排隊論與離散事件模擬的動態。
+            我想回答的是「到達率上升，等待時間會怎麼變」這種<B>質性</B>問題，
+            不是「禮拜三中午要多請幾個店員」那種需要實測的<B>量化</B>問題。
+          </P>
+          <Note>
+            💡 有一個區分我覺得很重要：
+            <br />
+            「為什麼選用 Exp 分佈來建模到達間隔」這件事，是有 Kleinrock 等經典文獻背書的；
+            <br />
+            「為什麼平均是 8 分鐘」這件事，則純粹是我的情境取值，沒有文獻。
+            <br />
+            兩件事要分開看。每個參數展開後的「📚 文獻依據」欄，只保證前者（分佈選擇），
+            不保證後者（具體數值）。被問起的時候我也會分開答。
+          </Note>
+          <P>
+            所以若有人問我這些數字從哪來，我會老實說：
+            這是教學情境模擬，數字取值基於對小型咖啡廳的常識推估；
+            分佈選擇才是有文獻支持的那一塊。若有一天要拿去為某家真實的店做規劃，
+            我會再做敏感度分析，並把最關鍵的幾個數字拿到現場量測校準。
+          </P>
+          <P>要讓這個立場站得住腳，我自己覺得還有幾件事可以做：</P>
+          <UL>
+            <LI>
+              <B>把每個數字的出處寫清楚</B>。
+              設定頁上每個參數的「預設值依據」欄，我都寫了是常識、類比還是文獻區間，
+              不裝作有資料，被問就能直接指給對方看。
+            </LI>
+            <LI>
+              <B>做敏感度分析</B>。
+              把到達間隔、用餐時間這類關鍵參數，在合理範圍內（例如到達 4 到 16 分鐘）掃一遍，
+              看結論會不會翻盤。如果結論對某個數字極度敏感，那它就必須實測，不能靠我猜。
+            </LI>
+            <LI>
+              <B>做部分實測校準</B>。
+              真要用在某家店，其實只要現場計時 30 分鐘，
+              抓幾個最關鍵的數字代回模擬，整個研究就能從「示意」升級成「半實測」，
+              說服力馬上不一樣。
+            </LI>
+            <LI>
+              <B>引用合理區間</B>。
+              像「顧客放棄等待時間」這種已經有人寫過的參數
+              （Maister 1985、Larson 1987 都討論過 15 到 30 分鐘的忍耐區間），
+              我就引用區間再取中位數，比自己憑感覺取值紮實得多。
+            </LI>
+          </UL>
+          <Note>
+            🎓 一句話總結我的立場：
+            <br />
+            這個 app 是用來體會排隊論「為什麼會這樣」的工具，
+            不是拿來預測「實際上會怎樣」的工具。
+            <br />
+            擺在前者的位置上，情境假設就是合理的選擇；
+            擺錯位置，它就失職了。
+          </Note>
+          <P>所以我心裡的分界是：</P>
+          <UL>
+            <LI>
+              <B>適合</B>：課堂示範排隊動態、what-if 探索（尖峰 vs 離峰、多一個店員會怎樣）、
+              SimPy 的動手練習。
+            </LI>
+            <LI>
+              <B>不適合</B>：真實投資決策、政府報告的量化預測、需要誤差保證的科學論文。
+              這些都需要實地資料校準，不是情境假設能承擔的。
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'references',
+      icon: '📚',
+      title: '參考文獻',
+      content: (
+        <div>
+          <P>
+            以下是每個參數「📚 文獻依據」欄位所引用的完整書目，
+            按主題分類。這些文獻支持<B>分佈與理論框架的選擇</B>，
+            不直接支持具體數值（具體數值屬情境假設）。
+          </P>
+          <P><B>排隊論基礎</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975">
+                Kleinrock, L. (1975). <i>Queueing Systems, Volume 1: Theory</i>. Wiley.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition">
+                Gross, D., Shortle, J. F., Thompson, J. M., &amp; Harris, C. M. (2008). <i>Fundamentals of Queueing Theory</i> (4th ed.). Wiley.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>核心定理</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.9.3.383">
+                Little, J. D. C. (1961). "A Proof for the Queuing Formula: L = λW". <i>Operations Research</i>, 9(3), 383–387.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>模擬方法論</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition">
+                Law, A. M., &amp; Kelton, W. D. (2015). <i>Simulation Modeling and Analysis</i> (5th ed.). McGraw-Hill.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Banks+Carson+Nelson+Nicol+Discrete+Event+System+Simulation+5th+edition">
+                Banks, J., Carson, J. S., Nelson, B. L., &amp; Nicol, D. M. (2010). <i>Discrete-Event System Simulation</i> (5th ed.). Pearson.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition">
+                Ross, S. M. (2019). <i>Introduction to Probability Models</i> (12th ed.). Academic Press.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://dl.acm.org/doi/10.5555/2433508.2433519">
+                Law, A. M. (2010). "Statistical Analysis of Simulation Output Data: The Practical State of the Art". <i>Proc. 2010 Winter Simulation Conference</i>, 65–74.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>Agent-Based 建模</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Borshchev+Filippov+2004+System+Dynamics+Agent+Based+Modeling">
+                Borshchev, A., &amp; Filippov, A. (2004). "From System Dynamics and Discrete Event to Practical Agent-Based Modeling". <i>Proc. 22nd International Conference of the System Dynamics Society</i>.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Macal+North+2010+Tutorial+Agent+Based+Modeling+Simulation">
+                Macal, C. M., &amp; North, M. J. (2010). "Tutorial on Agent-Based Modelling and Simulation". <i>Journal of Simulation</i>, 4(3), 151–162.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>等待心理學 / Reneging</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Maister+1985+Psychology+of+Waiting+Lines">
+                Maister, D. H. (1985). "The Psychology of Waiting Lines". In J. A. Czepiel, M. R. Solomon, &amp; C. F. Surprenant (Eds.), <i>The Service Encounter</i>. Lexington Books.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.35.6.895">
+                Larson, R. C. (1987). "Perspectives on Queues: Social Justice and the Psychology of Queueing". <i>Operations Research</i>, 35(6), 895–905.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Haight+1959+Queueing+with+reneging+Metrika">
+                Haight, F. A. (1959). "Queueing with reneging". <i>Metrika</i>, 2(1), 186–197.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>亂數生成</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1137/1012065">
+                Knuth, D. E. (1997). <i>The Art of Computer Programming, Volume 2: Seminumerical Algorithms</i> (3rd ed.). Addison-Wesley.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.47.1.159">
+                L'Ecuyer, P. (1999). "Good Parameters and Implementations for Combined Multiple Recursive Random Number Generators". <i>Operations Research</i>, 47(1), 159–164.
+              </Ref>
+            </LI>
+          </UL>
+          <Note>
+            ⚠️ 再次提醒：上述文獻支持<B>分佈選擇與模型架構</B>，
+            不支持具體的預設值（10 座位、8 分鐘間隔等），這些仍為情境假設。
+          </Note>
         </div>
       ),
     },

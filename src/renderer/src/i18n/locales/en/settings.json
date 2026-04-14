@@ -6,62 +6,227 @@
     "catInteraction": "🐱 Cat Interaction",
     "simulationParams": "🎲 Simulation Parameters"
   },
+  "academicDisclaimer": {
+    "title": "📘 A note about these numbers",
+    "body": "I set every default on this page from common sense and casual observation of small cafés, not by measuring any real store. Expanding \"Design rationale\" in each section shows how I estimated the number, which distribution it uses, and the literature that backs the distribution choice. The sidebar card \"A note about these numbers\" lays out the full methodology stance."
+  },
+  "rationaleSection": {
+    "toggle": "📘 Design rationale (click to expand)",
+    "labels": {
+      "meaning": "Meaning",
+      "why": "Why it's needed",
+      "theory": "Theoretical basis",
+      "defaultBasis": "Default-value basis",
+      "references": "📚 References"
+    },
+    "noReferences": "The numerical value here is a scenario assumption without literature support. Only the modeling framework (SimPy agent-based) can be referenced: Borshchev & Filippov (2004)."
+  },
   "parameters": {
     "seatCount": {
       "label": "Seats",
-      "help": "Total number of seats available. Fewer seats means longer queues."
+      "help": "Total number of seats available. Fewer seats means longer queues.",
+      "rationale": {
+        "meaning": "Maximum number of customers seated at the same time.",
+        "why": "Seats are the first constrained resource a customer hits after arriving. Excess customers queue and may abandon.",
+        "theory": "Corresponds to the number of service stations c in an M/G/c multi-server queueing system.",
+        "defaultBasis": "Small independent cafés typically have 6–15 seats. 10 is taken as the midpoint for a weekday scenario.",
+        "formula": "c_{seat} = 10",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Gross, Shortle, Thompson & Harris (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
+        ]
+      }
     },
     "staffCount": {
       "label": "Staff",
-      "help": "Staff taking orders and preparing food. Fewer staff means longer wait for food."
+      "help": "Staff taking orders and preparing food. Fewer staff means longer wait for food.",
+      "rationale": {
+        "meaning": "Number of staff who can simultaneously handle orders and preparation.",
+        "why": "Staff is the second bottleneck after seating; it directly controls order- and meal-wait times.",
+        "theory": "Second M/G/c queue. Ordering and preparation share one staff resource pool.",
+        "defaultBasis": "Smallest common staffing in a small café: one front-of-house, one back-of-house.",
+        "formula": "c_{staff} = 2",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Gross et al. (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
+        ]
+      }
     },
     "catCount": {
       "label": "Cats",
-      "help": "Number of cats available for interaction (excluding resting cats)."
+      "help": "Number of cats available for interaction (excluding resting cats).",
+      "rationale": {
+        "meaning": "Total cats available for interaction with customers.",
+        "why": "More cats means more visits, which extend dining times and reduce seat turnover.",
+        "theory": "Each cat is an independent SimPy process (agent-based), not a passive queue resource.",
+        "defaultBasis": "Commercial cat cafés typically have 3–5 visible cats. 3 is the scenario low-end.",
+        "formula": "",
+        "references": [
+          { "text": "Borshchev & Filippov (2004), From System Dynamics and Discrete Event to Practical Agent-Based Modeling", "url": "https://scholar.google.com/scholar?q=Borshchev+Filippov+2004+System+Dynamics+Agent+Based+Modeling" },
+          { "text": "Macal & North (2010), Tutorial on Agent-Based Modelling and Simulation, J. Simulation 4(3)", "url": "https://scholar.google.com/scholar?q=Macal+North+2010+Tutorial+Agent+Based+Modeling+Simulation" }
+        ]
+      }
     },
     "customerArrivalInterval": {
       "label": "Avg. customer arrival interval",
-      "help": "Exponential distribution. Smaller value means more frequent arrivals (e.g. one every 5 min)."
+      "help": "Exponential distribution. Smaller value means more frequent arrivals (e.g. one every 5 min).",
+      "rationale": {
+        "meaning": "Average minutes between two consecutive customer arrivals.",
+        "why": "Drives the entire simulation. All downstream metrics depend on it.",
+        "theory": "Poisson process: interarrival times follow an exponential distribution and are memoryless.",
+        "defaultBasis": "8 min ≈ λ = 0.125 cust/min (~7.5/hour), between peak (λ≈0.2) and off-peak (λ≈0.05).",
+        "formula": "T \\sim \\text{Exp}(\\lambda),\\ \\lambda = \\tfrac{1}{8}",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
+        ]
+      }
     },
     "maxWaitTime": {
       "label": "Max wait tolerance",
-      "help": "Maximum time a customer will wait for a seat before abandoning and leaving."
+      "help": "Maximum time a customer will wait for a seat before abandoning and leaving.",
+      "rationale": {
+        "meaning": "Longest time a customer will wait for a seat before abandoning.",
+        "why": "Models customer abandonment so queues don't grow without bound, and provides the abandonment-rate metric.",
+        "theory": "Corresponds to reneging / patience-time in queueing theory (M/G/c+G).",
+        "defaultBasis": "Service-industry research places the abandonment threshold at 15–30 min. 25 is the scenario midpoint.",
+        "formula": "",
+        "references": [
+          { "text": "Maister (1985), The Psychology of Waiting Lines, in: The Service Encounter, Lexington Books", "url": "https://scholar.google.com/scholar?q=Maister+1985+Psychology+of+Waiting+Lines" },
+          { "text": "Larson (1987), Perspectives on Queues: Social Justice and the Psychology of Queueing, Operations Research 35(6)", "url": "https://doi.org/10.1287/opre.35.6.895" },
+          { "text": "Haight (1959), Queueing with reneging, Metrika 2(1)", "url": "https://scholar.google.com/scholar?q=Haight+1959+Queueing+with+reneging+Metrika" }
+        ]
+      }
     },
     "orderTime": {
       "label": "Avg. order time",
-      "help": "Normal distribution, std = mean × 0.2, min 1 min. Time for staff to take an order."
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Time for staff to take an order.",
+      "rationale": {
+        "meaning": "Time for staff to help one customer finish ordering.",
+        "why": "First segment of staff-side service time. Occupies the staff resource.",
+        "theory": "Normal N(μ, σ²) with σ = 0.2μ, truncated via max(1, sample). Service times have a natural floor.",
+        "defaultBasis": "Menu-and-checkout median is around 2–4 min. 3 min taken as midpoint.",
+        "formula": "T \\sim \\mathcal{N}(3,\\ 0.6^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6 (input distribution selection)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
+          { "text": "Law (2010), Statistical Analysis of Simulation Output Data: The Practical State of the Art, Proc. 2010 Winter Simulation Conference, 65–74", "url": "https://dl.acm.org/doi/10.5555/2433508.2433519" }
+        ]
+      }
     },
     "preparationTime": {
       "label": "Avg. preparation time",
-      "help": "Normal distribution, std = mean × 0.2, min 1 min. Order-to-ready time."
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Order-to-ready time.",
+      "rationale": {
+        "meaning": "Time from order confirmation to food served at the table.",
+        "why": "Second segment of staff-side service time. Most visible wait from the customer's perspective.",
+        "theory": "Same Normal(μ, σ²), σ = 0.2μ.",
+        "defaultBasis": "Hand-brewed or espresso-based drink with light meal: 6–10 min median. 8 taken as midpoint.",
+        "formula": "T \\sim \\mathcal{N}(8,\\ 1.6^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "diningTime": {
       "label": "Avg. dining time",
-      "help": "Normal distribution, std = mean × 0.2, min 1 min. Time a customer spends eating."
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Time a customer spends eating.",
+      "rationale": {
+        "meaning": "How long a customer sits eating after receiving the order.",
+        "why": "Directly controls seat occupancy time, i.e., seat turnover rate.",
+        "theory": "Normal distribution, same structure as other service times.",
+        "defaultBasis": "Scenario is \"one drink + short stay\" (not a full meal). Scale up manually (e.g., 45 min) for a lunch scenario.",
+        "formula": "T \\sim \\mathcal{N}(15,\\ 3^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "catInteractionTime": {
       "label": "Avg. visit duration",
-      "help": "Normal distribution, std = mean × 0.2. Average minutes a cat spends at a customer's seat during one visit."
+      "help": "Normal distribution, std = mean × 0.2. Average minutes a cat spends at a customer's seat during one visit.",
+      "rationale": {
+        "meaning": "How long a cat lingers at one customer's seat during a single visit.",
+        "why": "During a visit the customer cannot leave, so visit length extends dining time and lowers seat turnover.",
+        "theory": "Normal(μ, σ²), σ = 0.2μ, same logic as service times.",
+        "defaultBasis": "A typical friendly house cat stays a few to ten-plus minutes per visit. 10 min taken as midpoint.",
+        "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "catIdleInterval": {
       "label": "Cat idle interval",
-      "help": "Exponential mean. Average minutes a cat wanders before picking its next customer. Shorter means friendlier cats."
+      "help": "Exponential mean. Average minutes a cat wanders before picking its next customer. Shorter means friendlier cats.",
+      "rationale": {
+        "meaning": "Average time a cat wanders after one visit before initiating the next.",
+        "why": "Controls how often cats interrupt customers. The main knob for \"cat friendliness\".",
+        "theory": "Exponential distribution, same family as customer arrivals (Poisson-style events).",
+        "defaultBasis": "Scenario is \"curious, friendly café cat\", so 4 min. Try 1 min (very clingy) or 20 min (aloof) for teaching contrast.",
+        "formula": "T \\sim \\text{Exp}(1/4)",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
+        ]
+      }
     },
     "catRestProbability": {
       "label": "Rest trigger probability",
-      "help": "Probability (0–1) that a cat enters rest after finishing a visit. Resting cats do not initiate new visits."
+      "help": "Probability (0–1) that a cat enters rest after finishing a visit. Resting cats do not initiate new visits.",
+      "rationale": {
+        "meaning": "Probability that a cat enters rest immediately after finishing a visit.",
+        "why": "Prevents cats from running forever. Approximates an \"energy budget\" and makes the pool of available cats time-varying.",
+        "theory": "Bernoulli trial, sampled independently after each visit.",
+        "defaultBasis": "0.2 means roughly one rest every 5 visits. Scenario value, not empirical.",
+        "formula": "X \\sim \\text{Bernoulli}(0.2)",
+        "references": [
+          { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 4 (discrete random variables)", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
+        ]
+      }
     },
     "catRestDuration": {
       "label": "Avg. rest duration",
-      "help": "Normal distribution, std = mean × 0.2, min 1 min. Length of each cat rest."
+      "help": "Normal distribution, std = mean × 0.2, min 1 min. Length of each cat rest.",
+      "rationale": {
+        "meaning": "Average length of one cat rest period.",
+        "why": "During rest the cat is unavailable, reducing overall interaction frequency.",
+        "theory": "Normal(μ, σ²), σ = 0.2μ.",
+        "defaultBasis": "House-cat short naps are typically 5–15 min. 10 min taken as midpoint.",
+        "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "simulationDuration": {
       "label": "Simulation duration",
-      "help": "Total business minutes to simulate. 240 min = 4 h. No new customers arrive after this point."
+      "help": "Total business minutes to simulate. 240 min = 4 h. No new customers arrive after this point.",
+      "rationale": {
+        "meaning": "Total simulated business time in minutes (240 ≈ 4 h).",
+        "why": "Sets the sample size. Too short and averages are warm-up-dominated; too long and runs become slow.",
+        "theory": "DES rule of thumb: run length ≥ 10× longest service time to approach steady state.",
+        "defaultBasis": "240 min ≈ one shift (e.g., 11:00–15:00 lunch block), enough to see full peak and cool-down.",
+        "formula": "T_{run} = 240 \\text{ min}",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 9 (Output Analysis for Terminating Simulations)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
+          { "text": "Banks, Carson, Nelson & Nicol (2010), Discrete-Event System Simulation, 5/e, Ch 11", "url": "https://scholar.google.com/scholar?q=Banks+Carson+Nelson+Nicol+Discrete+Event+System+Simulation+5th+edition" }
+        ]
+      }
     },
     "randomSeed": {
       "label": "Random seed",
-      "help": "Fix the seed to reproduce identical simulation runs for classroom comparisons."
+      "help": "Fix the seed to reproduce identical simulation runs for classroom comparisons.",
+      "rationale": {
+        "meaning": "Initial seed for the pseudo-random number generator.",
+        "why": "A fixed seed makes the run fully reproducible, useful for classroom comparison and debugging.",
+        "theory": "PRNG determinism: identical seeds generate identical pseudo-random sequences.",
+        "defaultBasis": "42 is a cultural reference (\"the answer to life, the universe and everything\"), mathematically arbitrary.",
+        "formula": "",
+        "references": [
+          { "text": "Knuth (1997), The Art of Computer Programming Vol 2: Seminumerical Algorithms, 3/e, Ch 3", "url": "https://doi.org/10.1137/1012065" },
+          { "text": "L'Ecuyer (1999), Good Parameters and Implementations for Combined Multiple Recursive Random Number Generators, Operations Research 47(1)", "url": "https://doi.org/10.1287/opre.47.1.159" }
+        ]
+      }
     }
   },
   "actions": {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationConfig, ScenarioPreset, SimulatorError } from '../types'
 import ParamInput from '../components/ParamInput'
+import ParamRationale from '../components/ParamRationale'
 import ScenarioButtons from '../components/ScenarioButtons'
 import {
   loadCustomScenarios,
@@ -118,10 +119,21 @@ export default function SettingsPage({
         />
       </div>
 
+      {/* ── Academic disclaimer banner ───────────────── */}
+      <div className="mb-4 rounded-xl bg-cream-100 ring-1 ring-inset ring-orange-200 px-4 py-3">
+        <p className="text-[12px] font-semibold text-orange-700">
+          {t('settings:academicDisclaimer.title')}
+        </p>
+        <p className="mt-1 text-[12px] leading-relaxed text-orange-800/90 select-text">
+          {t('settings:academicDisclaimer.body')}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* ── Café resources ─────────────────────────── */}
         <div className="card">
           <div className="card-title">{t('settings:sections.cafeResources')}</div>
+          <ParamRationale params={['seatCount', 'staffCount', 'catCount']} />
           <div className="grid grid-cols-3 gap-3">
             <ParamInput
               label={paramLabel('seatCount')}
@@ -156,6 +168,7 @@ export default function SettingsPage({
         {/* ── Customer behavior ──────────────────────── */}
         <div className="card">
           <div className="card-title">{t('settings:sections.customerBehavior')}</div>
+          <ParamRationale params={['customerArrivalInterval', 'maxWaitTime']} />
           <div className="grid grid-cols-2 gap-3">
             <ParamInput
               label={paramLabel('customerArrivalInterval')}
@@ -181,6 +194,7 @@ export default function SettingsPage({
         {/* ── Service time ───────────────────────────── */}
         <div className="card">
           <div className="card-title">{t('settings:sections.serviceTime')}</div>
+          <ParamRationale params={['orderTime', 'preparationTime', 'diningTime']} />
           <div className="grid grid-cols-3 gap-3">
             <ParamInput
               label={paramLabel('orderTime')}
@@ -215,6 +229,9 @@ export default function SettingsPage({
         {/* ── Cat interaction ────────────────────────── */}
         <div className="card">
           <div className="card-title">{t('settings:sections.catInteraction')}</div>
+          <ParamRationale
+            params={['catIdleInterval', 'catInteractionTime', 'catRestProbability', 'catRestDuration']}
+          />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <ParamInput
               label={paramLabel('catIdleInterval')}
@@ -257,6 +274,7 @@ export default function SettingsPage({
         {/* ── Simulation parameters ──────────────────── */}
         <div className="card lg:col-span-2">
           <div className="card-title">{t('settings:sections.simulationParams')}</div>
+          <ParamRationale params={['simulationDuration', 'randomSeed']} />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <ParamInput
               label={paramLabel('simulationDuration')}

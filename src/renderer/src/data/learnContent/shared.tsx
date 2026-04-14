@@ -42,6 +42,23 @@ export function LI({ children }: { children: React.ReactNode }) {
   return <li className="list-disc">{children}</li>
 }
 
+/**
+ * Citation link styled like the ParamRationale reference list: dotted amber
+ * underline, opens in the default browser via Electron's window-open handler.
+ */
+export function Ref({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-amber-700 underline decoration-amber-300 decoration-dotted underline-offset-2 hover:text-amber-800 hover:decoration-solid"
+    >
+      {children}
+    </a>
+  )
+}
+
 // ── Types ──
 
 export interface LearnSection {

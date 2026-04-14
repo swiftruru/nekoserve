@@ -3,7 +3,7 @@
  * Classroom-note style: formulas, examples, and the "why this design" reasoning.
  */
 
-import { Formula, Example, Note, P, B, UL, LI, type LearnContent } from './shared'
+import { Formula, Example, Note, P, B, UL, LI, Ref, type LearnContent } from './shared'
 import { BlockMath } from '../../components/Math'
 
 export const LEARN_CONTENT_EN: LearnContent = {
@@ -152,6 +152,203 @@ export const LEARN_CONTENT_EN: LearnContent = {
             <br />→ there are on average N = 6 customers in the system
             <br />→ you need at least 6 seats to hold them
           </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'scenario-assumption',
+      icon: '📘',
+      title: 'A note about these numbers',
+      content: (
+        <div>
+          <P>
+            I didn't actually go sit in a cat café with a stopwatch to build this app.
+            Every default on the Settings page, 10 seats, 8-minute arrival interval,
+            cats finding someone every 4 minutes, comes from my own common sense,
+            casual observation of small cafés, and rough imagination of how cats behave.
+            These are <B>scenario assumptions</B>, not measured field data.
+          </P>
+          <P>
+            So why did I still build it this way? Because the point of this app
+            was never "predict what happens in a specific real store". It's to let
+            people feel how queueing theory and discrete-event simulation behave by
+            playing with it. The questions I want it to answer are <B>qualitative</B>:
+            "what happens to waiting time when arrivals speed up?" Not quantitative
+            ones like "how many extra staff do I need on Wednesday lunch?" That
+            second kind really does need measurement.
+          </P>
+          <Note>
+            💡 One distinction I think matters a lot:
+            <br />
+            "Modeling arrivals with an exponential distribution" is backed by Kleinrock
+            and similar classics.
+            <br />
+            "Mean = 8 minutes" is purely my scenario guess, with no literature behind it.
+            <br />
+            The two claims need to be answered separately. Each parameter's 📚 References
+            field guarantees the first (distribution choice), not the second (the number itself).
+          </Note>
+          <P>
+            So if someone asks where these numbers come from, I'll say it honestly:
+            this is a teaching-scenario simulation. The numerical values are common-sense
+            estimates for a small café; the distribution choices are the part that has
+            literature backing. If I ever needed to plan a real store, I'd add a
+            sensitivity analysis and measure the most important few parameters on site
+            to calibrate.
+          </P>
+          <P>To make that position solid, here's what I can still do:</P>
+          <UL>
+            <LI>
+              <B>Say where each number came from.</B> Every parameter's "Default-value basis"
+              field spells out whether it's common sense, analogy, or a literature range,
+              so I can point to it directly if challenged.
+            </LI>
+            <LI>
+              <B>Sensitivity analysis.</B> Sweep the key parameters (arrival interval,
+              dining time) across a plausible range and see if the conclusions flip.
+              If the conclusion is extremely sensitive to one number, that number must
+              be measured, not guessed.
+            </LI>
+            <LI>
+              <B>Partial on-site calibration.</B> To use this for a specific café, I only
+              need 30 minutes on-site with a stopwatch for a handful of key numbers.
+              That alone upgrades the study from "illustrative" to "semi-measured".
+            </LI>
+            <LI>
+              <B>Cite a plausible range.</B> For parameters that have been discussed in
+              the literature (Maister 1985 and Larson 1987 both talk about a 15–30 min
+              abandonment window), I cite the range and pick a midpoint, which is more
+              grounded than inventing a number from nothing.
+            </LI>
+          </UL>
+          <Note>
+            🎓 The one-line summary of my stance:
+            <br />
+            This app is a tool for feeling "why queues behave the way they do",
+            not a tool for predicting "what will actually happen".
+            <br />
+            In the first role, scenario assumptions are a reasonable choice; in the
+            second role, they fail.
+          </Note>
+          <P>So my line is:</P>
+          <UL>
+            <LI>
+              <B>Good for</B>: classroom demos of queueing dynamics, what-if exploration
+              (peak vs off-peak, what if we add one more staff), hands-on SimPy practice.
+            </LI>
+            <LI>
+              <B>Not good for</B>: real investment decisions, quantitative predictions
+              in government reports, scientific papers that need bounded error.
+              Those all need measured data, which scenario assumptions cannot stand in for.
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'references',
+      icon: '📚',
+      title: 'References',
+      content: (
+        <div>
+          <P>
+            The full bibliography for the "📚 References" field on every parameter,
+            grouped by topic. These sources support the <B>choice of distributions
+            and theoretical framework</B>; they do not directly support specific
+            numerical defaults (those remain scenario assumptions).
+          </P>
+          <P><B>Queueing theory foundations</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975">
+                Kleinrock, L. (1975). <i>Queueing Systems, Volume 1: Theory</i>. Wiley.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition">
+                Gross, D., Shortle, J. F., Thompson, J. M., &amp; Harris, C. M. (2008). <i>Fundamentals of Queueing Theory</i> (4th ed.). Wiley.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>Core theorems</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.9.3.383">
+                Little, J. D. C. (1961). "A Proof for the Queuing Formula: L = λW". <i>Operations Research</i>, 9(3), 383–387.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>Simulation methodology</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition">
+                Law, A. M., &amp; Kelton, W. D. (2015). <i>Simulation Modeling and Analysis</i> (5th ed.). McGraw-Hill.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Banks+Carson+Nelson+Nicol+Discrete+Event+System+Simulation+5th+edition">
+                Banks, J., Carson, J. S., Nelson, B. L., &amp; Nicol, D. M. (2010). <i>Discrete-Event System Simulation</i> (5th ed.). Pearson.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition">
+                Ross, S. M. (2019). <i>Introduction to Probability Models</i> (12th ed.). Academic Press.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://dl.acm.org/doi/10.5555/2433508.2433519">
+                Law, A. M. (2010). "Statistical Analysis of Simulation Output Data: The Practical State of the Art". <i>Proc. 2010 Winter Simulation Conference</i>, 65–74.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>Agent-based modeling</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Borshchev+Filippov+2004+System+Dynamics+Agent+Based+Modeling">
+                Borshchev, A., &amp; Filippov, A. (2004). "From System Dynamics and Discrete Event to Practical Agent-Based Modeling". <i>Proc. 22nd International Conference of the System Dynamics Society</i>.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Macal+North+2010+Tutorial+Agent+Based+Modeling+Simulation">
+                Macal, C. M., &amp; North, M. J. (2010). "Tutorial on Agent-Based Modelling and Simulation". <i>Journal of Simulation</i>, 4(3), 151–162.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>Waiting-line psychology / reneging</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Maister+1985+Psychology+of+Waiting+Lines">
+                Maister, D. H. (1985). "The Psychology of Waiting Lines". In J. A. Czepiel, M. R. Solomon, &amp; C. F. Surprenant (Eds.), <i>The Service Encounter</i>. Lexington Books.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.35.6.895">
+                Larson, R. C. (1987). "Perspectives on Queues: Social Justice and the Psychology of Queueing". <i>Operations Research</i>, 35(6), 895–905.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://scholar.google.com/scholar?q=Haight+1959+Queueing+with+reneging+Metrika">
+                Haight, F. A. (1959). "Queueing with reneging". <i>Metrika</i>, 2(1), 186–197.
+              </Ref>
+            </LI>
+          </UL>
+          <P><B>Random number generation</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1137/1012065">
+                Knuth, D. E. (1997). <i>The Art of Computer Programming, Volume 2: Seminumerical Algorithms</i> (3rd ed.). Addison-Wesley.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.47.1.159">
+                L'Ecuyer, P. (1999). "Good Parameters and Implementations for Combined Multiple Recursive Random Number Generators". <i>Operations Research</i>, 47(1), 159–164.
+              </Ref>
+            </LI>
+          </UL>
+          <Note>
+            ⚠️ Reminder: these references support <B>distribution and framework choice</B>,
+            not specific default values (10 seats, 8 min interval, etc.). Those remain scenario assumptions.
+          </Note>
         </div>
       ),
     },

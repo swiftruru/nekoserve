@@ -6,62 +6,227 @@
     "catInteraction": "🐱 貓咪互動設定",
     "simulationParams": "🎲 模擬參數設定"
   },
+  "academicDisclaimer": {
+    "title": "📘 關於這些數字，先說在前頭",
+    "body": "這頁上每個預設值都是我憑常識與對小店的觀察訂出來的情境假設，不是從哪家真實店家量測來的。各區塊的「設計依據」展開後可以看到這個數字是怎麼估的、背後用什麼分佈，以及分佈本身的文獻依據。想知道整個方法論的立場，側邊的「關於這些數字，先說在前頭」那張卡寫得更完整。"
+  },
+  "rationaleSection": {
+    "toggle": "📘 設計依據（點擊展開）",
+    "labels": {
+      "meaning": "參數意義",
+      "why": "為什麼需要",
+      "theory": "理論基礎",
+      "defaultBasis": "預設值依據",
+      "references": "📚 文獻依據"
+    },
+    "noReferences": "此參數的具體數值屬情境假設，無對應文獻；僅理論框架（SimPy agent-based 建模）可參考 Borshchev & Filippov (2004)。"
+  },
   "parameters": {
     "seatCount": {
       "label": "座位數量",
-      "help": "咖啡廳可供顧客入座的座位總數。座位越少，等待隊伍越長。"
+      "help": "咖啡廳可供顧客入座的座位總數。座位越少，等待隊伍越長。",
+      "rationale": {
+        "meaning": "咖啡廳可同時入座的顧客人數上限。",
+        "why": "座位是顧客進入系統後的第一個受限資源。超過上限的新顧客必須排隊，等過久便會放棄離開。",
+        "theory": "對應排隊論多服務台系統 M/G/c 中的服務台數量 c，只是這裡的「服務台」是指被動佔用的座位。",
+        "defaultBasis": "小型獨立咖啡廳實地觀察常見座位數約 6 至 15 席，取中值 10 作為情境模板。",
+        "formula": "c_{seat} = 10",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Gross, Shortle, Thompson & Harris (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
+        ]
+      }
     },
     "staffCount": {
       "label": "店員數量",
-      "help": "負責點餐與製作餐點的店員人數。店員越少，餐點等待時間越長。"
+      "help": "負責點餐與製作餐點的店員人數。店員越少，餐點等待時間越長。",
+      "rationale": {
+        "meaning": "同時可處理點餐與製餐的店員人數。",
+        "why": "店員是顧客入座後的第二個瓶頸資源，直接決定點餐與出餐的等待時間。",
+        "theory": "第二組 M/G/c 排隊系統的服務台數量，本模擬將點餐與製餐合併成一個共用的員工資源池。",
+        "defaultBasis": "小型咖啡廳最常見的最小人力配置：一人主外場點餐、一人主內場製作，共 2 人。",
+        "formula": "c_{staff} = 2",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Gross et al. (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
+        ]
+      }
     },
     "catCount": {
       "label": "貓咪數量",
-      "help": "咖啡廳內可供顧客互動的貓咪總數（扣除正在休息的貓咪）。"
+      "help": "咖啡廳內可供顧客互動的貓咪總數（扣除正在休息的貓咪）。",
+      "rationale": {
+        "meaning": "咖啡廳中可與顧客互動的貓咪總數。",
+        "why": "貓咪數量影響顧客被拜訪的頻率。拜訪期間顧客無法起身，會延長座位佔用時間、降低週轉率。",
+        "theory": "每隻貓為獨立的 SimPy process，屬 agent-based 建模，而非被動的排隊資源，不同於座位與店員的 Resource 模型。",
+        "defaultBasis": "商業貓咪咖啡廳實務上可見貓隻常介於 3 至 5 隻之間（其餘在後場輪休），取下界 3 作為平日情境。",
+        "formula": "",
+        "references": [
+          { "text": "Borshchev & Filippov (2004), From System Dynamics and Discrete Event to Practical Agent-Based Modeling", "url": "https://scholar.google.com/scholar?q=Borshchev+Filippov+2004+System+Dynamics+Agent+Based+Modeling" },
+          { "text": "Macal & North (2010), Tutorial on Agent-Based Modelling and Simulation, J. Simulation 4(3)", "url": "https://scholar.google.com/scholar?q=Macal+North+2010+Tutorial+Agent+Based+Modeling+Simulation" }
+        ]
+      }
     },
     "customerArrivalInterval": {
       "label": "顧客平均到達間隔",
-      "help": "使用 Exponential 分佈。值越小表示顧客越頻繁到達。例如平均 5 分鐘到一位。"
+      "help": "使用 Exponential 分佈。值越小表示顧客越頻繁到達。例如平均 5 分鐘到一位。",
+      "rationale": {
+        "meaning": "連續兩位顧客到達之間的平均時間（分鐘）。",
+        "why": "這是整個模擬的輸入強度，決定系統承受的流量有多大。所有下游指標（等待、放棄率、利用率）都由它驅動。",
+        "theory": "Poisson process 的到達間隔服從指數分佈，具「無記憶性」：不論已經等多久，下一位顧客到來的機率分佈都相同。",
+        "defaultBasis": "8 分鐘相當於 λ ≈ 0.125 人/分（約 7.5 人/小時），介於尖峰 λ≈0.2 與離峰 λ≈0.05 之間，屬平日中度流量情境。",
+        "formula": "T \\sim \\text{Exp}(\\lambda),\\ \\lambda = \\tfrac{1}{8}",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
+        ]
+      }
     },
     "maxWaitTime": {
       "label": "最大可接受等待時間",
-      "help": "顧客等待座位的最大耐心時間。超過後顧客放棄離開，計入放棄率。"
+      "help": "顧客等待座位的最大耐心時間。超過後顧客放棄離開，計入放棄率。",
+      "rationale": {
+        "meaning": "顧客在門口等座位的最長忍耐時間，超過便放棄離開。",
+        "why": "模擬真實顧客的流失行為，使系統不會累積出無限長的佇列，同時產生「放棄率」這個關鍵指標。",
+        "theory": "對應排隊論中的「反悔 / 耐心時間（reneging / patience time）」機制，亦屬 M/G/c+G 系統特徵。",
+        "defaultBasis": "服務業消費者等待心理學研究（如 Larson 關於排隊體感時間的討論）多將 15 至 30 分鐘視為放棄門檻區間，取中值 25 分為情境設定。",
+        "formula": "",
+        "references": [
+          { "text": "Maister (1985), The Psychology of Waiting Lines, in: The Service Encounter, Lexington Books", "url": "https://scholar.google.com/scholar?q=Maister+1985+Psychology+of+Waiting+Lines" },
+          { "text": "Larson (1987), Perspectives on Queues: Social Justice and the Psychology of Queueing, Operations Research 35(6)", "url": "https://doi.org/10.1287/opre.35.6.895" },
+          { "text": "Haight (1959), Queueing with reneging, Metrika 2(1)", "url": "https://scholar.google.com/scholar?q=Haight+1959+Queueing+with+reneging+Metrika" }
+        ]
+      }
     },
     "orderTime": {
       "label": "點餐平均時間",
-      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。店員協助點餐所需時間。"
+      "help": "Normal 分佈，std = mean × 0.2,最小值為 1 分鐘。店員協助點餐所需時間。",
+      "rationale": {
+        "meaning": "店員協助單一顧客完成點餐的時間（從入座到確認餐點）。",
+        "why": "店員服務時間的第一段，期間店員資源被佔用。它加上製作時間決定總服務時長。",
+        "theory": "採常態分佈 N(μ, σ²)，固定 σ = 0.2μ，並以 max(1, sample) 截斷負值。服務時間有自然下限，因此不適合長尾的指數分佈。",
+        "defaultBasis": "看菜單加點餐結帳合理中位數約 2 至 4 分，取 3 分。",
+        "formula": "T \\sim \\mathcal{N}(3,\\ 0.6^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6 (輸入機率分佈的選擇)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
+          { "text": "Law (2010), Statistical Analysis of Simulation Output Data: The Practical State of the Art, Proc. 2010 Winter Simulation Conference, 65–74", "url": "https://dl.acm.org/doi/10.5555/2433508.2433519" }
+        ]
+      }
     },
     "preparationTime": {
       "label": "餐點製作平均時間",
-      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。餐點從下單到完成的時間。"
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。餐點從下單到完成的時間。",
+      "rationale": {
+        "meaning": "從點餐完成到餐點送達顧客座位的製作時間。",
+        "why": "店員服務時間的第二段。同樣佔用店員資源，是顧客體感等待中最明顯的一段。",
+        "theory": "同點餐時間，採常態分佈 N(μ, σ²)，σ = 0.2μ。",
+        "defaultBasis": "手沖咖啡或義式調製搭配簡餐的合理中位數約 6 至 10 分，取中值 8 分。",
+        "formula": "T \\sim \\mathcal{N}(8,\\ 1.6^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "diningTime": {
       "label": "用餐平均時間",
-      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。顧客用餐完畢所需時間。"
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。顧客用餐完畢所需時間。",
+      "rationale": {
+        "meaning": "顧客拿到餐點後，在座位上用餐的總時長。",
+        "why": "直接決定座位被佔用多久，也就是座位週轉率。與到達率一起決定系統的擁擠程度。",
+        "theory": "同樣採常態分佈 N(μ, σ²)，σ = 0.2μ。",
+        "defaultBasis": "以「一杯飲品加短暫停留」為情境（非正餐），取 15 分。若改為午餐情境需手動放大（例如 45 分）。",
+        "formula": "T \\sim \\mathcal{N}(15,\\ 3^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "catInteractionTime": {
       "label": "單次拜訪時間",
-      "help": "Normal 分佈，std = mean × 0.2。貓咪主動走到顧客座位旁停留的平均時間（分鐘）。"
+      "help": "Normal 分佈，std = mean × 0.2。貓咪主動走到顧客座位旁停留的平均時間（分鐘）。",
+      "rationale": {
+        "meaning": "貓咪停留在一位顧客旁邊的單次互動時長。",
+        "why": "期間顧客無法離開座位，會延長用餐總時長並壓縮座位週轉。這是貓咪互動設計的核心旋鈕。",
+        "theory": "常態分佈 N(μ, σ²)，σ = 0.2μ，邏輯與服務時間相同（有自然下限、集中於均值附近）。",
+        "defaultBasis": "一般家貓主動親近人類的單次停留時間約數分鐘到十餘分鐘，取中位數 10 分作為情境值。",
+        "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6 (Normal 分佈於服務時間的適用性)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "catIdleInterval": {
       "label": "貓咪空閒間隔",
-      "help": "Exponential 分佈的 mean。每隻貓在兩次拜訪之間的平均閒晃時間（分鐘），越短表示貓越黏人。"
+      "help": "Exponential 分佈的 mean。每隻貓在兩次拜訪之間的平均閒晃時間（分鐘），越短表示貓越黏人。",
+      "rationale": {
+        "meaning": "貓咪結束一次拜訪後，到下次主動找顧客之間的平均閒晃時間。",
+        "why": "控制貓咪互動的整體頻率，是「貓咪黏人程度」的量化旋鈕；值越小貓越黏人，顧客體驗差異也越大。",
+        "theory": "取指數分佈模擬「隨機時刻出現」的行為，與顧客到達過程同為 Poisson 近似。",
+        "defaultBasis": "情境假設為「好奇愛黏人的館內貓」，取 4 分。改為 1 分可示範極度黏人的貓，改為 20 分可示範冷淡的貓，做為教學對比用。",
+        "formula": "T \\sim \\text{Exp}(1/4)",
+        "references": [
+          { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2 (Poisson 過程)", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
+          { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
+        ]
+      }
     },
     "catRestProbability": {
       "label": "休息觸發機率",
-      "help": "每次拜訪結束後，貓咪進入休息狀態的機率（0–1）。休息中的貓咪不會主動拜訪任何顧客。"
+      "help": "每次拜訪結束後，貓咪進入休息狀態的機率（0–1）。休息中的貓咪不會主動拜訪任何顧客。",
+      "rationale": {
+        "meaning": "貓咪每完成一次拜訪後，隨即轉入休息狀態的機率。",
+        "why": "避免貓咪無限期主動拜訪顧客，粗略模擬「精力預算」。也讓可用貓咪的數量在時間上動態起伏。",
+        "theory": "Bernoulli trial：每次拜訪結束後獨立抽樣一個成功率為 p 的二項事件。",
+        "defaultBasis": "0.2 代表「每 5 次拜訪後約有 1 次進入休息」，為教學用情境值，無實證依據；可調整以觀察休息率對互動頻率的影響。",
+        "formula": "X \\sim \\text{Bernoulli}(0.2)",
+        "references": [
+          { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 4 (離散隨機變數與 Bernoulli 分佈)", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
+        ]
+      }
     },
     "catRestDuration": {
       "label": "休息平均時間",
-      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。貓咪每次休息的持續時間。"
+      "help": "Normal 分佈，std = mean × 0.2，最小值為 1 分鐘。貓咪每次休息的持續時間。",
+      "rationale": {
+        "meaning": "貓咪一次休息（不拜訪任何人）的平均持續時間。",
+        "why": "休息期間該貓咪不算在「可用貓咪」內，直接影響整體互動頻率與貓咪利用率。",
+        "theory": "常態分佈 N(μ, σ²)，σ = 0.2μ。",
+        "defaultBasis": "家貓的短眠（非深睡）常見長度約 5 至 15 分鐘，取中值 10 分作為情境值。",
+        "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
+        ]
+      }
     },
     "simulationDuration": {
       "label": "模擬總時長",
-      "help": "模擬的總營業時間（分鐘）。240 分鐘 = 4 小時。超過此時間後不再產生新顧客。"
+      "help": "模擬的總營業時間（分鐘）。240 分鐘 = 4 小時。超過此時間後不再產生新顧客。",
+      "rationale": {
+        "meaning": "模擬要跑多長的營業時間（分鐘）。240 分約等於 4 小時。",
+        "why": "決定統計樣本的大小。太短會讓平均值不穩定（受 warm-up 期主導），太長則執行變慢。",
+        "theory": "DES 教學常用的經驗法則：run length ≥ 10 倍最長服務時間，以達接近 steady state 的穩態觀測。",
+        "defaultBasis": "240 分約等於一個營業班（例如 11:00 到 15:00 的午餐班），可觀察完整的尖峰與退潮。",
+        "formula": "T_{run} = 240 \\text{ min}",
+        "references": [
+          { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 9 (Output Analysis for Terminating Simulations)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
+          { "text": "Banks, Carson, Nelson & Nicol (2010), Discrete-Event System Simulation, 5/e, Ch 11", "url": "https://scholar.google.com/scholar?q=Banks+Carson+Nelson+Nicol+Discrete+Event+System+Simulation+5th+edition" }
+        ]
+      }
     },
     "randomSeed": {
       "label": "Random Seed",
-      "help": "固定隨機種子可重現完全相同的模擬結果，方便教學示範對比。"
+      "help": "固定隨機種子可重現完全相同的模擬結果，方便教學示範對比。",
+      "rationale": {
+        "meaning": "偽亂數生成器的初始種子。",
+        "why": "固定 seed 讓同一組參數每次執行都得到完全相同的結果，方便教學對比、除錯與重現。",
+        "theory": "偽亂數生成器（PRNG）的確定性：給定同樣的 seed 會產生同樣的偽隨機序列，因此所有隨機決策都可重現。",
+        "defaultBasis": "42 取自文化梗「生命、宇宙以及任何事情的終極答案」，無任何數學意義；任一整數皆可。",
+        "formula": "",
+        "references": [
+          { "text": "Knuth (1997), The Art of Computer Programming Vol 2: Seminumerical Algorithms, 3/e, Ch 3", "url": "https://doi.org/10.1137/1012065" },
+          { "text": "L'Ecuyer (1999), Good Parameters and Implementations for Combined Multiple Recursive Random Number Generators, Operations Research 47(1)", "url": "https://doi.org/10.1287/opre.47.1.159" }
+        ]
+      }
     }
   },
   "actions": {
