@@ -168,12 +168,14 @@ def test_cat_visits_happen_autonomously():
 
 def test_cat_visit_events_carry_cat_id_in_resource():
     """Cat visit / leave events should tag the cat identity in resourceId so
-    the renderer can track which cat went where."""
+    the renderer can track which cat went where. As of v0.5.0 the
+    resource label is the locale-neutral ``cat-N`` form (previously
+    ``貓-N``); the renderer localizes it via i18n."""
     logs = _run(DEFAULT_CONFIG)["eventLog"]
     visits = [e for e in logs if e["eventType"] == "CAT_VISIT_SEAT"]
     assert visits, "no visits to inspect"
     for e in visits:
-        assert "resourceId" in e and e["resourceId"].startswith("貓-"), (
+        assert "resourceId" in e and e["resourceId"].startswith("cat-"), (
             f"visit event missing cat resourceId: {e}"
         )
 

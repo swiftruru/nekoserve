@@ -19,8 +19,41 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # ── Guard: skip build.yml on release commits ──────────────
+  # Release commits are tagged separately right after landing on main.
+  # release.yml fires on the tag push and builds the same artifacts, so
+  # letting build.yml run on the same commit is pure duplication. We
+  # detect the convention `feat: ... (vX.Y.Z)` in the first line of the
+  # commit message and short-circuit the whole workflow.
+  check-skip:
+    name: Detect release commit
+    runs-on: ubuntu-latest
+    outputs:
+      is_release_commit: ${{ steps.check.outputs.is_release_commit }}
+    steps:
+      - name: Check head commit message
+        id: check
+        run: |
+          # Only short-circuit push events. PRs and manual dispatches
+          # always run the full build pipeline.
+          if [[ "${{ github.event_name }}" != "push" ]]; then
+            echo "Event is ${{ github.event_name }} — running full build."
+            echo "is_release_commit=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          MSG=$(printf '%s' "${{ github.event.head_commit.message }}" | head -n 1)
+          echo "First line of commit: $MSG"
+          if printf '%s' "$MSG" | grep -qE '\(v[0-9]+\.[0-9]+\.[0-9]+\)'; then
+            echo "is_release_commit=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Release commit detected — skipping build.yml; release.yml handles this commit."
+          else
+            echo "is_release_commit=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: Build (${{ matrix.os }})
+    needs: check-skip
+    if: needs.check-skip.outputs.is_release_commit != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -175,6 +208,8 @@ jobs:
   # ── Optional: run Python tests on Ubuntu ──────────────
   test-simulator:
     name: Test Python Simulator
+    needs: check-skip
+    if: needs.check-skip.outputs.is_release_commit != 'true'
     runs-on: ubuntu-latest
 
     steps:
