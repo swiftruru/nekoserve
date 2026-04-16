@@ -166,6 +166,7 @@ export default function EventLogTable({
               onChange={(e) => setSearch(e.target.value)}
               className="input-field"
               data-selectable
+              aria-label={t('eventLog:searchLabel')}
             />
           </div>
           {hasFilters && (
@@ -181,6 +182,7 @@ export default function EventLogTable({
               key={type}
               type="button"
               onClick={() => toggleType(type)}
+              aria-pressed={selectedTypes.has(type)}
               className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
                 selectedTypes.has(type)
                   ? EVENT_TYPE_COLORS[type] + ' border-current'
@@ -190,6 +192,11 @@ export default function EventLogTable({
               {labelForType(type)}
             </button>
           ))}
+        </div>
+
+        {/* Filter result announcement for screen readers */}
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {t('eventLog:filterResultAnnounce', { count: filtered.length })}
         </div>
       </div>
 
@@ -216,19 +223,19 @@ export default function EventLogTable({
           <table className="w-full text-sm">
             <thead className="bg-orange-50 dark:bg-bark-800 sticky top-0">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-20">
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-20">
                   {t('eventLog:column.time')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-28">
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-28">
                   {t('eventLog:column.type')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-16">
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-16">
                   {t('eventLog:column.customer')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-24">
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-24">
                   {t('eventLog:column.resource')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300">
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300">
                   {t('eventLog:column.description')}
                 </th>
               </tr>
@@ -252,6 +259,13 @@ export default function EventLogTable({
                       else rowRefs.current.delete(i)
                     }}
                     onClick={onRowClick ? () => onRowClick(e.timestamp) : undefined}
+                    onKeyDown={onRowClick ? (ev) => {
+                      if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault()
+                        onRowClick(e.timestamp)
+                      }
+                    } : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
                   >
                     <td className="px-4 py-2 font-mono text-gray-600 dark:text-bark-300">
                       {e.timestamp.toFixed(2)}

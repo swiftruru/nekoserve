@@ -114,7 +114,7 @@ export default function UtilizationTimeSeries({
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={t('results:utilTimeSeries.title')}>
       <div className="text-xs font-semibold text-orange-700 mb-2">
         {t('results:utilTimeSeries.title')}
       </div>

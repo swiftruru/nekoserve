@@ -264,9 +264,9 @@ export default function PlaybackPage({
                 type="button"
                 onClick={onToggleFullscreen}
                 className="btn-secondary text-sm whitespace-nowrap px-3 py-1.5"
-                title={t('common:shortcutHelp.toggleFullscreen')}
+                aria-label={fullscreen ? t('playback:exitFullscreen') : t('playback:fullscreen')}
               >
-                {fullscreen ? '⊡' : '⊞'}
+                {fullscreen ? '⊡' : '⊞'} {fullscreen ? t('playback:exitFullscreen') : t('playback:fullscreen')}
               </button>
             )}
             {onSkipToResults && (

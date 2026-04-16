@@ -33,9 +33,12 @@ export default function UtilizationChart({
 
   const tooltipLabel = t('results:charts.utilization.tooltipLabel')
 
+  const summaryText = data.map((d) => `${d.name}: ${d.value}%`).join(', ')
+
   return (
-    <div className="card">
+    <div className="card" role="figure" aria-label={t('results:charts.utilization.title')}>
       <div className="card-title">{t('results:charts.utilization.title')}</div>
+      <p className="sr-only">{summaryText}</p>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#fed7aa" />

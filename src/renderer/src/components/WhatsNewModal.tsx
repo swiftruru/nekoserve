@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 const STORAGE_KEY = 'nekoserve:last-seen-version'
 
@@ -37,6 +38,9 @@ export function useWhatsNew() {
 
 export default function WhatsNewModal({ visible, version, onDismiss }: WhatsNewModalProps) {
   const { t } = useTranslation('common')
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  useFocusTrap(dialogRef, visible && !!version)
 
   useEffect(() => {
     if (!visible) return
@@ -51,7 +55,11 @@ export default function WhatsNewModal({ visible, version, onDismiss }: WhatsNewM
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[9997] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="whats-new-heading"
       onClick={onDismiss}
     >
       <div
@@ -60,13 +68,14 @@ export default function WhatsNewModal({ visible, version, onDismiss }: WhatsNewM
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-orange-100 dark:border-bark-600 flex items-center justify-between">
-          <h2 className="text-base font-bold text-orange-700 dark:text-orange-400">
+          <h2 id="whats-new-heading" className="text-base font-bold text-orange-700 dark:text-orange-400">
             {t('whatsNew.title')}
           </h2>
           <button
             type="button"
             onClick={onDismiss}
             className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+            aria-label={t('button.close')}
           >
             ✕
           </button>

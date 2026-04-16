@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { AppLocale } from '@i18n/index'
 import { SUPPORTED_LOCALES } from '@i18n/index'
+import { useToast } from '../hooks/useToast'
 
 const LABELS: Record<AppLocale, string> = {
   'zh-TW': '繁中',
@@ -17,13 +18,21 @@ function nextLocale(current: AppLocale): AppLocale {
   return SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length]
 }
 
+const FULL_LABELS: Record<AppLocale, string> = {
+  'zh-TW': '繁體中文',
+  en: 'English',
+}
+
 export default function LanguageSwitcher() {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
+  const { toast } = useToast()
   const current = resolveLocale(i18n.resolvedLanguage ?? i18n.language)
   const next = nextLocale(current)
 
   function handleToggle() {
-    void i18n.changeLanguage(next)
+    void i18n.changeLanguage(next).then(() => {
+      toast(t('common:a11y.languageChanged', { lang: FULL_LABELS[next] }))
+    })
   }
 
   return (

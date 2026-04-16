@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 interface ShortcutHelpProps {
   visible: boolean
@@ -30,6 +31,9 @@ const GLOBAL_SHORTCUTS: ShortcutEntry[] = [
 
 export default function ShortcutHelp({ visible, onClose }: ShortcutHelpProps) {
   const { t } = useTranslation('common')
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  useFocusTrap(dialogRef, visible)
 
   useEffect(() => {
     if (!visible) return
@@ -44,7 +48,11 @@ export default function ShortcutHelp({ visible, onClose }: ShortcutHelpProps) {
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[9997] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shortcut-help-heading"
       onClick={onClose}
     >
       <div
@@ -53,13 +61,14 @@ export default function ShortcutHelp({ visible, onClose }: ShortcutHelpProps) {
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-orange-100 dark:border-bark-600 flex items-center justify-between">
-          <h2 className="text-base font-bold text-orange-700 dark:text-orange-400">
+          <h2 id="shortcut-help-heading" className="text-base font-bold text-orange-700 dark:text-orange-400">
             {t('shortcutHelp.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+            aria-label={t('button.close')}
           >
             ✕
           </button>

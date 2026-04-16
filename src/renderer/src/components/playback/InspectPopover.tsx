@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { CafeState, CustomerRuntime } from '../../utils/replay'
 import type { FocusTarget } from './CafeScene'
 
@@ -20,6 +22,17 @@ export default function InspectPopover({
   onClose,
 }: InspectPopoverProps) {
   const { t } = useTranslation('playback')
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  useFocusTrap(popoverRef, true)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const content =
     focus.kind === 'seat'
@@ -28,14 +41,16 @@ export default function InspectPopover({
 
   return (
     <div
+      ref={popoverRef}
       className="absolute bottom-4 right-4 z-10 w-64 rounded-xl
                  bg-white/95 dark:bg-bark-800/95 backdrop-blur-sm border border-orange-200 dark:border-bark-500
                  shadow-[0_8px_24px_-8px_rgba(251,146,60,0.35)]
                  px-4 py-3"
       role="dialog"
+      aria-labelledby="inspect-popover-title"
     >
       <div className="flex items-start gap-2 mb-2">
-        <div className="flex-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
+        <div id="inspect-popover-title" className="flex-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
           {focus.kind === 'seat'
             ? t('playback:inspect.seatTitle', { n: focus.slotIdx + 1 })
             : t('playback:inspect.catTitle', { n: focus.slotIdx + 1 })}

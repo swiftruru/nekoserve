@@ -90,7 +90,7 @@ First-launch tips for unsigned builds:
 - **Drag-and-Drop Scenario Import** (v0.8.0): drop a `.json` config file onto the Settings page to load parameters instantly.
 - **Smart Number Inputs** (v0.8.0): fields allow clearing to empty while editing; on blur, revert to last valid value if left blank.
 - **Disabled Tab Guidance** (v0.8.0): clicking a grayed-out tab shows a toast prompting users to run a simulation first.
-- **Accessibility** (v0.8.0): `role="tablist"`/`role="tab"`, `aria-selected`, `role="status"` on toasts, `role="progressbar"`, global `focus-visible` outlines.
+- **Accessibility** (v0.8.0 / v0.9.0): comprehensive WCAG 2.1 AA support -- see "Accessibility" section below for full details.
 - **Scenario Comparison**: run multiple configurations and compare KPIs side-by-side (up to 3 runs)
 - **Custom Scenario Presets**: save, name, and persist your own parameter sets across restarts
 - **Progress Animation**: exponential progress bar with elapsed-time counter during simulation
@@ -239,6 +239,53 @@ Built-in update checking against GitHub Releases, with no external dependencies 
 - **About page**: version display is now dynamic (reads `app.getVersion()` instead of a hardcoded i18n key), and a new "Version & Updates" card at the bottom shows the current version with a one-click update check button.
 
 Architecture: `src/main/updater/` contains four modules (config, service, store, IPC). The renderer consumes updates via a `useUpdateCheck` hook and an `UpdateModal` component. Skipped-version preferences are persisted to `userData/update-prefs.json`.
+
+### Accessibility (v0.9.0)
+
+v0.9.0 is an accessibility-focused release that brings NekoServe closer to WCAG 2.1 AA compliance across keyboard navigation, screen reader support, and semantic HTML.
+
+**Focus management**
+
+- **`useFocusTrap` hook**: zero-dependency focus trap that saves the previously-focused element, cycles Tab/Shift+Tab within a container, and restores focus on deactivation. Applied to all 5 modal/overlay components: UpdateModal, WhatsNewModal, ShortcutHelp, OnboardingOverlay, InspectPopover.
+- All modals now have proper `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to their heading, and Escape key to dismiss.
+- **Skip to main content**: a visually-hidden link appears on first Tab press, jumping focus past the header and navigation to `<main id="main-content">`.
+
+**Screen reader announcements**
+
+- **`RouteAnnouncer`**: a visually-hidden `aria-live="polite"` region announces page name on every tab switch (e.g. "Navigated to Settings" / "已導覽至模擬設定").
+- **Language switch toast**: changing locale fires a toast that is announced via the existing `aria-live` toast container.
+- **Filter result count**: the EventLogTable announces the number of matching events when search or type filters change.
+
+**Semantic HTML & ARIA**
+
+- Icon-only buttons (theme toggle, shortcut help, onboarding tour, modal close buttons) now have `aria-label` in addition to `title`.
+- EventLogTable: `<th scope="col">` on all column headers, `aria-label` on the search input, `aria-pressed` on filter toggle buttons, `tabIndex={0}` + Enter/Space keyboard activation on clickable rows.
+- ParamInput: new `error` prop wires up `aria-invalid` + `aria-describedby` for form validation; HelpButton tooltip has `aria-expanded` + `aria-describedby`.
+- SettingsPage progress bar: `aria-label` added to the `role="progressbar"` element.
+- LearningPanel `<aside>`: `aria-label` for landmark identification.
+- All 10 chart/visualization components: outer wrapper has `role="figure"` + `aria-label`; Recharts-based charts (UtilizationChart, WaitTimeChart, CustomerPieChart) include `sr-only` text summaries of the data.
+
+**Playback scene keyboard access**
+
+- CafeScene SVG: each seat and cat `<g>` element now has `tabIndex={0}`, `role="button"`, `aria-label` describing its current state (e.g. "Seat 3, occupied" / "Cat 1, visiting customer"), and Enter/Space to open the InspectPopover.
+- InspectPopover: Escape key to close (previously mouse-only).
+
+**Fullscreen button label**
+
+- The playback fullscreen toggle button now shows a visible text label ("Fullscreen" / "Exit fullscreen" / "全螢幕" / "退出全螢幕") instead of a bare `⊞` / `⊡` symbol that was invisible to the custom cursor tooltip system.
+
+**Existing foundations (v0.8.0)**
+
+- `role="tablist"` / `role="tab"` / `aria-selected` on navigation
+- `role="status"` + `aria-live="polite"` on toast notifications
+- `role="progressbar"` with `aria-valuenow/min/max`
+- Global `:focus-visible` orange outlines
+- `prefers-reduced-motion` support (CSS + JS)
+- Dark mode with Tailwind `dark:` classes
+- `aria-hidden` on decorative elements
+- Form labels with `htmlFor` on ParamInput
+
+**i18n keys**: all new accessibility strings ship in both zh-TW and en (`common:a11y.*`, `eventLog:searchLabel`, `eventLog:filterResultAnnounce`, `playback:a11y.*`, `playback:fullscreen`, `playback:exitFullscreen`).
 
 ### Native Desktop Polish
 
@@ -512,7 +559,8 @@ nekoserve/
 │       │   ├── useUpdateCheck.ts # Update checking state, auto/manual check, skip/remind actions
 │       │   ├── useMousePosition.ts # Zero-rerender cursor position tracker for CustomCursor
 │       │   ├── usePlaybackClock.ts # rAF sim-time clock driving the Playback animation
-│       │   └── useKeyboardShortcuts.ts # Document-level key map with input-focus protection
+│       │   ├── useKeyboardShortcuts.ts # Document-level key map with input-focus protection
+│       │   └── useFocusTrap.ts    # Zero-dep focus trap for modals (Tab cycling + restore)
 │       ├── assets/
 │       │   ├── mascot-cat.png    # Page-transition mascot sprite
 │       │   └── cursors/          # CustomCursor sprites (default + hover) and archived source
@@ -547,6 +595,7 @@ nekoserve/
 - [x] Dark mode with warm theme (v0.8.0)
 - [x] Onboarding tour, toast notifications, keyboard shortcut help (v0.8.0)
 - [x] Fullscreen playback, drag-and-drop import, What's New modal (v0.8.0)
+- [x] Comprehensive accessibility / WCAG 2.1 AA (v0.9.0)
 - [ ] Persistent simulation history (SQLite)
 - [ ] CSV import for batch parameter testing
 - [ ] macOS / Windows code signing & notarization

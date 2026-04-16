@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 const STORAGE_KEY = 'nekoserve:onboarded'
 
@@ -115,6 +116,8 @@ export default function OnboardingOverlay({ externalOpen, onClose }: OnboardingO
     onClose?.()
   }
 
+  useFocusTrap(tooltipRef, visible)
+
   if (!visible) return null
 
   const current = STEPS[step]
@@ -156,7 +159,7 @@ export default function OnboardingOverlay({ externalOpen, onClose }: OnboardingO
   }
 
   return (
-    <div className="fixed inset-0 z-[9996]" onClick={handleNext}>
+    <div className="fixed inset-0 z-[9996]" role="dialog" aria-modal="true" aria-labelledby="onboarding-step-title" onClick={handleNext}>
       {/* Dark mask with spotlight cutout */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
         <defs>
@@ -199,7 +202,7 @@ export default function OnboardingOverlay({ externalOpen, onClose }: OnboardingO
 
         <div className="flex items-start gap-2 mb-2">
           <span className="text-base">🐱</span>
-          <h3 className="text-sm font-bold text-orange-700 dark:text-orange-400">
+          <h3 id="onboarding-step-title" className="text-sm font-bold text-orange-700 dark:text-orange-400">
             {t(current.titleKey)}
           </h3>
         </div>

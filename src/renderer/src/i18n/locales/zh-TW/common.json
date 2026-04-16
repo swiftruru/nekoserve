@@ -59,6 +59,14 @@
     "openOnboarding": "開啟新手導覽",
     "toggleFullscreen": "切換全螢幕播放"
   },
+  "a11y": {
+    "darkMode": "切換至深色模式",
+    "lightMode": "切換至淺色模式",
+    "openTour": "開啟新手導覽",
+    "skipToContent": "跳至主要內容",
+    "navigatedTo": "已導覽至{{page}}",
+    "languageChanged": "語言已切換至{{lang}}"
+  },
   "unit": {
     "min": "分鐘",
     "minutesShort": "分",

@@ -8,6 +8,8 @@
   "simMinutesUnit": "分鐘",
   "noCurrentEvent": "尚未播放任何事件",
   "skipToResults": "查看統計結果",
+  "fullscreen": "全螢幕",
+  "exitFullscreen": "退出全螢幕",
   "timeline": {
     "label": "時間軸",
     "hint": "拖曳跳到任意時間，亮度代表該段事件密集度",
@@ -80,5 +82,17 @@
     "stage": "目前階段",
     "stayTime": "已停留",
     "close": "關閉"
+  },
+  "a11y": {
+    "seat": "座位 {{n}}, {{status}}",
+    "occupied": "已佔用",
+    "empty": "空位",
+    "cat": "貓 {{n}}, {{status}}",
+    "catState": {
+      "idle": "閒置",
+      "visiting": "拜訪顧客中",
+      "resting": "休息中",
+      "walking": "走動中"
+    }
   }
 }

@@ -77,7 +77,7 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={t('results:queueTimeSeries.title')}>
       <div className="flex items-baseline justify-between mb-2">
         <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">
           {t('results:queueTimeSeries.title')}

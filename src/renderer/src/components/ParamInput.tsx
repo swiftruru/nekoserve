@@ -10,6 +10,7 @@ interface ParamInputProps {
   tooltip?: string
   unit?: string
   disabled?: boolean
+  error?: string
 }
 
 /**
@@ -18,6 +19,7 @@ interface ParamInputProps {
  */
 function HelpButton({ label, tooltip }: { label: string; tooltip: string }) {
   const [open, setOpen] = useState(false)
+  const tooltipId = useId()
   return (
     <div className="relative">
       <button
@@ -33,11 +35,14 @@ function HelpButton({ label, tooltip }: { label: string; tooltip: string }) {
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         aria-label={label}
+        aria-expanded={open}
+        aria-describedby={open ? tooltipId : undefined}
       >
         i
       </button>
       {open && (
         <div
+          id={tooltipId}
           role="tooltip"
           className="pointer-events-none absolute bottom-6 right-0 z-20 w-56
                      rounded-xl bg-gray-900/95 px-3 py-2.5 text-xs font-normal
@@ -95,8 +100,10 @@ export default function ParamInput({
   tooltip,
   unit,
   disabled = false,
+  error,
 }: ParamInputProps) {
   const inputId = useId()
+  const errorId = useId()
 
   // Local string mirror of the numeric value so the user can freely
   // clear the field (e.g. select-all → delete) without the controlled
@@ -170,6 +177,8 @@ export default function ParamInput({
           max={max}
           step={step}
           disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={`
             param-number-input
             w-full rounded-xl border border-orange-100 bg-cream-50
@@ -199,6 +208,13 @@ export default function ParamInput({
           </span>
         )}
       </div>
+
+      {/* ── Validation error ────────────────────────── */}
+      {error && (
+        <p id={errorId} role="alert" className="text-xs text-red-500 dark:text-red-400">
+          {error}
+        </p>
+      )}
 
       {/* ── Value range fill bar ─────────────────────── */}
       {hasRange && (

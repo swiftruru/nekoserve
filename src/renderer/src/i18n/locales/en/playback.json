@@ -8,6 +8,8 @@
   "simMinutesUnit": "min",
   "noCurrentEvent": "No events played yet",
   "skipToResults": "View results",
+  "fullscreen": "Fullscreen",
+  "exitFullscreen": "Exit fullscreen",
   "timeline": {
     "label": "Timeline",
     "hint": "Drag to seek; brighter bars mean busier moments",
@@ -80,5 +82,17 @@
     "stage": "Stage",
     "stayTime": "Stay time",
     "close": "Close"
+  },
+  "a11y": {
+    "seat": "Seat {{n}}, {{status}}",
+    "occupied": "occupied",
+    "empty": "empty",
+    "cat": "Cat {{n}}, {{status}}",
+    "catState": {
+      "idle": "idle",
+      "visiting": "visiting customer",
+      "resting": "resting",
+      "walking": "walking"
+    }
   }
 }

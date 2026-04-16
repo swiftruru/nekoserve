@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { UpdateStatus } from '../hooks/useUpdateCheck'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import appIconUrl from '@assets/app-icon.png'
 
 interface UpdateModalProps {
@@ -34,16 +35,10 @@ export default function UpdateModal({
 }: UpdateModalProps) {
   const { t } = useTranslation('update')
   const primaryRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const [notesExpanded, setNotesExpanded] = useState(false)
 
-  // Auto-focus the primary button when status changes to an actionable state
-  useEffect(() => {
-    if (visible && status !== 'checking') {
-      // Small delay so the DOM has rendered the button
-      const timer = setTimeout(() => primaryRef.current?.focus(), 50)
-      return () => clearTimeout(timer)
-    }
-  }, [visible, status])
+  useFocusTrap(dialogRef, visible && status !== 'checking', { initialFocusRef: primaryRef })
 
   // Escape key to dismiss (except during checking)
   useEffect(() => {
@@ -69,6 +64,7 @@ export default function UpdateModal({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/30 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"

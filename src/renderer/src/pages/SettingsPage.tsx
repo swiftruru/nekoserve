@@ -399,7 +399,7 @@ export default function SettingsPage({
             <span>{t('settings:actions.runningHint')}</span>
             <span>{elapsed.toFixed(1)} {t('common:unit.sec')}</span>
           </div>
-          <div className="h-2.5 bg-orange-100 dark:bg-bark-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(progressPct)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-2.5 bg-orange-100 dark:bg-bark-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(progressPct)} aria-valuemin={0} aria-valuemax={100} aria-label={t('settings:actions.running')}>
             <div
               className="h-full bg-orange-400 rounded-full transition-all duration-300"
               style={{ width: `${progressPct.toFixed(1)}%` }}

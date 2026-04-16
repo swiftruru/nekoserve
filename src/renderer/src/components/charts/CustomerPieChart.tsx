@@ -68,8 +68,14 @@ export default function CustomerPieChart({
   const total = data.reduce((sum, d) => sum + d.value, 0)
   const tooltipUnit = t('results:charts.customerPie.tooltipUnit')
 
+  const summaryText = data.map((d) => {
+    const pct = total > 0 ? ((d.value / total) * 100).toFixed(0) : '0'
+    return `${d.name}: ${d.value} (${pct}%)`
+  }).join(', ')
+
   return (
-    <div className="card">
+    <div className="card" role="figure" aria-label={t('results:charts.customerPie.title')}>
+      <p className="sr-only">{summaryText}</p>
       <div className="card-title flex items-center gap-2">
         {t('results:charts.customerPie.title')}
         {clickable && (

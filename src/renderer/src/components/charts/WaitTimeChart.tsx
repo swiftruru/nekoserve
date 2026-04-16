@@ -34,9 +34,12 @@ export default function WaitTimeChart({
   const yUnit = t('results:charts.waitTime.yAxisUnit')
   const minUnit = t('common:unit.min')
 
+  const summaryText = data.map((d) => `${d.name}: ${d.value.toFixed(1)} ${minUnit}`).join(', ')
+
   return (
-    <div className="card">
+    <div className="card" role="figure" aria-label={t('results:charts.waitTime.title')}>
       <div className="card-title">{t('results:charts.waitTime.title')}</div>
+      <p className="sr-only">{summaryText}</p>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#fed7aa" />

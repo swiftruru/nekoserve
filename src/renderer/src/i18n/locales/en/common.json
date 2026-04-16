@@ -59,6 +59,14 @@
     "openOnboarding": "Open onboarding tour",
     "toggleFullscreen": "Toggle fullscreen playback"
   },
+  "a11y": {
+    "darkMode": "Switch to dark mode",
+    "lightMode": "Switch to light mode",
+    "openTour": "Open guided tour",
+    "skipToContent": "Skip to main content",
+    "navigatedTo": "Navigated to {{page}}",
+    "languageChanged": "Language changed to {{lang}}"
+  },
   "unit": {
     "min": "min",
     "minutesShort": "min",

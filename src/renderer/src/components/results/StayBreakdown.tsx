@@ -67,7 +67,7 @@ export default function StayBreakdown({
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={t('stayBreakdown.title')}>
       <div className="flex items-baseline justify-between mb-2">
         <span className="text-xs text-gray-500 dark:text-bark-300">
           {t('stayBreakdown.title')}

@@ -132,7 +132,7 @@ export default function StayDistribution({ customers }: Props) {
     withoutCat.total > 0 ? xForValue(withoutCat.mean) : null
 
   return (
-    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={t('results:stayDist.title')}>
       <div className="text-xs font-semibold text-orange-700 dark:text-orange-400 mb-2">
         {t('results:stayDist.title')}
       </div>

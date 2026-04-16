@@ -10,5 +10,7 @@
     "resource": "Resource",
     "description": "Description"
   },
-  "empty": "No events match the current filter"
+  "empty": "No events match the current filter",
+  "searchLabel": "Search events",
+  "filterResultAnnounce": "{{count}} events shown"
 }

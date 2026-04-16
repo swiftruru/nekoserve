@@ -10,5 +10,7 @@
     "resource": "資源",
     "description": "描述"
   },
-  "empty": "沒有符合條件的事件"
+  "empty": "沒有符合條件的事件",
+  "searchLabel": "搜尋事件",
+  "filterResultAnnounce": "顯示 {{count}} 筆事件"
 }

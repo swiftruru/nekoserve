@@ -996,10 +996,20 @@ export default function CafeScene({
               <g
                 key={`seat-${seat.slotIdx}`}
                 transform={`translate(${p.x - 18}, ${p.y - 18})`}
-                className="cursor-pointer"
+                className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
+                tabIndex={0}
+                role="button"
+                aria-label={t('playback:a11y.seat', { n: seat.slotIdx + 1, status: busy ? t('playback:a11y.occupied') : t('playback:a11y.empty') })}
                 onClick={(e) => {
                   e.stopPropagation()
                   onSelectFocus({ kind: 'seat', slotIdx: seat.slotIdx })
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onSelectFocus({ kind: 'seat', slotIdx: seat.slotIdx })
+                  }
                 }}
               >
                 <rect
@@ -1606,7 +1616,10 @@ export default function CafeScene({
             <g
               key={`cat-${cat.slotIdx}`}
               transform={`translate(${x - 18}, ${y - 18})`}
-              className="cursor-pointer"
+              className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
+              tabIndex={0}
+              role="button"
+              aria-label={t('playback:a11y.cat', { n: cat.slotIdx + 1, status: t(`playback:a11y.catState.${cat.state}` as const) })}
               style={{
                 transition: transformTransition,
                 willChange: 'transform',
@@ -1614,6 +1627,13 @@ export default function CafeScene({
               onClick={(e) => {
                 e.stopPropagation()
                 onSelectFocus({ kind: 'cat', slotIdx: cat.slotIdx })
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onSelectFocus({ kind: 'cat', slotIdx: cat.slotIdx })
+                }
               }}
             >
               <g className={innerClass} style={innerStyle}>

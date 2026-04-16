@@ -64,7 +64,7 @@ export default function FlowDiagram({
   ]
 
   return (
-    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={t('flowDiagram.arrived')}>
       {/* Arrived row */}
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg" aria-hidden="true">

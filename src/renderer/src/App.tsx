@@ -21,6 +21,7 @@ import { useTheme } from './hooks/useTheme'
 import ShortcutHelp from './components/ShortcutHelp'
 import OnboardingOverlay from './components/OnboardingOverlay'
 import WhatsNewModal, { useWhatsNew } from './components/WhatsNewModal'
+import RouteAnnouncer from './components/RouteAnnouncer'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -176,6 +177,15 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-cream-100 dark:bg-bark-950">
+      {/* ── Skip to main content (a11y) ───────────────── */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-orange-500 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold"
+      >
+        {t('common:a11y.skipToContent')}
+      </a>
+      <RouteAnnouncer page={page} />
+
       {/* ── In-window custom cursor overlay ───────────────
            Mounted at the outermost level so its `position: fixed`
            overlay is never clipped by `overflow-hidden` ancestors
@@ -242,7 +252,8 @@ export default function App() {
             type="button"
             onClick={toggleTheme}
             className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-lg leading-none"
-            title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+            title={theme === 'light' ? t('common:a11y.darkMode') : t('common:a11y.lightMode')}
+            aria-label={theme === 'light' ? t('common:a11y.darkMode') : t('common:a11y.lightMode')}
           >
             {theme === 'light' ? '\uD83C\uDF19' : '\u2600\uFE0F'}
           </button>
@@ -251,6 +262,7 @@ export default function App() {
             onClick={() => setShortcutHelpVisible(true)}
             className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-sm"
             title={t('common:shortcutHelp.title')}
+            aria-label={t('common:shortcutHelp.title')}
           >
             <kbd className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-bark-500 bg-gray-50 dark:bg-bark-700 text-[11px] font-mono">⌘K</kbd>
           </button>
@@ -258,7 +270,8 @@ export default function App() {
             type="button"
             onClick={() => setOnboardingOpen(true)}
             className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-sm"
-            title={t('common:onboarding.step1Title')}
+            title={t('common:a11y.openTour')}
+            aria-label={t('common:a11y.openTour')}
           >
             <kbd className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-bark-500 bg-gray-50 dark:bg-bark-700 text-xs font-mono">?</kbd>
           </button>
@@ -322,7 +335,7 @@ export default function App() {
 
       {/* ── Main area: content + sidebar ────────────────── */}
       <div className="flex-1 flex overflow-hidden">
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" className="flex-1 overflow-y-auto">
           <PageTransition pageKey={page}>
             {page === 'settings' && (
               <SettingsPage
@@ -374,6 +387,7 @@ export default function App() {
         {/* ── Learning sidebar ──────────────────────────── */}
         {!fullscreen && (
         <aside
+          aria-label={t('common:learningPanel')}
           className={`flex-shrink-0 border-l border-orange-100 dark:border-bark-600 overflow-hidden transition-all duration-200 ${
             panelOpen ? 'w-72' : 'w-0'
           }`}
