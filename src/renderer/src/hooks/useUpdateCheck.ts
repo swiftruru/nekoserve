@@ -37,6 +37,9 @@ export function useUpdateCheck() {
   // Guard against double-registering listeners in StrictMode
   const listenersRegistered = useRef(false)
 
+  // Prevent overlapping manual checks (ref so the memoized callback sees it)
+  const checkingRef = useRef(false)
+
   // ── Listen for auto-check push from main process ─────────────
   useEffect(() => {
     if (listenersRegistered.current) return
@@ -56,20 +59,27 @@ export function useUpdateCheck() {
   // ── Manual check ─────────────────────────────────────────────
 
   const performCheck = useCallback(async (manual: boolean) => {
+    if (checkingRef.current) return // prevent overlapping checks
+    checkingRef.current = true
+
     setState({ status: 'checking', info: null, errorMessage: null, manual })
     setVisible(true)
 
-    const result = await window.electronAPI.checkForUpdate()
+    try {
+      const result = await window.electronAPI.checkForUpdate()
 
-    if (!result.success) {
-      setState({ status: 'error', info: null, errorMessage: result.error ?? 'Unknown error', manual })
-      return
-    }
+      if (!result.success) {
+        setState({ status: 'error', info: null, errorMessage: result.error ?? 'Unknown error', manual })
+        return
+      }
 
-    if (result.data!.hasUpdate) {
-      setState({ status: 'available', info: result.data!, errorMessage: null, manual })
-    } else {
-      setState({ status: 'up-to-date', info: result.data!, errorMessage: null, manual })
+      if (result.data!.hasUpdate) {
+        setState({ status: 'available', info: result.data!, errorMessage: null, manual })
+      } else {
+        setState({ status: 'up-to-date', info: result.data!, errorMessage: null, manual })
+      }
+    } finally {
+      checkingRef.current = false
     }
   }, [])
 

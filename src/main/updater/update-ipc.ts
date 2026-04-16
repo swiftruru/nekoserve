@@ -7,7 +7,7 @@
 import { ipcMain, shell, BrowserWindow } from 'electron'
 import { checkForUpdate } from './update-service'
 import { isVersionSkipped, skipVersion } from './update-store'
-import { RELEASES_URL, AUTO_CHECK_DELAY_MS } from './update-config'
+import { RELEASES_URL, AUTO_CHECK_DELAY_MS, AUTO_RETRY_DELAY_MS } from './update-config'
 import type { UpdateCheckOutcome, UpdateInfo } from './update-service'
 
 export function registerUpdateHandlers(): void {
@@ -30,17 +30,28 @@ export function registerUpdateHandlers(): void {
 /**
  * Silently checks for updates after a short delay. If a newer, non-skipped
  * version is found, pushes an `update-available` event to every open window.
+ * On failure, retries once after AUTO_RETRY_DELAY_MS.
  */
 export function scheduleAutoCheck(): void {
-  setTimeout(async () => {
-    const result = await checkForUpdate()
-    if (!result.success) return // silent fail for auto-check
-    if (!result.data.hasUpdate) return
-    if (isVersionSkipped(result.data.latestVersion)) return
+  setTimeout(() => runAutoCheck(true), AUTO_CHECK_DELAY_MS)
+}
 
-    const info: UpdateInfo = result.data
-    for (const win of BrowserWindow.getAllWindows()) {
-      win.webContents.send('update-available', info)
+async function runAutoCheck(allowRetry: boolean): Promise<void> {
+  const result = await checkForUpdate()
+
+  if (!result.success) {
+    // Silent retry once (e.g. network not ready at startup)
+    if (allowRetry) {
+      setTimeout(() => runAutoCheck(false), AUTO_RETRY_DELAY_MS)
     }
-  }, AUTO_CHECK_DELAY_MS)
+    return
+  }
+
+  if (!result.data.hasUpdate) return
+  if (isVersionSkipped(result.data.latestVersion)) return
+
+  const info: UpdateInfo = result.data
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send('update-available', info)
+  }
 }

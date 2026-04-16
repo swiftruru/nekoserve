@@ -11,6 +11,9 @@
   "skipVersion": "Skip This Version",
   "remindLater": "Remind Me Later",
   "ok": "OK",
+  "retry": "Retry",
+  "checkingButton": "Checking...",
+  "whatsNew": "What's New",
   "versionAndUpdate": "Version & Updates",
   "currentVersionLabel": "Current Version",
   "checkForUpdates": "Check for Updates"

@@ -23,7 +23,12 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
 // Reusable bold inline element for <Trans> markup components.
 const boldComponents = { strong: <strong className="font-semibold" /> }
 
-export default function AboutPage({ onCheckForUpdate }: { onCheckForUpdate?: () => void }) {
+interface AboutPageProps {
+  onCheckForUpdate?: () => void
+  updateChecking?: boolean
+}
+
+export default function AboutPage({ onCheckForUpdate, updateChecking }: AboutPageProps) {
   const { t } = useTranslation(['about', 'update'])
   const [version, setVersion] = useState<string>('')
 
@@ -203,9 +208,21 @@ export default function AboutPage({ onCheckForUpdate }: { onCheckForUpdate?: () 
             <button
               type="button"
               onClick={onCheckForUpdate}
-              className="flex-shrink-0 px-4 py-2 rounded-xl border border-orange-200 text-orange-600 text-xs font-medium hover:bg-orange-50 active:bg-orange-100 transition-colors no-drag"
+              disabled={updateChecking}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl border text-xs font-medium transition-colors no-drag ${
+                updateChecking
+                  ? 'border-orange-100 text-orange-300 cursor-not-allowed'
+                  : 'border-orange-200 text-orange-600 hover:bg-orange-50 active:bg-orange-100'
+              }`}
             >
-              {t('update:checkForUpdates')}
+              {updateChecking ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 border-[1.5px] border-orange-200 border-t-orange-400 rounded-full animate-spin" />
+                  {t('update:checkingButton')}
+                </span>
+              ) : (
+                t('update:checkForUpdates')
+              )}
             </button>
           </div>
         </div>

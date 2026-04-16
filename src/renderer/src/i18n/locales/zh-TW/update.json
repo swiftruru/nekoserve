@@ -11,6 +11,9 @@
   "skipVersion": "略過此版本",
   "remindLater": "下次再提示",
   "ok": "確定",
+  "retry": "重試",
+  "checkingButton": "正在檢查...",
+  "whatsNew": "更新內容",
   "versionAndUpdate": "版本與更新",
   "currentVersionLabel": "目前版本",
   "checkForUpdates": "檢查更新"

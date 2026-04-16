@@ -211,12 +211,15 @@ v0.6.1 turns the Simulation Settings page into something that can be defended in
 
 Built-in update checking against GitHub Releases, with no external dependencies (uses Electron's built-in `net.fetch`).
 
-- **Automatic check on launch**: 5 seconds after startup, silently queries the GitHub Releases API. If a newer version exists and the user hasn't skipped it, a modal notification appears. If up-to-date or offline, nothing happens.
-- **Manual check via menu**: macOS: *NekoServe > Check for Updates...*; Windows/Linux: *Help > Check for Updates...*. Also available as a button on the About page's new "Version & Updates" card.
+- **Automatic check on launch**: 5 seconds after startup, silently queries the GitHub Releases API. If a newer version exists and the user hasn't skipped it, a modal notification appears. If up-to-date or offline, nothing happens. If the first check fails (e.g. network not ready), a single silent retry fires after 30 seconds.
+- **Manual check via menu**: macOS: *NekoServe > Check for Updates...*; Windows/Linux: *Help > Check for Updates...*. Also available as a button on the About page's new "Version & Updates" card. The button shows a spinner and disables itself while a check is in progress; duplicate clicks are ignored.
 - **Three-action update modal**: when a new version is found, the user sees:
   1. **Go to Download** (primary) — opens the GitHub Releases page in the system browser
   2. **Skip This Version** (secondary) — persists the choice; the app will not prompt for this version again
   3. **Remind Me Later** (tertiary) — dismisses the modal; the next app launch will check and prompt again
+- **Release notes preview**: the "update available" modal includes a collapsible "What's New" section that shows the changelog body from the GitHub release, so users can see what changed before deciding to update.
+- **Error resilience**: if a check fails, the modal shows a **Retry** button so users can re-check without dismissing and navigating back to the menu.
+- **Accessible modal**: `role="dialog"`, `aria-modal`, `aria-labelledby`, Escape key to dismiss, and auto-focus on the primary action button.
 - **Platform strategy**: all current build targets (macOS DMG/ZIP, Windows portable EXE, Linux AppImage) use the redirect-to-GitHub flow. The updater module is structured so a future Windows NSIS installer target could add auto-download-and-install without changing the existing code paths.
 - **Bilingual**: all update UI strings ship in both zh-TW and en.
 - **About page**: version display is now dynamic (reads `app.getVersion()` instead of a hardcoded i18n key), and a new "Version & Updates" card at the bottom shows the current version with a one-click update check button.

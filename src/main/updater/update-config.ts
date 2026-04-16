@@ -14,3 +14,6 @@ export const AUTO_CHECK_DELAY_MS = 5_000
 
 /** Timeout (ms) for the GitHub API request. */
 export const FETCH_TIMEOUT_MS = 10_000
+
+/** Delay (ms) before retrying a failed auto-check (once only). */
+export const AUTO_RETRY_DELAY_MS = 30_000

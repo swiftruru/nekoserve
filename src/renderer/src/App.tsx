@@ -157,10 +157,12 @@ export default function App() {
         manual={update.manual}
         currentVersion={update.info?.currentVersion}
         latestVersion={update.info?.latestVersion}
+        releaseNotes={update.info?.releaseNotes}
         errorMessage={update.errorMessage}
         onGoToDownload={update.goToDownload}
         onSkipVersion={update.skipVersion}
         onRemindLater={update.remindLater}
+        onRetry={update.checkManually}
         onDismiss={update.dismiss}
       />
 
@@ -286,7 +288,7 @@ export default function App() {
                 <PlaybackPageEmpty />
               ))}
             {page === 'howitworks' && <HowItWorksPage />}
-            {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} />}
+            {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} updateChecking={update.status === 'checking'} />}
           </PageTransition>
         </main>
 
