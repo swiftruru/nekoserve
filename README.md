@@ -77,7 +77,7 @@ First-launch tips for unsigned builds:
 | **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter, localized keyword search, row highlight synced to the Playback cursor |
 | **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Characters walk through real aisles (no more ghosting through walls), ambient decorations react to time of day, and an optional side-by-side **Live Learning Mode** overlay shows four live DES concept cards (Event-driven clock, Queue length, Little's Law, Utilization) with a Beginner / Pro level toggle |
 | **🎬 How it Works** | Dedicated system-simulation walkthrough: event-driven clock, entity as process, queueing vs service, dynamic capacity, end-of-run aggregation (with KaTeX-rendered formulas and small SimPy code excerpts) |
-| **ℹ️ About** | Course background, tech stack, architecture overview, experiment design principles |
+| **ℹ️ About** | Course background, tech stack, architecture overview, experiment design principles, version & update check |
 
 ### UX Features
 
@@ -207,6 +207,22 @@ v0.6.1 turns the Simulation Settings page into something that can be defended in
 - Uses **KaTeX** for pretty rendering of core formulas (for example $\rho = \frac{\lambda}{\mu c}$ and $N = \lambda \cdot W$)
 - Sidebar state persisted in `localStorage`
 
+### Update Checking (v0.7.0)
+
+Built-in update checking against GitHub Releases, with no external dependencies (uses Electron's built-in `net.fetch`).
+
+- **Automatic check on launch**: 5 seconds after startup, silently queries the GitHub Releases API. If a newer version exists and the user hasn't skipped it, a modal notification appears. If up-to-date or offline, nothing happens.
+- **Manual check via menu**: macOS: *NekoServe > Check for Updates...*; Windows/Linux: *Help > Check for Updates...*. Also available as a button on the About page's new "Version & Updates" card.
+- **Three-action update modal**: when a new version is found, the user sees:
+  1. **Go to Download** (primary) — opens the GitHub Releases page in the system browser
+  2. **Skip This Version** (secondary) — persists the choice; the app will not prompt for this version again
+  3. **Remind Me Later** (tertiary) — dismisses the modal; the next app launch will check and prompt again
+- **Platform strategy**: all current build targets (macOS DMG/ZIP, Windows portable EXE, Linux AppImage) use the redirect-to-GitHub flow. The updater module is structured so a future Windows NSIS installer target could add auto-download-and-install without changing the existing code paths.
+- **Bilingual**: all update UI strings ship in both zh-TW and en.
+- **About page**: version display is now dynamic (reads `app.getVersion()` instead of a hardcoded i18n key), and a new "Version & Updates" card at the bottom shows the current version with a one-click update check button.
+
+Architecture: `src/main/updater/` contains four modules (config, service, store, IPC). The renderer consumes updates via a `useUpdateCheck` hook and an `UpdateModal` component. Skipped-version preferences are persisted to `userData/update-prefs.json`.
+
 ### Native Desktop Polish
 
 - Custom title bar: macOS `hiddenInset` style with native traffic lights integrated into the header
@@ -249,7 +265,8 @@ src/renderer/src/i18n/
     │   ├── scenarios.json   # built-in scenario names / descriptions
     │   ├── about.json       # AboutPage (course, tech, architecture, 5 principles)
     │   ├── howItWorks.json  # HowItWorksPage (walkthrough intro, 5 sections, outro)
-    │   └── learn.json       # LearningPanel UI shell (title, close, footer)
+    │   ├── learn.json       # LearningPanel UI shell (title, close, footer)
+    │   └── update.json      # Update checking modal + About page update card
     └── en/                  # structural subset of zh-TW
 
 src/renderer/src/data/learnContent/
@@ -459,7 +476,8 @@ nekoserve/
 │   ├── main/
 │   │   ├── index.ts              # Window creation, app lifecycle, custom title bar
 │   │   ├── i18n.ts               # Main-process string table (menu + About dialog)
-│   │   └── simulator-bridge.ts   # Python process IPC bridge
+│   │   ├── simulator-bridge.ts   # Python process IPC bridge
+│   │   └── updater/              # Update checking: config, service, store, IPC handlers
 │   ├── preload/
 │   │   └── index.ts              # contextBridge whitelist API
 │   └── renderer/src/
@@ -474,6 +492,7 @@ nekoserve/
 │       │   └── charts/           # UtilizationChart, WaitTimeChart, CustomerPieChart
 │       ├── hooks/
 │       │   ├── useSimulation.ts  # Simulation state, history, elapsed timer
+│       │   ├── useUpdateCheck.ts # Update checking state, auto/manual check, skip/remind actions
 │       │   ├── useMousePosition.ts # Zero-rerender cursor position tracker for CustomCursor
 │       │   ├── usePlaybackClock.ts # rAF sim-time clock driving the Playback animation
 │       │   └── useKeyboardShortcuts.ts # Document-level key map with input-focus protection
@@ -511,7 +530,7 @@ nekoserve/
 - [ ] Timeline animation playback
 - [ ] CSV import for batch parameter testing
 - [ ] macOS / Windows code signing & notarization
-- [ ] Auto-update (electron-updater)
+- [x] Update checking via GitHub Releases (v0.7.0; auto-download for NSIS installers pending)
 - [ ] Advanced statistics (confidence intervals, multi-seed averaging)
 - [ ] Third UI language (Japanese?)
 

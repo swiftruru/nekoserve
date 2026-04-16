@@ -13,6 +13,8 @@ import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import PageTransition from './components/PageTransition'
 import CustomCursor from './components/CustomCursor'
+import UpdateModal from './components/UpdateModal'
+import { useUpdateCheck } from './hooks/useUpdateCheck'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -68,6 +70,7 @@ export default function App() {
    */
   const [playbackAutoStartPending, setPlaybackAutoStartPending] = useState(false)
   const { status, result, error, elapsed, history, run, reset } = useSimulation()
+  const update = useUpdateCheck()
 
   // Persist panel open/closed whenever it changes. Keeping the side effect
   // out of the state updater is required for React 18 StrictMode purity.
@@ -148,6 +151,18 @@ export default function App() {
            on the main/aside flex container. Renders behind nothing
            (z-index 9999) and has `pointer-events: none`. */}
       <CustomCursor />
+      <UpdateModal
+        visible={update.visible}
+        status={update.status}
+        manual={update.manual}
+        currentVersion={update.info?.currentVersion}
+        latestVersion={update.info?.latestVersion}
+        errorMessage={update.errorMessage}
+        onGoToDownload={update.goToDownload}
+        onSkipVersion={update.skipVersion}
+        onRemindLater={update.remindLater}
+        onDismiss={update.dismiss}
+      />
 
       {/* ── Title bar area ──────────────────────────────── */}
       {/* drag-region: entire header is draggable on macOS (no interactive elements here) */}
@@ -271,7 +286,7 @@ export default function App() {
                 <PlaybackPageEmpty />
               ))}
             {page === 'howitworks' && <HowItWorksPage />}
-            {page === 'about' && <AboutPage />}
+            {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} />}
           </PageTransition>
         </main>
 

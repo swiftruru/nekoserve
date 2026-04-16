@@ -1,0 +1,17 @@
+{
+  "checking": "正在檢查更新...",
+  "available": "發現新版本!",
+  "currentVersion": "目前版本: v{{current}}",
+  "latestVersion": "最新版本: v{{latest}}",
+  "upToDate": "已是最新版本!",
+  "upToDateDetail": "NekoServe v{{version}} 已是最新版本。",
+  "error": "無法檢查更新",
+  "errorDetail": "請確認網路連線後再試一次。",
+  "goToDownload": "前往下載",
+  "skipVersion": "略過此版本",
+  "remindLater": "下次再提示",
+  "ok": "確定",
+  "versionAndUpdate": "版本與更新",
+  "currentVersionLabel": "目前版本",
+  "checkForUpdates": "檢查更新"
+}

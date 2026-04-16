@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
+import appIconUrl from '@assets/app-icon.png'
 
 function ExternalLink({ href, label }: { href: string; label: string }) {
   return (
@@ -21,8 +23,13 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
 // Reusable bold inline element for <Trans> markup components.
 const boldComponents = { strong: <strong className="font-semibold" /> }
 
-export default function AboutPage() {
-  const { t } = useTranslation('about')
+export default function AboutPage({ onCheckForUpdate }: { onCheckForUpdate?: () => void }) {
+  const { t } = useTranslation(['about', 'update'])
+  const [version, setVersion] = useState<string>('')
+
+  useEffect(() => {
+    window.electronAPI.getAppVersion().then((v) => setVersion(v))
+  }, [])
 
   return (
     <div className="page-container max-w-2xl">
@@ -32,7 +39,7 @@ export default function AboutPage() {
         <span className="text-6xl mb-3">🐱</span>
         <h2 className="text-2xl font-bold text-gray-800">{t('about:appName')}</h2>
         <p className="text-sm text-gray-500 mt-1">{t('about:subtitle')}</p>
-        <p className="text-xs text-gray-400 mt-2">{t('about:version')}</p>
+        <p className="text-xs text-gray-400 mt-2">{version ? `v${version}` : ''}</p>
       </div>
 
       <div className="space-y-4">
@@ -179,6 +186,27 @@ export default function AboutPage() {
               <p className="mb-1">{t('about:experiment.principle5BodyA')}</p>
               <p>{t('about:experiment.principle5BodyB')}</p>
             </div>
+          </div>
+        </div>
+
+        {/* ── Version & Updates ─────────────────────── */}
+        <div className="card">
+          <div className="card-title">{t('update:versionAndUpdate')}</div>
+          <div className="flex items-center gap-4">
+            <img src={appIconUrl} alt="NekoServe" className="w-12 h-12 rounded-xl shadow-sm flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700">NekoServe</p>
+              <p className="text-xs text-gray-400">
+                {t('update:currentVersionLabel')}: {version ? `v${version}` : '...'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onCheckForUpdate}
+              className="flex-shrink-0 px-4 py-2 rounded-xl border border-orange-200 text-orange-600 text-xs font-medium hover:bg-orange-50 active:bg-orange-100 transition-colors no-drag"
+            >
+              {t('update:checkForUpdates')}
+            </button>
           </div>
         </div>
 

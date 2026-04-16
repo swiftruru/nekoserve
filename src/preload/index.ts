@@ -78,6 +78,52 @@ const electronAPI = {
       /* ignore: main process may not yet be ready */
     }
   },
+
+  // ── Update APIs ──────────────────────────────────────────────
+
+  /** Manually trigger an update check. Returns the full outcome. */
+  checkForUpdate: (): Promise<{
+    success: boolean
+    data?: {
+      hasUpdate: boolean
+      currentVersion: string
+      latestVersion: string
+      releaseUrl: string
+      releaseNotes: string
+    }
+    error?: string
+  }> => ipcRenderer.invoke('check-for-update'),
+
+  /** Persist "skip this version" so it won't be prompted again. */
+  skipUpdateVersion: (version: string): Promise<void> =>
+    ipcRenderer.invoke('skip-update-version', version),
+
+  /** Open the GitHub Releases page in the system browser. */
+  openReleasesPage: (): Promise<void> => ipcRenderer.invoke('open-releases-page'),
+
+  /**
+   * Listen for the auto-check result pushed from main process on startup.
+   * The callback receives the UpdateInfo payload when an update is available.
+   */
+  onUpdateAvailable: (
+    callback: (info: {
+      hasUpdate: boolean
+      currentVersion: string
+      latestVersion: string
+      releaseUrl: string
+      releaseNotes: string
+    }) => void
+  ): void => {
+    ipcRenderer.on('update-available', (_event, info) => callback(info))
+  },
+
+  /**
+   * Listen for "Check for Updates..." triggered from the application menu.
+   * The renderer should perform a manual check when this fires.
+   */
+  onMenuCheckForUpdate: (callback: () => void): void => {
+    ipcRenderer.on('menu-check-for-update', () => callback())
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

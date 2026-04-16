@@ -38,6 +38,8 @@ interface MainStrings {
     hideOthers: string
     unhide: string
     quit: (app: string) => string
+    checkForUpdates: string
+    help: string
   }
   about: {
     windowTitle: (app: string) => string
@@ -70,6 +72,8 @@ const ZH_TW: MainStrings = {
     hideOthers: '隱藏其他',
     unhide: '全部顯示',
     quit: (app) => `結束 ${app}`,
+    checkForUpdates: '檢查更新...',
+    help: '說明',
   },
   about: {
     windowTitle: (app) => `關於 ${app}`,
@@ -102,6 +106,8 @@ const EN: MainStrings = {
     hideOthers: 'Hide Others',
     unhide: 'Show All',
     quit: (app) => `Quit ${app}`,
+    checkForUpdates: 'Check for Updates...',
+    help: 'Help',
   },
   about: {
     windowTitle: (app) => `About ${app}`,

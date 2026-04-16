@@ -1,0 +1,17 @@
+{
+  "checking": "Checking for updates...",
+  "available": "A new version is available!",
+  "currentVersion": "Current: v{{current}}",
+  "latestVersion": "Latest: v{{latest}}",
+  "upToDate": "You're up to date!",
+  "upToDateDetail": "NekoServe v{{version}} is the latest version.",
+  "error": "Unable to check for updates",
+  "errorDetail": "Please check your internet connection and try again.",
+  "goToDownload": "Go to Download",
+  "skipVersion": "Skip This Version",
+  "remindLater": "Remind Me Later",
+  "ok": "OK",
+  "versionAndUpdate": "Version & Updates",
+  "currentVersionLabel": "Current Version",
+  "checkForUpdates": "Check for Updates"
+}

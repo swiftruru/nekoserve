@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import { registerSimulationHandler } from './simulator-bridge'
 import { setMainLocale, mainStrings, getMainLocale } from './i18n'
+import { registerUpdateHandlers, scheduleAutoCheck } from './updater/update-ipc'
 
 // ──────────────────────────────────────────────────────────────
 // Window state persistence
@@ -70,6 +71,14 @@ function buildAppMenu(): void {
   const appName = app.getName()
   const s = mainStrings()
 
+  /** Send a manual "check for updates" request through the focused window's renderer. */
+  function triggerManualUpdateCheck(): void {
+    const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+    if (win) {
+      win.webContents.send('menu-check-for-update')
+    }
+  }
+
   const template: (Electron.MenuItemConstructorOptions | MenuItem)[] = [
     // macOS: first menu is always the "App" menu shown in the menubar
     ...(isMac
@@ -80,6 +89,10 @@ function buildAppMenu(): void {
               {
                 label: s.menu.about(appName),
                 click: () => showAboutWindow(),
+              },
+              {
+                label: s.menu.checkForUpdates,
+                click: () => triggerManualUpdateCheck(),
               },
               { type: 'separator' },
               { role: 'services' },
@@ -120,6 +133,24 @@ function buildAppMenu(): void {
           : [{ role: 'close' as const, label: s.menu.close }]),
       ],
     },
+    // Help menu (Windows/Linux: contains "Check for Updates..."; macOS: item is in the App menu)
+    ...(!isMac
+      ? [
+          {
+            label: s.menu.help,
+            submenu: [
+              {
+                label: s.menu.about(appName),
+                click: () => showAboutWindow(),
+              },
+              {
+                label: s.menu.checkForUpdates,
+                click: () => triggerManualUpdateCheck(),
+              },
+            ],
+          } as Electron.MenuItemConstructorOptions,
+        ]
+      : []),
   ]
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
@@ -299,7 +330,9 @@ app.whenReady().then(() => {
 
   buildAppMenu()
   registerSimulationHandler()
+  registerUpdateHandlers()
   createWindow()
+  scheduleAutoCheck()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
