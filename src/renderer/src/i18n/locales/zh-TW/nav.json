@@ -5,5 +5,5 @@
   "playback": "模擬回放",
   "howitworks": "運作原理",
   "about": "關於",
-  "needsRunHint": "（需先執行模擬）"
+  "needsRunHint": "請先到「模擬設定」按下開始模擬"
 }

@@ -25,10 +25,10 @@ interface KpiCardProps {
 }
 
 const HIGHLIGHT_STYLES = {
-  normal:  'bg-white border-orange-100',
-  good:    'bg-green-50 border-green-200',
-  warning: 'bg-yellow-50 border-yellow-200',
-  danger:  'bg-red-50 border-red-200',
+  normal:  'bg-white border-orange-100 dark:bg-bark-800 dark:border-bark-600',
+  good:    'bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-800',
+  warning: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800',
+  danger:  'bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800',
 } as const
 
 const HIGHLIGHT_VALUE_STYLES = {
@@ -54,7 +54,7 @@ export default function KpiCard({
       className={`rounded-2xl border p-4 shadow-sm flex flex-col gap-1 ${HIGHLIGHT_STYLES[highlight]}`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-bark-300 uppercase tracking-wide">{label}</span>
         {icon && <span className="text-lg">{icon}</span>}
       </div>
       <div className="flex items-baseline gap-1">
@@ -69,7 +69,7 @@ export default function KpiCard({
             value
           )}
         </span>
-        {unit && <span className="text-sm text-gray-500">{unit}</span>}
+        {unit && <span className="text-sm text-gray-500 dark:text-bark-300">{unit}</span>}
       </div>
       {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
     </div>

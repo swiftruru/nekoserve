@@ -64,16 +64,16 @@ export default function FlowDiagram({
   ]
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
       {/* Arrived row */}
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg" aria-hidden="true">
           🚶
         </span>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-bark-300">
           {t('flowDiagram.arrived')}
         </span>
-        <span className="text-lg font-bold tabular-nums text-orange-700">
+        <span className="text-lg font-bold tabular-nums text-orange-700 dark:text-orange-400">
           <AnimatedNumber value={arrived} />
         </span>
       </div>
@@ -86,13 +86,13 @@ export default function FlowDiagram({
               {row.icon}
             </span>
             <div className="flex-1 min-w-0">
-              <div className="flex items-baseline justify-between gap-2 text-[11px] text-gray-600 mb-0.5">
+              <div className="flex items-baseline justify-between gap-2 text-[11px] text-gray-600 dark:text-bark-300 mb-0.5">
                 <span className="truncate">{row.label}</span>
-                <span className="tabular-nums text-gray-500 shrink-0">
+                <span className="tabular-nums text-gray-500 dark:text-bark-300 shrink-0">
                   <AnimatedNumber value={row.count} /> ({row.pct.toFixed(0)}%)
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-white/70 overflow-hidden border border-orange-100 relative">
+              <div className="h-2 rounded-full bg-white/70 dark:bg-bark-700/70 overflow-hidden border border-orange-100 dark:border-bark-600 relative">
                 <div
                   className="h-full rounded-full"
                   style={{

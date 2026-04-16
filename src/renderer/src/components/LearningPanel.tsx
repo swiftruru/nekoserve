@@ -35,12 +35,12 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-bark-800">
       {/* ── Header ───────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3 bg-orange-50 border-b border-orange-100 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 bg-orange-50 dark:bg-bark-800 border-b border-orange-100 dark:border-bark-600 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-base">📚</span>
-          <span className="text-sm font-semibold text-orange-700">{t('learn:title')}</span>
+          <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">{t('learn:title')}</span>
         </div>
         <button
           type="button"
@@ -71,8 +71,8 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
       </div>
 
       {/* ── Page context label ───────────────────────── */}
-      <div className="px-4 py-2 bg-orange-50/60 border-b border-orange-100 flex-shrink-0">
-        <span className="text-xs text-orange-500 font-medium">
+      <div className="px-4 py-2 bg-orange-50/60 dark:bg-bark-800/60 border-b border-orange-100 dark:border-bark-600 flex-shrink-0">
+        <span className="text-xs text-orange-500 dark:text-orange-400 font-medium">
           {t('learn:contextLabel', { page: t(`nav:${page}` as const) })}
         </span>
       </div>
@@ -82,7 +82,7 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
         {sections.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-8">{t('learn:empty')}</p>
         ) : (
-          <div className="divide-y divide-orange-50">
+          <div className="divide-y divide-orange-50 dark:divide-bark-600">
             {sections.map((section) => {
               const isOpen = openId === section.id
               return (
@@ -93,8 +93,8 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
                     onClick={() => toggle(section.id)}
                     className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors duration-150 ${
                       isOpen
-                        ? 'bg-orange-50 text-orange-700'
-                        : 'hover:bg-orange-50/50 text-gray-700'
+                        ? 'bg-orange-50 dark:bg-bark-700 text-orange-700 dark:text-orange-400'
+                        : 'hover:bg-orange-50/50 dark:hover:bg-bark-700/50 text-gray-700 dark:text-bark-200'
                     }`}
                   >
                     <span className="flex items-center gap-2 text-sm font-medium">
@@ -112,7 +112,7 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
 
                   {/* Accordion body */}
                   {isOpen && (
-                    <div className="px-4 pb-4 pt-1 bg-white">
+                    <div className="px-4 pb-4 pt-1 bg-white dark:bg-bark-800">
                       {section.content}
                     </div>
                   )}
@@ -124,7 +124,7 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
       </div>
 
       {/* ── Footer ───────────────────────────────────── */}
-      <div className="px-4 py-2.5 border-t border-orange-100 bg-orange-50/40 flex-shrink-0">
+      <div className="px-4 py-2.5 border-t border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-800/40 flex-shrink-0">
         <p className="text-xs text-gray-400 leading-relaxed">
           {t('learn:footer')}
         </p>

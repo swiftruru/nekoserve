@@ -16,6 +16,49 @@
     "delete": "Delete"
   },
   "learningPanel": "Learning notes",
+  "toast": {
+    "exportSuccess": "Exported successfully",
+    "scenarioSaved": "Scenario saved",
+    "scenarioDeleted": "Scenario deleted",
+    "importSuccess": "Scenario imported",
+    "importFailed": "Import failed: invalid file format",
+    "copied": "Copied"
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "updated": "Updated to {{version}}",
+    "body": "Thanks for using NekoServe! This version includes new features and improvements. Give them a try!",
+    "dismiss": "Got it"
+  },
+  "onboarding": {
+    "step1Title": "Adjust parameters",
+    "step1Body": "Set up the cafe's seats, staff, cats and other simulation parameters here. Try a preset scenario to get started!",
+    "step2Title": "Run simulation",
+    "step2Body": "Once parameters are set, click this button to run the simulation. It only takes a few seconds.",
+    "step3Title": "Watch the replay",
+    "step3Body": "After the simulation finishes, you'll jump to the Playback page. Watch an animated replay to see how customers and cats interact!",
+    "step4Title": "View results",
+    "step4Body": "The Results page has detailed statistics and charts to help you analyze where the cafe's bottlenecks are.",
+    "skip": "Skip",
+    "next": "Next",
+    "done": "Get started"
+  },
+  "shortcutHelp": {
+    "title": "Keyboard shortcuts",
+    "sectionPlayback": "Playback",
+    "sectionGlobal": "Global",
+    "playPause": "Play / Pause",
+    "seekBack": "Seek back 10s",
+    "seekForward": "Seek forward 10s",
+    "stepPrev": "Previous event",
+    "stepNext": "Next event",
+    "resetTime": "Jump to start",
+    "setSpeed": "Set playback speed",
+    "closePopover": "Close popover",
+    "openHelp": "Open shortcut help",
+    "openOnboarding": "Open onboarding tour",
+    "toggleFullscreen": "Toggle fullscreen playback"
+  },
   "unit": {
     "min": "min",
     "minutesShort": "min",

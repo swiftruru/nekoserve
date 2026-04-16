@@ -5,5 +5,5 @@
   "playback": "Playback",
   "howitworks": "How it Works",
   "about": "About",
-  "needsRunHint": "(run a simulation first)"
+  "needsRunHint": "Go to Settings and run a simulation first"
 }

@@ -29,7 +29,7 @@ export default function InspectPopover({
   return (
     <div
       className="absolute bottom-4 right-4 z-10 w-64 rounded-xl
-                 bg-white/95 backdrop-blur-sm border border-orange-200
+                 bg-white/95 dark:bg-bark-800/95 backdrop-blur-sm border border-orange-200 dark:border-bark-500
                  shadow-[0_8px_24px_-8px_rgba(251,146,60,0.35)]
                  px-4 py-3"
       role="dialog"
@@ -44,7 +44,7 @@ export default function InspectPopover({
           type="button"
           onClick={onClose}
           className="flex h-6 w-6 items-center justify-center rounded-md
-                     text-gray-400 hover:text-orange-600 hover:bg-orange-50
+                     text-gray-400 dark:text-bark-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-bark-600
                      transition-colors"
           aria-label={t('playback:inspect.close')}
         >
@@ -62,7 +62,7 @@ function renderSeat(slotIdx: number, state: CafeState, t: TFn) {
   const seat = state.seats[slotIdx]
   if (!seat) return null
   if (seat.customerId === null) {
-    return <p className="text-sm text-gray-500">{t('playback:inspect.seatEmpty')}</p>
+    return <p className="text-sm text-gray-500 dark:text-bark-300">{t('playback:inspect.seatEmpty')}</p>
   }
   const customer = state.customers[seat.customerId]
   return <CustomerDetails customer={customer} state={state} t={t} />
@@ -72,7 +72,7 @@ function renderCat(slotIdx: number, state: CafeState, t: TFn) {
   const cat = state.cats[slotIdx]
   if (!cat) return null
   if (cat.state === 'idle') {
-    return <p className="text-sm text-gray-500">{t('playback:inspect.catIdle')}</p>
+    return <p className="text-sm text-gray-500 dark:text-bark-300">{t('playback:inspect.catIdle')}</p>
   }
   if (cat.state === 'resting') {
     return (
@@ -103,7 +103,7 @@ function CustomerDetails({
   t: TFn
 }) {
   if (!customer) {
-    return <p className="text-sm text-gray-500">–</p>
+    return <p className="text-sm text-gray-500 dark:text-bark-300">–</p>
   }
   const stayMin = Math.max(0, state.time - customer.enteredAt)
   return (
@@ -127,8 +127,8 @@ function CustomerDetails({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="text-xs text-gray-500">{label}</dt>
-      <dd className="font-semibold text-gray-800 tabular-nums">{value}</dd>
+      <dt className="text-xs text-gray-500 dark:text-bark-300">{label}</dt>
+      <dd className="font-semibold text-gray-800 dark:text-bark-100 tabular-nums">{value}</dd>
     </div>
   )
 }

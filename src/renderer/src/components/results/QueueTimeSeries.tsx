@@ -77,12 +77,12 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
       <div className="flex items-baseline justify-between mb-2">
-        <span className="text-xs font-semibold text-orange-700">
+        <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">
           {t('results:queueTimeSeries.title')}
         </span>
-        <span className="text-[10px] text-gray-500 tabular-nums">
+        <span className="text-[10px] text-gray-500 dark:text-bark-300 tabular-nums">
           {t('results:queueTimeSeries.yMax', { n: yMax })}
         </span>
       </div>
@@ -101,7 +101,7 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
           y={0}
           width={CHART_W}
           height={CHART_H}
-          fill="#fff7ed"
+          className="fill-[#fff7ed] dark:fill-bark-800"
           rx={6}
         />
         {/* Baseline grid line (bottom edge where queue = 0) */}
@@ -110,7 +110,7 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
           y1={CHART_H - PADDING_Y}
           x2={CHART_W - PADDING_X}
           y2={CHART_H - PADDING_Y}
-          stroke="#fed7aa"
+          className="stroke-[#fed7aa] dark:stroke-bark-600"
           strokeDasharray="3 3"
           strokeWidth={0.5}
         />
@@ -150,7 +150,7 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
           x={PADDING_X}
           y={CHART_H - 1}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
         >
           0
         </text>
@@ -158,7 +158,7 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
           x={CHART_W - PADDING_X}
           y={CHART_H - 1}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
           textAnchor="end"
         >
           {totalDuration} {minUnit}
@@ -166,7 +166,7 @@ export default function QueueTimeSeries({ series, totalDuration }: Props) {
       </svg>
 
       {peakQueue > 0 && (
-        <div className="mt-1 text-[11px] text-gray-600 leading-snug">
+        <div className="mt-1 text-[11px] text-gray-600 dark:text-bark-300 leading-snug">
           {t('results:queueTimeSeries.peakLabel', {
             n: peakQueue,
             t: peakSim.toFixed(0),

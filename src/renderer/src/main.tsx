@@ -7,9 +7,14 @@ import 'katex/dist/katex.min.css'
 // and the initial language is resolved before React renders any component.
 import '@i18n/index'
 import App from './App'
+import { ToastProvider } from './hooks/useToast'
+import ToastContainer from './components/Toast'
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <ToastProvider>
+      <App />
+      <ToastContainer />
+    </ToastProvider>
   </React.StrictMode>
 )

@@ -61,5 +61,10 @@
     "principle5Title": "Principle 5: relieving bottlenecks",
     "principle5BodyA": "Find the resource with the highest utilization (seats / staff / cats) and expand its capacity first. By the Theory of Constraints, investing in non-bottleneck resources barely moves system throughput.",
     "principle5BodyB": "Example: seats 95% utilized, staff 60% utilized. Adding staff will not shorten the seat queue; add seats first, or shorten dining time to turn tables faster."
+  },
+  "onboardingReset": {
+    "title": "Onboarding tour",
+    "description": "Replay the first-time user walkthrough.",
+    "button": "Restart tour"
   }
 }

@@ -123,12 +123,12 @@ export default function KeyMomentsTimeline({
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
       <div className="flex items-baseline justify-between mb-1">
-        <span className="text-xs font-semibold text-orange-700">
+        <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">
           {t('results:keyMoments.title')}
         </span>
-        <span className="text-[10px] text-gray-500">
+        <span className="text-[10px] text-gray-500 dark:text-bark-300">
           {t('results:keyMoments.clickHint')}
         </span>
       </div>
@@ -147,7 +147,7 @@ export default function KeyMomentsTimeline({
           y1={TRACK_Y}
           x2={CHART_W - PADDING_X}
           y2={TRACK_Y}
-          stroke="#fed7aa"
+          className="stroke-[#fed7aa] dark:stroke-bark-600"
           strokeWidth={1}
         />
         {/* Tick marks at 0 / 1/4 / 1/2 / 3/4 / end */}
@@ -171,7 +171,7 @@ export default function KeyMomentsTimeline({
           x={PADDING_X}
           y={CHART_H - 2}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
           textAnchor="start"
         >
           0
@@ -180,7 +180,7 @@ export default function KeyMomentsTimeline({
           x={CHART_W - PADDING_X}
           y={CHART_H - 2}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
           textAnchor="end"
         >
           {totalDuration} {minUnit}
@@ -193,7 +193,7 @@ export default function KeyMomentsTimeline({
             x={gap.midX}
             y={TRACK_Y - 10}
             fontSize={8}
-            fill="#9ca3af"
+            className="fill-gray-400 dark:fill-bark-300"
             fontStyle="italic"
             textAnchor="middle"
             pointerEvents="none"
@@ -258,7 +258,7 @@ export default function KeyMomentsTimeline({
       </svg>
 
       {onMomentClick && (
-        <div className="mt-1 text-[11px] text-gray-600 leading-snug">
+        <div className="mt-1 text-[11px] text-gray-600 dark:text-bark-300 leading-snug">
           {t('results:keyMoments.jumpHint')}
         </div>
       )}
@@ -320,7 +320,7 @@ function renderSingleBubble({
         cx={x}
         cy={y}
         r={BUBBLE_RADIUS}
-        fill="#fff"
+        className="fill-white dark:fill-bark-700"
         stroke={color}
         strokeWidth={1.6}
       />
@@ -337,7 +337,7 @@ function renderSingleBubble({
         x={x}
         y={y + BUBBLE_RADIUS + 9}
         fontSize={7}
-        fill="#7c2d12"
+        className="fill-[#7c2d12] dark:fill-bark-200"
         textAnchor="middle"
         pointerEvents="none"
       >
@@ -388,8 +388,7 @@ function renderClusterBubble({
         cx={x}
         cy={y}
         r={BUBBLE_RADIUS + 2}
-        fill="#fff"
-        stroke="#7c2d12"
+        className="fill-white dark:fill-bark-700 stroke-[#7c2d12] dark:stroke-bark-300"
         strokeWidth={1.8}
       />
       <text
@@ -405,7 +404,7 @@ function renderClusterBubble({
         x={x + 7}
         y={y + 2}
         fontSize={8}
-        fill="#7c2d12"
+        className="fill-[#7c2d12] dark:fill-bark-200"
         fontWeight={700}
         textAnchor="start"
         pointerEvents="none"
@@ -416,7 +415,7 @@ function renderClusterBubble({
         x={x}
         y={y + BUBBLE_RADIUS + 11}
         fontSize={7}
-        fill="#7c2d12"
+        className="fill-[#7c2d12] dark:fill-bark-200"
         textAnchor="middle"
         pointerEvents="none"
       >

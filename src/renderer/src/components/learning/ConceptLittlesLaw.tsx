@@ -63,13 +63,13 @@ export default function ConceptLittlesLaw({
       {/* Water cup SVG: drops at top = λ, cup body = L, drain at bottom = W */}
       <div className="flex items-center justify-center gap-3">
         <div className="flex flex-col items-center text-center">
-          <span className="text-[9px] text-gray-500">
+          <span className="text-[9px] text-gray-500 dark:text-bark-300">
             {t('concepts.littlesLaw.friendlyIn')}
           </span>
           <span className="text-sm font-bold tabular-nums text-sky-600">
             💧 {lambda.toFixed(2)}
           </span>
-          <span className="text-[9px] text-gray-500">
+          <span className="text-[9px] text-gray-500 dark:text-bark-300">
             {t('concepts.littlesLaw.unitPerMin')}
           </span>
         </div>
@@ -104,7 +104,7 @@ export default function ConceptLittlesLaw({
               repeatCount="indefinite"
             />
           </rect>
-          {/* Current count overlay */}
+          {/* Current count overlay — uses stroke for contrast on any background */}
           <text
             x="23"
             y="36"
@@ -112,25 +112,28 @@ export default function ConceptLittlesLaw({
             fontSize="14"
             fontWeight="700"
             fill="#0c4a6e"
+            stroke="#fff"
+            strokeWidth="2.5"
+            paintOrder="stroke"
           >
             {L.toFixed(1)}
           </text>
         </svg>
 
         <div className="flex flex-col items-center text-center">
-          <span className="text-[9px] text-gray-500">
+          <span className="text-[9px] text-gray-500 dark:text-bark-300">
             {t('concepts.littlesLaw.friendlyStay')}
           </span>
           <span className="text-sm font-bold tabular-nums text-amber-600">
             ⏳ {W.toFixed(1)}
           </span>
-          <span className="text-[9px] text-gray-500">
+          <span className="text-[9px] text-gray-500 dark:text-bark-300">
             {t('concepts.littlesLaw.unitMin')}
           </span>
         </div>
       </div>
 
-      <div className="mt-1 text-center text-[10px] text-gray-700 leading-snug">
+      <div className="mt-1 text-center text-[10px] text-gray-700 dark:text-bark-200 leading-snug">
         {t('concepts.littlesLaw.friendlyEquation', {
           lambda: lambda.toFixed(2),
           w: W.toFixed(1),
@@ -138,7 +141,7 @@ export default function ConceptLittlesLaw({
         })}
       </div>
       {warmingUp && (
-        <div className="mt-1 text-[10px] text-gray-400 text-center">
+        <div className="mt-1 text-[10px] text-gray-400 dark:text-bark-400 text-center">
           {t('concepts.littlesLaw.warmingUp')}
         </div>
       )}
@@ -167,13 +170,13 @@ export default function ConceptLittlesLaw({
           compact={compact}
         />
       </div>
-      <div className="mt-2 text-center text-[11px] tabular-nums text-gray-700">
+      <div className="mt-2 text-center text-[11px] tabular-nums text-gray-700 dark:text-bark-200">
         {L.toFixed(1)} = {lambda.toFixed(2)} × {W.toFixed(1)}
         <span
           className={
             'ml-1 ' +
             (warmingUp
-              ? 'text-gray-400'
+              ? 'text-gray-400 dark:text-bark-400'
               : withinTolerance
               ? 'text-green-600 font-bold'
               : 'text-amber-600')
@@ -183,7 +186,7 @@ export default function ConceptLittlesLaw({
         </span>
       </div>
       {warmingUp && (
-        <div className="mt-1 text-[10px] text-gray-400 text-center">
+        <div className="mt-1 text-[10px] text-gray-400 dark:text-bark-400 text-center">
           {t('concepts.littlesLaw.warmingUp')}
         </div>
       )}
@@ -192,11 +195,11 @@ export default function ConceptLittlesLaw({
 
   const friendlyExpert = (
     <>
-      <div className="rounded-md bg-white border border-orange-200 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
+      <div className="rounded-md bg-white dark:bg-bark-700 border border-orange-200 dark:border-bark-500 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
         {t('concepts.littlesLaw.friendlyFormula')}
       </div>
       <p>{t('concepts.littlesLaw.friendlyExpertDef')}</p>
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-bark-300">
         {t('concepts.littlesLaw.friendlyExpertWhy')}
       </p>
     </>
@@ -206,7 +209,7 @@ export default function ConceptLittlesLaw({
     <>
       <BlockMath formula="L = \lambda \cdot W" />
       <p>{t('concepts.littlesLaw.expertDef')}</p>
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-bark-300">
         {t('concepts.littlesLaw.expertWhy')}
       </p>
     </>
@@ -238,16 +241,16 @@ function Metric({
 }) {
   return (
     <div>
-      <div className="text-[9px] italic text-gray-500">{symbol}</div>
+      <div className="text-[9px] italic text-gray-500 dark:text-bark-300">{symbol}</div>
       <div
         className={
           (compact ? 'text-sm' : 'text-base') +
-          ' font-bold tabular-nums text-orange-700 leading-tight'
+          ' font-bold tabular-nums text-orange-700 dark:text-orange-400 leading-tight'
         }
       >
         {value}
       </div>
-      <div className="text-[8px] text-gray-500 leading-none">{unit}</div>
+      <div className="text-[8px] text-gray-500 dark:text-bark-300 leading-none">{unit}</div>
     </div>
   )
 }

@@ -39,6 +39,10 @@ interface PlaybackPageProps {
   onAutoStartConsumed?: () => void
   /** Jumps directly to the Results (statistics) page for users who only want the numbers. */
   onSkipToResults?: () => void
+  /** Whether the playback page is in fullscreen mode. */
+  fullscreen?: boolean
+  /** Toggle fullscreen mode on/off. */
+  onToggleFullscreen?: () => void
 }
 
 const DEFAULT_SPEED = 4
@@ -57,6 +61,8 @@ export default function PlaybackPage({
   autoStartPending,
   onAutoStartConsumed,
   onSkipToResults,
+  fullscreen,
+  onToggleFullscreen,
 }: PlaybackPageProps) {
   const { t } = useTranslation(['playback', 'events', 'learnMode'])
   const { config, eventLog } = result
@@ -237,7 +243,7 @@ export default function PlaybackPage({
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
             <div className="card-title">{t('playback:title')}</div>
-            <p className="text-sm text-gray-500 mb-3">{t('playback:subtitle')}</p>
+            <p className="text-sm text-gray-500 dark:text-bark-300 mb-3">{t('playback:subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -247,12 +253,22 @@ export default function PlaybackPage({
                 'text-sm whitespace-nowrap px-3 py-1.5 rounded-lg border font-semibold transition-colors ' +
                 (learningMode
                   ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
-                  : 'bg-white text-orange-700 border-orange-300 hover:border-orange-500')
+                  : 'bg-white dark:bg-bark-700 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-bark-500 hover:border-orange-500')
               }
               aria-pressed={learningMode}
             >
               🎓 {t('learnMode:toggle')}
             </button>
+            {onToggleFullscreen && (
+              <button
+                type="button"
+                onClick={onToggleFullscreen}
+                className="btn-secondary text-sm whitespace-nowrap px-3 py-1.5"
+                title={t('common:shortcutHelp.toggleFullscreen')}
+              >
+                {fullscreen ? '⊡' : '⊞'}
+              </button>
+            )}
             {onSkipToResults && (
               <button
                 type="button"
@@ -266,17 +282,17 @@ export default function PlaybackPage({
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 mr-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-bark-300 mr-2">
               {t('playback:timeLabel')}
             </span>
-            <span className="text-base font-bold tabular-nums text-orange-700">
+            <span className="text-base font-bold tabular-nums text-orange-700 dark:text-orange-400">
               {formatSimClock(simTime)}
             </span>
-            <span className="text-xs text-gray-400 ml-1">
+            <span className="text-xs text-gray-400 dark:text-bark-400 ml-1">
               / {formatSimClock(config.simulationDuration)}
             </span>
           </div>
-          <div className="text-xs text-gray-500 tabular-nums">
+          <div className="text-xs text-gray-500 dark:text-bark-300 tabular-nums">
             {t('playback:eventProgress', {
               current: state.appliedCount,
               total: eventLog.length,
@@ -333,7 +349,7 @@ export default function PlaybackPage({
         <span className="text-xs font-semibold uppercase tracking-wide text-orange-600">
           ●
         </span>
-        <span className="text-sm text-gray-700 flex-1 truncate">
+        <span className="text-sm text-gray-700 dark:text-bark-200 flex-1 truncate">
           {currentEventText}
         </span>
       </div>
@@ -371,8 +387,8 @@ export function PlaybackPageEmpty() {
     <div className="page-container">
       <div className="card">
         <div className="card-title">{t('playback:title')}</div>
-        <p className="text-sm text-gray-600 mb-2">{t('playback:emptyState')}</p>
-        <p className="text-xs text-gray-400">{t('playback:emptyStateHint')}</p>
+        <p className="text-sm text-gray-600 dark:text-bark-300 mb-2">{t('playback:emptyState')}</p>
+        <p className="text-xs text-gray-400 dark:text-bark-400">{t('playback:emptyStateHint')}</p>
       </div>
     </div>
   )

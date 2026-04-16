@@ -75,9 +75,9 @@ export default function HeroVerdict({ metrics, level }: Props) {
 }
 
 const TONE_FOR_SITUATION: Record<string, string> = {
-  healthy: 'bg-green-50 border-green-200 text-green-900',
-  strained: 'bg-amber-50 border-amber-300 text-amber-900',
-  overloaded: 'bg-red-50 border-red-300 text-red-900',
+  healthy: 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-900 dark:text-green-200',
+  strained: 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200',
+  overloaded: 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200',
 }
 
 const ICON_FOR_SITUATION: Record<string, string> = {

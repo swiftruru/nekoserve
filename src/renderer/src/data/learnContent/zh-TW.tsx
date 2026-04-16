@@ -31,7 +31,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <P>
             本 app 使用 <B>Python SimPy 4</B> 作為 DES 引擎。
             SimPy 以 generator function 實作 process，資源競爭
-            透過 <code className="text-xs bg-gray-100 px-1 rounded">simpy.Resource</code> 管理。
+            透過 <code className="text-xs bg-gray-100 dark:bg-bark-600 px-1 rounded">simpy.Resource</code> 管理。
           </P>
         </div>
       ),
@@ -72,7 +72,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             <B>常態分佈（Normal Distribution）</B>建模：
           </P>
           <BlockMath formula={String.raw`T \sim \mathcal{N}(\mu,\, \sigma^2), \quad \sigma = 0.2\,\mu`} />
-          <P>本模擬固定標準差為均值的 20%，並以 <code className="text-xs bg-gray-100 px-1 rounded">max(1, sample)</code> 截斷負值。</P>
+          <P>本模擬固定標準差為均值的 20%，並以 <code className="text-xs bg-gray-100 dark:bg-bark-600 px-1 rounded">max(1, sample)</code> 截斷負值。</P>
           <P><B>為什麼不用指數分佈？</B></P>
           <UL>
             <LI>服務時間有自然下限（不可能 0 秒完成）</LI>
@@ -490,7 +490,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           </UL>
           <Note>
             🔍 追蹤單一顧客的技巧：
-            <br />在搜尋框輸入顧客編號（如 <code className="text-xs bg-orange-100 px-1 rounded">#12</code>），
+            <br />在搜尋框輸入顧客編號（如 <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">#12</code>），
             即可篩選出該顧客的完整旅程事件序列。
           </Note>
           <Example>
@@ -507,7 +507,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
       content: (
         <div>
           <P><B>正常完成的顧客旅程（v0.4.0）：</B></P>
-          <div className="text-xs text-gray-600 font-mono bg-gray-50 rounded-lg p-3 my-2 select-text leading-6">
+          <div className="text-xs text-gray-600 dark:text-bark-200 font-mono bg-gray-50 dark:bg-bark-700 rounded-lg p-3 my-2 select-text leading-6">
             ARRIVE<br />
             ↓ [若無空座位]<br />
             WAIT_SEAT → SEATED<br />
@@ -521,7 +521,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             LEAVE
           </div>
           <P><B>交錯發生的貓咪事件（獨立於顧客旅程）：</B></P>
-          <div className="text-xs text-gray-600 font-mono bg-pink-50 rounded-lg p-3 my-2 select-text leading-6">
+          <div className="text-xs text-gray-600 dark:text-bark-200 font-mono bg-pink-50 dark:bg-pink-900/30 rounded-lg p-3 my-2 select-text leading-6">
             CAT_VISIT_SEAT<br />
             ↓ [互動時間，可能與其他顧客同時發生]<br />
             CAT_LEAVE_SEAT<br />
@@ -529,13 +529,13 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             CAT_START_REST → CAT_END_REST
           </div>
           <P><B>短路（放棄）情境：</B></P>
-          <div className="text-xs text-gray-600 font-mono bg-red-50 rounded-lg p-3 my-2 select-text">
+          <div className="text-xs text-gray-600 dark:text-bark-200 font-mono bg-red-50 dark:bg-red-900/30 rounded-lg p-3 my-2 select-text">
             ARRIVE → WAIT_SEAT → ABANDON
           </div>
           <Note>
-            💡 <B>CAT_VISIT_SEAT</B> / <B>CAT_LEAVE_SEAT</B> 的 <code className="text-xs bg-orange-100 px-1 rounded">resourceId</code>
-            會帶貓的 ID（例如 <code className="text-xs bg-orange-100 px-1 rounded">貓-2</code>），
-            <code className="text-xs bg-orange-100 px-1 rounded">customerId</code> 是被拜訪的那位顧客。
+            💡 <B>CAT_VISIT_SEAT</B> / <B>CAT_LEAVE_SEAT</B> 的 <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">resourceId</code>
+            會帶貓的 ID（例如 <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">貓-2</code>），
+            <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">customerId</code> 是被拜訪的那位顧客。
             同一位顧客在用餐期間可能被多隻貓輪流或同時拜訪。
           </Note>
         </div>
@@ -628,12 +628,12 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           </P>
           <P><B>鍵盤快捷鍵（輸入框有焦點時自動停用）：</B></P>
           <UL>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">Space</code>：播放 / 暫停</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">← →</code>：前後跳 10 分鐘</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">, .</code>：逐事件</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">0</code>：重播</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">1-5</code>：切換速度</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">Esc</code>：關閉詳情卡片</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">Space</code>：播放 / 暫停</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">← →</code>：前後跳 10 分鐘</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">, .</code>：逐事件</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">0</code>：重播</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">1-5</code>：切換速度</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">Esc</code>：關閉詳情卡片</LI>
           </UL>
         </div>
       ),
@@ -697,7 +697,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             </LI>
           </UL>
           <Example>
-            💡 搭配事件紀錄頁的搜尋框：輸入單一顧客編號（例如 <code className="text-xs bg-orange-100 px-1 rounded">#12</code>）
+            💡 搭配事件紀錄頁的搜尋框：輸入單一顧客編號（例如 <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">#12</code>）
             篩出該顧客的完整事件序列，再回到這裡用時間軸對照，
             能把 trace 和動畫兩種視角串起來。
           </Example>

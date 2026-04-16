@@ -73,7 +73,7 @@ export default function PlaybackControls({
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-bark-300">
           {t('playback:controls.speed')}
         </span>
         <div className="flex gap-1">
@@ -111,8 +111,8 @@ function ShortcutHelp() {
       <button
         type="button"
         className="flex h-6 w-6 items-center justify-center rounded-full
-                   bg-orange-50 text-xs text-orange-500
-                   ring-1 ring-inset ring-orange-100
+                   bg-orange-50 dark:bg-bark-600 text-xs text-orange-500 dark:text-orange-400
+                   ring-1 ring-inset ring-orange-100 dark:ring-bark-500
                    transition-colors duration-150
                    hover:bg-orange-100 hover:text-orange-600 hover:ring-orange-200
                    focus:outline-none focus:ring-2 focus:ring-orange-400"

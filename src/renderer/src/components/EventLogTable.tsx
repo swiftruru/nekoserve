@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { EventLogItem, EventType } from '../types'
 import { exportEventLogCSV } from '../utils/export'
+import { useToast } from '../hooks/useToast'
 
 interface EventLogTableProps {
   events: EventLogItem[]
@@ -40,6 +41,7 @@ export default function EventLogTable({
   onRowClick,
 }: EventLogTableProps) {
   const { t } = useTranslation(['eventLog', 'events', 'common'])
+  const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [selectedTypes, setSelectedTypes] = useState<Set<EventType>>(
     () => (initialFilter ? new Set(initialFilter) : new Set())
@@ -182,7 +184,7 @@ export default function EventLogTable({
               className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
                 selectedTypes.has(type)
                   ? EVENT_TYPE_COLORS[type] + ' border-current'
-                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400'
+                  : 'bg-gray-50 dark:bg-bark-700 text-gray-500 dark:text-bark-300 border-gray-200 dark:border-bark-500 hover:border-gray-400'
               }`}
             >
               {labelForType(type)}
@@ -193,13 +195,13 @@ export default function EventLogTable({
 
       {/* Table */}
       <div className="card p-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-orange-100 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">
+        <div className="px-4 py-3 border-b border-orange-100 dark:border-bark-600 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600 dark:text-bark-300">
             {t('eventLog:summary', { filtered: filtered.length, total: events.length })}
           </span>
           <button
             type="button"
-            onClick={() => exportEventLogCSV(filtered.map((r) => r.e))}
+            onClick={() => { exportEventLogCSV(filtered.map((r) => r.e)); toast(t('common:toast.exportSuccess')) }}
             className="btn-secondary text-xs px-3 py-1.5"
           >
             {t('eventLog:exportCsv')}
@@ -212,31 +214,31 @@ export default function EventLogTable({
           style={{ maxHeight: '55vh' }}
         >
           <table className="w-full text-sm">
-            <thead className="bg-orange-50 sticky top-0">
+            <thead className="bg-orange-50 dark:bg-bark-800 sticky top-0">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-20">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-20">
                   {t('eventLog:column.time')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-28">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-28">
                   {t('eventLog:column.type')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-16">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-16">
                   {t('eventLog:column.customer')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 w-24">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300 w-24">
                   {t('eventLog:column.resource')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-bark-300">
                   {t('eventLog:column.description')}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-bark-600">
               {filtered.map(({ e, description }, i) => {
                 const isHighlight = i === highlightedKey
                 const baseClass = isHighlight
-                  ? 'bg-orange-100 ring-2 ring-orange-400 ring-inset'
-                  : 'hover:bg-orange-50/50'
+                  ? 'bg-orange-100 dark:bg-orange-900/40 ring-2 ring-orange-400 ring-inset'
+                  : 'hover:bg-orange-50/50 dark:hover:bg-bark-700/50'
                 const rowClass = `transition-colors ${baseClass} ${
                   onRowClick ? '' : ''
                 }`
@@ -251,7 +253,7 @@ export default function EventLogTable({
                     }}
                     onClick={onRowClick ? () => onRowClick(e.timestamp) : undefined}
                   >
-                    <td className="px-4 py-2 font-mono text-gray-600">
+                    <td className="px-4 py-2 font-mono text-gray-600 dark:text-bark-300">
                       {e.timestamp.toFixed(2)}
                     </td>
                     <td className="px-4 py-2">
@@ -259,13 +261,13 @@ export default function EventLogTable({
                         {labelForType(e.eventType)}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-gray-500">
+                    <td className="px-4 py-2 text-gray-500 dark:text-bark-300">
                       {e.customerId > 0 ? `#${e.customerId}` : '–'}
                     </td>
-                    <td className="px-4 py-2 text-gray-500 text-xs">
+                    <td className="px-4 py-2 text-gray-500 dark:text-bark-300 text-xs">
                       {e.resourceId ? formatResourceId(e.resourceId) : '–'}
                     </td>
-                    <td className="px-4 py-2 text-gray-700" data-selectable>
+                    <td className="px-4 py-2 text-gray-700 dark:text-bark-100" data-selectable>
                       {description}
                     </td>
                   </tr>
@@ -273,7 +275,7 @@ export default function EventLogTable({
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 dark:text-bark-400">
                     {t('eventLog:empty')}
                   </td>
                 </tr>

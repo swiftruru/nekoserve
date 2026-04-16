@@ -67,19 +67,19 @@ export default function StayBreakdown({
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
       <div className="flex items-baseline justify-between mb-2">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-bark-300">
           {t('stayBreakdown.title')}
         </span>
-        <span className="text-sm font-bold tabular-nums text-orange-700">
+        <span className="text-sm font-bold tabular-nums text-orange-700 dark:text-orange-400">
           {avgTotalStayTime.toFixed(1)}
-          <span className="text-xs text-gray-500 ml-1">{minUnit}</span>
+          <span className="text-xs text-gray-500 dark:text-bark-300 ml-1">{minUnit}</span>
         </span>
       </div>
 
       {/* Stacked bar */}
-      <div className="flex h-4 rounded-full overflow-hidden border border-orange-100 bg-white">
+      <div className="flex h-4 rounded-full overflow-hidden border border-orange-100 dark:border-bark-600 bg-white dark:bg-bark-700">
         {segments.map((s) =>
           s.value <= 0 ? null : (
             <div
@@ -106,8 +106,8 @@ export default function StayBreakdown({
                 className="inline-block w-2 h-2 rounded-full shrink-0"
                 style={{ background: s.color }}
               />
-              <span className="text-gray-600 truncate">{s.label}</span>
-              <span className="text-gray-500 tabular-nums ml-auto shrink-0">
+              <span className="text-gray-600 dark:text-bark-300 truncate">{s.label}</span>
+              <span className="text-gray-500 dark:text-bark-300 tabular-nums ml-auto shrink-0">
                 {s.value.toFixed(1)} ({pct.toFixed(0)}%)
               </span>
             </div>

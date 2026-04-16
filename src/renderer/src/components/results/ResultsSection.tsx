@@ -74,10 +74,10 @@ export default function ResultsSection({
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-orange-700 leading-tight">
+          <h3 className="text-sm font-bold text-orange-700 dark:text-orange-400 leading-tight">
             {title}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5 leading-snug">
+          <p className="text-xs text-gray-500 dark:text-bark-300 mt-0.5 leading-snug">
             {summary}
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function ResultsSection({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-800"
+        className="mt-3 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300"
       >
         {expanded
           ? t('section.collapse')
@@ -98,7 +98,7 @@ export default function ResultsSection({
       </button>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-orange-100 text-sm text-gray-700 leading-relaxed space-y-2">
+        <div className="mt-3 pt-3 border-t border-orange-100 text-sm text-gray-700 dark:text-bark-200 leading-relaxed space-y-2">
           {level === 'friendly' ? beginnerExpand : expertExpand}
         </div>
       )}

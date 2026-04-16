@@ -37,7 +37,7 @@ export default function ConceptCard({
   return (
     <div
       className={
-        'border border-orange-100 rounded-lg bg-orange-50/40 ' +
+        'border border-orange-100 dark:border-bark-600 rounded-lg bg-orange-50/40 dark:bg-bark-700/40 ' +
         (compact ? 'p-2' : 'p-3')
       }
     >
@@ -54,13 +54,13 @@ export default function ConceptCard({
           <div
             className={
               (compact ? 'text-[10px]' : 'text-xs') +
-              ' font-bold uppercase tracking-wide text-orange-700 leading-tight'
+              ' font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400 leading-tight'
             }
           >
             {title}
           </div>
           {!compact && (
-            <div className="text-xs text-gray-600 leading-snug mt-0.5">
+            <div className="text-xs text-gray-600 dark:text-bark-300 leading-snug mt-0.5">
               {summary}
             </div>
           )}
@@ -76,7 +76,7 @@ export default function ConceptCard({
         onClick={() => setExpanded((v) => !v)}
         className={
           (compact ? 'mt-1 text-[10px]' : 'mt-2 text-xs') +
-          ' text-orange-600 hover:text-orange-800 font-semibold'
+          ' text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 font-semibold'
         }
       >
         {expanded
@@ -92,11 +92,11 @@ export default function ConceptCard({
         <div
           className={
             (compact ? 'mt-1 pt-1 text-[10px]' : 'mt-2 pt-2 text-xs') +
-            ' border-t border-orange-100 text-gray-700 space-y-1.5'
+            ' border-t border-orange-100 dark:border-bark-600 text-gray-700 dark:text-bark-200 space-y-1.5'
           }
         >
           {compact && (
-            <div className="text-gray-600 leading-snug">{summary}</div>
+            <div className="text-gray-600 dark:text-bark-300 leading-snug">{summary}</div>
           )}
           {expert}
         </div>

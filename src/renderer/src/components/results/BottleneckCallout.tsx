@@ -28,28 +28,28 @@ export default function BottleneckCallout({ metrics, level }: Props) {
   const hint = t(`bottleneck.hint.${level}`)
 
   return (
-    <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-4 shadow-sm">
+    <div className="rounded-2xl border-2 border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xl leading-none" aria-hidden="true">
           🔥
         </span>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-red-800">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-red-800 dark:text-red-300">
           {t('bottleneck.title')}
         </div>
       </div>
-      <div className="mb-2 text-sm text-red-900">
+      <div className="mb-2 text-sm text-red-900 dark:text-red-200">
         <span className="font-bold">{resourceLabel}</span>{' '}
         <span className="tabular-nums">
           {(bottleneck.ratio * 100).toFixed(0)}%
         </span>{' '}
-        <span className="text-red-700">
+        <span className="text-red-700 dark:text-red-400">
           {t('bottleneck.arrow')}
         </span>
       </div>
-      <p className="text-xs text-red-900 leading-relaxed mb-2">
+      <p className="text-xs text-red-900 dark:text-red-200 leading-relaxed mb-2">
         {renderWithTerms(advice)}
       </p>
-      <p className="text-[11px] text-red-700/80 leading-relaxed">
+      <p className="text-[11px] text-red-700/80 dark:text-red-400/80 leading-relaxed">
         💡 {renderWithTerms(hint)}
       </p>
     </div>

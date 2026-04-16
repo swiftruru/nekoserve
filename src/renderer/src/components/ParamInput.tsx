@@ -1,4 +1,4 @@
-import { useState, useId } from 'react'
+import { useState, useEffect, useId } from 'react'
 
 interface ParamInputProps {
   label: string
@@ -23,8 +23,8 @@ function HelpButton({ label, tooltip }: { label: string; tooltip: string }) {
       <button
         type="button"
         className="flex h-4 w-4 items-center justify-center rounded-full
-                   bg-orange-50 text-[10px] font-semibold text-orange-400
-                   ring-1 ring-inset ring-orange-100
+                   bg-orange-50 dark:bg-bark-600 text-[10px] font-semibold text-orange-400
+                   ring-1 ring-inset ring-orange-100 dark:ring-bark-500
                    transition-colors duration-150
                    hover:bg-orange-100 hover:text-orange-600 hover:ring-orange-200
                    focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -72,7 +72,7 @@ function ValueBar({
   const pct = range > 0 ? Math.max(0, Math.min(100, ((value - min) / range) * 100)) : 0
   return (
     <div
-      className="h-1 overflow-hidden rounded-full bg-orange-50"
+      className="h-1 overflow-hidden rounded-full bg-orange-50 dark:bg-bark-700"
       aria-hidden
     >
       <div
@@ -98,10 +98,38 @@ export default function ParamInput({
 }: ParamInputProps) {
   const inputId = useId()
 
+  // Local string mirror of the numeric value so the user can freely
+  // clear the field (e.g. select-all → delete) without the controlled
+  // value snapping back immediately. On blur we either commit the
+  // parsed number or revert to the last good value.
+  const [draft, setDraft] = useState(() => String(value))
+  const [focused, setFocused] = useState(false)
+
+  // Sync draft when the parent value changes externally (scenario
+  // preset switch, reset button, drag-drop import, etc.) — but only
+  // while the field is NOT focused, so we never fight the user's
+  // in-progress edits.
+  useEffect(() => {
+    if (!focused) setDraft(String(value))
+  }, [value, focused])
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDraft(e.target.value)
     const raw = parseFloat(e.target.value)
     if (!Number.isNaN(raw)) {
       onChange(raw)
+    }
+  }
+
+  function handleBlur() {
+    setFocused(false)
+    const raw = parseFloat(draft)
+    if (Number.isNaN(raw) || draft.trim() === '') {
+      // Revert to parent value
+      setDraft(String(value))
+    } else {
+      onChange(raw)
+      setDraft(String(raw))
     }
   }
 
@@ -118,7 +146,7 @@ export default function ParamInput({
         <label
           htmlFor={inputId}
           className="flex-1 text-[11px] font-semibold uppercase tracking-wide
-                     text-gray-500 leading-[1.2]"
+                     text-gray-500 dark:text-bark-300 leading-[1.2]"
         >
           {label}
         </label>
@@ -134,8 +162,10 @@ export default function ParamInput({
         <input
           id={inputId}
           type="number"
-          value={value}
+          value={draft}
           onChange={handleChange}
+          onFocus={() => setFocused(true)}
+          onBlur={handleBlur}
           min={min}
           max={max}
           step={step}
@@ -151,6 +181,11 @@ export default function ParamInput({
             focus:outline-none focus:ring-4 focus:ring-orange-200/50
             disabled:bg-gray-50
             disabled:text-gray-400 disabled:opacity-70
+            dark:bg-bark-700 dark:border-bark-500 dark:text-bark-100
+            dark:hover:border-bark-400 dark:hover:bg-bark-600
+            dark:focus:border-orange-500 dark:focus:bg-bark-600
+            dark:focus:ring-orange-500/30
+            dark:disabled:bg-bark-800 dark:disabled:text-bark-400
           `}
         />
         {unit && (

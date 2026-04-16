@@ -32,7 +32,7 @@ export default function LanguageSwitcher() {
       onClick={handleToggle}
       title={`${LABELS[current]} → ${LABELS[next]}`}
       aria-label={`Switch language to ${LABELS[next]}`}
-      className="no-drag inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-orange-200 bg-white text-xs font-medium text-orange-600 hover:bg-orange-50 active:bg-orange-100 transition-colors"
+      className="no-drag inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-700 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600 active:bg-orange-100 dark:active:bg-bark-500 transition-colors"
     >
       <span className="text-[13px] leading-none">🌐</span>
       <span>{LABELS[current]}</span>

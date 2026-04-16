@@ -56,10 +56,10 @@ export default function TimelineScrubber({
   return (
     <div className="card py-3">
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-bark-300">
           {t('playback:timeline.label')}
         </span>
-        <span className="text-[11px] text-gray-400">
+        <span className="text-[11px] text-gray-400 dark:text-bark-400">
           {t('playback:timeline.hint')}
         </span>
       </div>
@@ -72,7 +72,7 @@ export default function TimelineScrubber({
         {bins.map((v, i) => (
           <div
             key={i}
-            className="flex-1 rounded-t-sm bg-gradient-to-t from-orange-200 to-orange-400"
+            className="flex-1 rounded-t-sm bg-gradient-to-t from-orange-200 to-orange-400 dark:from-orange-800 dark:to-orange-600"
             style={{
               height: `${Math.max(8, v * 100)}%`,
               opacity: 0.15 + v * 0.75,

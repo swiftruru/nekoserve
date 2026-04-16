@@ -27,6 +27,7 @@ import { buildSnapshotSeries } from '../utils/snapshotSeries'
 import { extractCustomerMetrics } from '../utils/customerMetrics'
 import { extractKeyMoments } from '../utils/keyMoments'
 import { exportResultJSON, exportMetricsCSV } from '../utils/export'
+import { useToast } from '../hooks/useToast'
 
 interface ResultsPageProps {
   result: SimulationResult
@@ -47,6 +48,7 @@ export default function ResultsPage({
   onJumpToPlayback,
 }: ResultsPageProps) {
   const { t } = useTranslation(['results', 'common'])
+  const { toast } = useToast()
   const { metrics, config, eventLog } = result
   const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
   const [level, setLevel] = useState<LearningLevel>('expert')
@@ -81,8 +83,8 @@ export default function ResultsPage({
     <div className="page-container space-y-4">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
-        <h2 className="text-lg font-bold text-orange-700">{t('results:title')}</h2>
-        <span className="text-xs text-gray-500">
+        <h2 className="text-lg font-bold text-orange-700 dark:text-orange-400">{t('results:title')}</h2>
+        <span className="text-xs text-gray-500 dark:text-bark-300">
           {t('results:subtitle', {
             duration: config.simulationDuration,
             seed: config.randomSeed,
@@ -90,7 +92,7 @@ export default function ResultsPage({
         </span>
         <div className="ml-auto flex items-center gap-2 flex-wrap">
           {/* Level pill: Beginner / Pro */}
-          <div className="flex items-center rounded-full border border-orange-200 bg-white overflow-hidden shrink-0">
+          <div className="flex items-center rounded-full border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-800 overflow-hidden shrink-0">
             <button
               type="button"
               onClick={() => setLevel('friendly')}
@@ -121,14 +123,14 @@ export default function ResultsPage({
 
           <button
             type="button"
-            onClick={() => exportMetricsCSV(result)}
+            onClick={() => { exportMetricsCSV(result); toast(t('common:toast.exportSuccess')) }}
             className="btn-secondary text-xs px-3 py-1.5"
           >
             {t('results:exportMetricsCsv')}
           </button>
           <button
             type="button"
-            onClick={() => exportResultJSON(result)}
+            onClick={() => { exportResultJSON(result); toast(t('common:toast.exportSuccess')) }}
             className="btn-secondary text-xs px-3 py-1.5"
           >
             {t('results:exportJson')}
@@ -438,19 +440,19 @@ export default function ResultsPage({
           {/* ── Config summary (unchanged, bottom of page) ─── */}
           <div className="card">
             <div className="card-title">{t('results:configSummary.title')}</div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-1 text-sm text-gray-600">
-              <div>{t('results:configSummary.seats')} <span className="font-semibold text-gray-800">{config.seatCount}</span></div>
-              <div>{t('results:configSummary.staff')} <span className="font-semibold text-gray-800">{config.staffCount}</span></div>
-              <div>{t('results:configSummary.cats')} <span className="font-semibold text-gray-800">{config.catCount}</span></div>
-              <div>{t('results:configSummary.arrivalInterval')} <span className="font-semibold text-gray-800">{config.customerArrivalInterval}</span> {unitMin}</div>
-              <div>{t('results:configSummary.orderTime')} <span className="font-semibold text-gray-800">{config.orderTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.preparationTime')} <span className="font-semibold text-gray-800">{config.preparationTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.diningTime')} <span className="font-semibold text-gray-800">{config.diningTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.interactionTime')} <span className="font-semibold text-gray-800">{config.catInteractionTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.restProbability')} <span className="font-semibold text-gray-800">{config.catRestProbability}</span></div>
-              <div>{t('results:configSummary.restDuration')} <span className="font-semibold text-gray-800">{config.catRestDuration}</span> {unitMin}</div>
-              <div>{t('results:configSummary.maxWait')} <span className="font-semibold text-gray-800">{config.maxWaitTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.seed')} <span className="font-semibold text-gray-800">{config.randomSeed}</span></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-1 text-sm text-gray-600 dark:text-bark-300">
+              <div>{t('results:configSummary.seats')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.seatCount}</span></div>
+              <div>{t('results:configSummary.staff')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.staffCount}</span></div>
+              <div>{t('results:configSummary.cats')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catCount}</span></div>
+              <div>{t('results:configSummary.arrivalInterval')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.customerArrivalInterval}</span> {unitMin}</div>
+              <div>{t('results:configSummary.orderTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.orderTime}</span> {unitMin}</div>
+              <div>{t('results:configSummary.preparationTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.preparationTime}</span> {unitMin}</div>
+              <div>{t('results:configSummary.diningTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.diningTime}</span> {unitMin}</div>
+              <div>{t('results:configSummary.interactionTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catInteractionTime}</span> {unitMin}</div>
+              <div>{t('results:configSummary.restProbability')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catRestProbability}</span></div>
+              <div>{t('results:configSummary.restDuration')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catRestDuration}</span> {unitMin}</div>
+              <div>{t('results:configSummary.maxWait')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.maxWaitTime}</span> {unitMin}</div>
+              <div>{t('results:configSummary.seed')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.randomSeed}</span></div>
             </div>
           </div>
         </>

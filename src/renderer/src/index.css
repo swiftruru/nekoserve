@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-orange-500;
+  }
+
   html {
     @apply antialiased;
     /* Hide the native OS cursor; CustomCursor renders its own sprite on
@@ -12,7 +16,7 @@
   }
 
   body {
-    @apply bg-cream-100 text-gray-800 font-sans;
+    @apply bg-cream-100 text-gray-800 font-sans dark:bg-bark-950 dark:text-bark-100;
     user-select: none;
     -webkit-user-select: none;
     cursor: none;
@@ -74,14 +78,19 @@
            shadow-[0_1px_2px_rgba(251,146,60,0.05),0_8px_24px_-12px_rgba(251,146,60,0.12)]
            transition-all duration-200 ease-out
            hover:shadow-[0_2px_4px_rgba(251,146,60,0.08),0_12px_32px_-12px_rgba(251,146,60,0.18)]
-           hover:border-orange-200;
+           hover:border-orange-200
+           dark:bg-bark-800 dark:border-bark-600
+           dark:shadow-[0_1px_2px_rgba(0,0,0,0.2),0_8px_24px_-12px_rgba(0,0,0,0.3)]
+           dark:hover:shadow-[0_2px_4px_rgba(0,0,0,0.3),0_12px_32px_-12px_rgba(0,0,0,0.4)]
+           dark:hover:border-bark-500;
   }
 
   /* Card title: orange accent glyph on the left (via ::before) and slightly
      bigger type than before so section headers read more clearly. */
   .card-title {
     @apply text-[15px] font-semibold text-orange-700 mb-4
-           flex items-center gap-2 tracking-tight;
+           flex items-center gap-2 tracking-tight
+           dark:text-orange-400;
   }
   .card-title::before {
     content: '';
@@ -95,7 +104,10 @@
            text-white font-semibold rounded-xl px-6 py-2.5
            shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30
            transition-all duration-150
-           disabled:opacity-50 disabled:shadow-none;
+           disabled:opacity-50 disabled:shadow-none
+           dark:from-orange-600 dark:to-orange-700
+           dark:hover:from-orange-500 dark:hover:to-orange-600
+           dark:shadow-orange-900/40;
   }
 
   .btn-secondary {
@@ -103,14 +115,18 @@
            text-orange-600 font-medium rounded-xl px-5 py-2.5
            border border-orange-200 hover:border-orange-400
            shadow-sm hover:shadow
-           transition-all duration-150;
+           transition-all duration-150
+           dark:bg-bark-700 dark:text-orange-400 dark:border-bark-600
+           dark:hover:bg-bark-600 dark:hover:border-bark-500
+           dark:active:bg-bark-500;
   }
 
   .btn-scenario {
     @apply px-3.5 py-1.5 rounded-lg text-sm font-medium
            transition-all duration-150
            border border-orange-200
-           hover:border-orange-400 hover:-translate-y-px hover:shadow-sm;
+           hover:border-orange-400 hover:-translate-y-px hover:shadow-sm
+           dark:border-bark-600 dark:hover:border-bark-500;
   }
 
   .btn-scenario-active {
@@ -120,23 +136,41 @@
   }
 
   .btn-scenario-inactive {
-    @apply bg-white text-orange-600 hover:bg-orange-50;
+    @apply bg-white text-orange-600 hover:bg-orange-50
+           dark:bg-bark-700 dark:text-orange-400 dark:hover:bg-bark-600;
   }
 
   .input-field {
     @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
            focus:outline-none focus:ring-4 focus:ring-orange-200/50
            focus:border-orange-300
-           transition-all duration-150 bg-white;
+           transition-all duration-150 bg-white
+           dark:bg-bark-700 dark:border-bark-600 dark:text-bark-100
+           dark:focus:ring-orange-500/30 dark:focus:border-orange-500;
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-bark-200;
   }
 
   .section-divider {
-    @apply border-t border-orange-100 my-4;
+    @apply border-t border-orange-100 my-4 dark:border-bark-600;
   }
+}
+
+/* ── KaTeX dark mode: inherit text color from parent ─────────
+   KaTeX defaults to black text. In dark mode, force it to
+   inherit from the container so formulas are visible. */
+.dark .katex,
+.dark .katex .mord,
+.dark .katex .mrel,
+.dark .katex .mbin,
+.dark .katex .mop,
+.dark .katex .mopen,
+.dark .katex .mclose,
+.dark .katex .mpunct,
+.dark .katex .minner {
+  color: inherit;
 }
 
 /* ── ParamInput: hide browser-native number spinners ─────────
@@ -206,6 +240,10 @@
   will-change: opacity;
   background:
     radial-gradient(ellipse at center, #fef9f0 0%, #fef9f0 60%, #fdf0dc 100%);
+}
+.dark .page-veil {
+  background:
+    radial-gradient(ellipse at center, #261e16 0%, #261e16 60%, #1a140e 100%);
 }
 
 /* ── Playback scene character animations ────────────────────
@@ -772,6 +810,15 @@
 .event-log-scroll::-webkit-scrollbar-thumb:hover {
   background: #fb923c;
 }
+.dark .event-log-scroll::-webkit-scrollbar-track {
+  background: #261e16;
+}
+.dark .event-log-scroll::-webkit-scrollbar-thumb {
+  background: #6e5c4a;
+}
+.dark .event-log-scroll::-webkit-scrollbar-thumb:hover {
+  background: #8a7560;
+}
 
 /* Custom scrollbar for learning panel */
 .learn-panel-scroll::-webkit-scrollbar {
@@ -786,4 +833,10 @@
 }
 .learn-panel-scroll::-webkit-scrollbar-thumb:hover {
   background: #fb923c;
+}
+.dark .learn-panel-scroll::-webkit-scrollbar-thumb {
+  background: #6e5c4a;
+}
+.dark .learn-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: #8a7560;
 }

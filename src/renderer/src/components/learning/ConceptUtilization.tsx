@@ -102,7 +102,7 @@ export default function ConceptUtilization({
                       'flex-1 min-w-0 truncate ' +
                       (isBottleneck
                         ? 'text-red-700 font-bold'
-                        : 'text-gray-600')
+                        : 'text-gray-600 dark:text-bark-300')
                     }
                   >
                     {t(row.labelKey)}
@@ -113,14 +113,14 @@ export default function ConceptUtilization({
                     )}
                     {isBottleneck && ' 🔥'}
                   </span>
-                  <span className="tabular-nums text-gray-500 shrink-0">
+                  <span className="tabular-nums text-gray-500 dark:text-bark-300 shrink-0">
                     {level === 'friendly'
                       ? `${row.used}/${row.capacity}`
                       : `${row.used}/${row.capacity} · ${pct}%`}
                   </span>
                 </div>
                 <div
-                  className={`${barH} rounded-full bg-orange-100 overflow-hidden`}
+                  className={`${barH} rounded-full bg-orange-100 dark:bg-bark-600 overflow-hidden`}
                 >
                   <div
                     className="h-full rounded-full"
@@ -135,7 +135,7 @@ export default function ConceptUtilization({
             )
           })}
           {level === 'friendly' && (
-            <div className="text-[10px] text-gray-500 leading-snug mt-1">
+            <div className="text-[10px] text-gray-500 dark:text-bark-300 leading-snug mt-1">
               {t('concepts.utilization.friendlyHint')}
             </div>
           )}
@@ -144,11 +144,11 @@ export default function ConceptUtilization({
       expert={
         level === 'friendly' ? (
           <>
-            <div className="rounded-md bg-white border border-orange-200 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
+            <div className="rounded-md bg-white dark:bg-bark-700 border border-orange-200 dark:border-bark-500 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
               {t('concepts.utilization.friendlyFormula')}
             </div>
             <p>{t('concepts.utilization.friendlyExpertDef')}</p>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-bark-300">
               {t('concepts.utilization.friendlyExpertWhy')}
             </p>
           </>
@@ -156,7 +156,7 @@ export default function ConceptUtilization({
           <>
             <BlockMath formula="\rho = \frac{\text{busy time}}{c \cdot T}" />
             <p>{t('concepts.utilization.expertDef')}</p>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-bark-300">
               {t('concepts.utilization.expertWhy')}
             </p>
           </>

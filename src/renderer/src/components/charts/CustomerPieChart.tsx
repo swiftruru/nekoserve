@@ -58,7 +58,7 @@ export default function CustomerPieChart({
 
   if (data.length === 0) {
     return (
-      <div className="card flex items-center justify-center h-48 text-gray-400 text-sm">
+      <div className="card flex items-center justify-center h-48 text-gray-400 dark:text-bark-400 text-sm">
         {t('results:charts.customerPie.empty')}
       </div>
     )
@@ -73,7 +73,7 @@ export default function CustomerPieChart({
       <div className="card-title flex items-center gap-2">
         {t('results:charts.customerPie.title')}
         {clickable && (
-          <span className="text-xs text-gray-400 font-normal">
+          <span className="text-xs text-gray-400 dark:text-bark-400 font-normal">
             {t('results:charts.customerPie.clickHint')}
           </span>
         )}

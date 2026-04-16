@@ -48,11 +48,11 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
 
   if (histogram.total === 0) {
     return (
-      <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+      <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
         <div className="text-xs font-semibold text-orange-700 mb-2">
           {t(titleKey)}
         </div>
-        <div className="text-[11px] text-gray-400 text-center py-4">
+        <div className="text-[11px] text-gray-400 dark:text-bark-400 text-center py-4">
           {t('results:waitHistogram.empty')}
         </div>
       </div>
@@ -70,12 +70,12 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
       innerW
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
       <div className="flex items-baseline justify-between mb-2">
-        <span className="text-xs font-semibold text-orange-700">
+        <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">
           {t(titleKey)}
         </span>
-        <span className="text-[10px] text-gray-500 tabular-nums">
+        <span className="text-[10px] text-gray-500 dark:text-bark-300 tabular-nums">
           {t('results:waitHistogram.totalCount', { n: histogram.total })}
         </span>
       </div>
@@ -94,7 +94,7 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
           y={0}
           width={CHART_W}
           height={CHART_H}
-          fill="#fff7ed"
+          className="fill-[#fff7ed] dark:fill-bark-800"
           rx={6}
         />
         {/* Baseline */}
@@ -103,7 +103,7 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
           y1={CHART_H - PADDING_Y_BOTTOM}
           x2={CHART_W - PADDING_X}
           y2={CHART_H - PADDING_Y_BOTTOM}
-          stroke="#fed7aa"
+          className="stroke-[#fed7aa] dark:stroke-bark-600"
           strokeWidth={0.8}
         />
         {/* Bars */}
@@ -137,7 +137,7 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
                   x={x + barW / 2}
                   y={y - 2}
                   fontSize={7}
-                  fill="#7c2d12"
+                  className="fill-[#7c2d12] dark:fill-bark-200"
                   textAnchor="middle"
                 >
                   {count}
@@ -172,7 +172,7 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
           x={PADDING_X}
           y={CHART_H - PADDING_Y_BOTTOM + 10}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
         >
           {histogram.min.toFixed(1)} {minUnit}
         </text>
@@ -180,14 +180,14 @@ export default function WaitHistogram({ customers, field = 'waitForSeat' }: Prop
           x={CHART_W - PADDING_X}
           y={CHART_H - PADDING_Y_BOTTOM + 10}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
           textAnchor="end"
         >
           {histogram.max.toFixed(1)} {minUnit}
         </text>
       </svg>
 
-      <div className="mt-1 text-[11px] text-gray-600 leading-snug">
+      <div className="mt-1 text-[11px] text-gray-600 dark:text-bark-300 leading-snug">
         {t('results:waitHistogram.hint')}
       </div>
     </div>

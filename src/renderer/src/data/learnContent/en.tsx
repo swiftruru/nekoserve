@@ -34,7 +34,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           <P>
             This app uses <B>Python SimPy 4</B> as the DES engine. SimPy implements
             processes with generator functions and manages resource contention via
-            {' '}<code className="text-xs bg-gray-100 px-1 rounded">simpy.Resource</code>.
+            {' '}<code className="text-xs bg-gray-100 dark:bg-bark-600 px-1 rounded">simpy.Resource</code>.
           </P>
         </div>
       ),
@@ -82,7 +82,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           <BlockMath formula={String.raw`T \sim \mathcal{N}(\mu,\, \sigma^2), \quad \sigma = 0.2\,\mu`} />
           <P>
             This simulator fixes the standard deviation at 20% of the mean and clamps
-            negative draws with <code className="text-xs bg-gray-100 px-1 rounded">max(1, sample)</code>.
+            negative draws with <code className="text-xs bg-gray-100 dark:bg-bark-600 px-1 rounded">max(1, sample)</code>.
           </P>
           <P><B>Why not exponential here?</B></P>
           <UL>
@@ -519,7 +519,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           </UL>
           <Note>
             🔍 Tracking a single customer: type their id (e.g.{' '}
-            <code className="text-xs bg-orange-100 px-1 rounded">#12</code>) in the
+            <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">#12</code>) in the
             search box to filter the full journey for that customer.
           </Note>
           <Example>
@@ -536,7 +536,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
       content: (
         <div>
           <P><B>A complete (happy-path) customer journey (v0.4.0):</B></P>
-          <div className="text-xs text-gray-600 font-mono bg-gray-50 rounded-lg p-3 my-2 select-text leading-6">
+          <div className="text-xs text-gray-600 dark:text-bark-200 font-mono bg-gray-50 dark:bg-bark-700 rounded-lg p-3 my-2 select-text leading-6">
             ARRIVE<br />
             ↓ [if no free seat]<br />
             WAIT_SEAT → SEATED<br />
@@ -550,7 +550,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             LEAVE
           </div>
           <P><B>Interleaved cat events (independent of any single customer):</B></P>
-          <div className="text-xs text-gray-600 font-mono bg-pink-50 rounded-lg p-3 my-2 select-text leading-6">
+          <div className="text-xs text-gray-600 dark:text-bark-200 font-mono bg-pink-50 dark:bg-pink-900/30 rounded-lg p-3 my-2 select-text leading-6">
             CAT_VISIT_SEAT<br />
             ↓ [visit duration; may overlap other customers]<br />
             CAT_LEAVE_SEAT<br />
@@ -558,14 +558,14 @@ export const LEARN_CONTENT_EN: LearnContent = {
             CAT_START_REST → CAT_END_REST
           </div>
           <P><B>Short-circuit (abandon) path:</B></P>
-          <div className="text-xs text-gray-600 font-mono bg-red-50 rounded-lg p-3 my-2 select-text">
+          <div className="text-xs text-gray-600 dark:text-bark-200 font-mono bg-red-50 dark:bg-red-900/30 rounded-lg p-3 my-2 select-text">
             ARRIVE → WAIT_SEAT → ABANDON
           </div>
           <Note>
             💡 <B>CAT_VISIT_SEAT</B> / <B>CAT_LEAVE_SEAT</B> carry the cat identity
-            in <code className="text-xs bg-orange-100 px-1 rounded">resourceId</code>
-            (e.g. <code className="text-xs bg-orange-100 px-1 rounded">貓-2</code>);
-            <code className="text-xs bg-orange-100 px-1 rounded">customerId</code> is the
+            in <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">resourceId</code>
+            (e.g. <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">貓-2</code>);
+            <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">customerId</code> is the
             customer being visited. A single customer may be visited by several cats
             during their stay, possibly overlapping in time.
           </Note>
@@ -664,12 +664,12 @@ export const LEARN_CONTENT_EN: LearnContent = {
           </P>
           <P><B>Keyboard shortcuts (disabled while an input is focused):</B></P>
           <UL>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">Space</code>: play / pause</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">← →</code>: seek ±10 minutes</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">, .</code>: step events</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">0</code>: reset</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">1-5</code>: change speed</LI>
-            <LI><code className="text-xs bg-orange-100 px-1 rounded">Esc</code>: close inspect card</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">Space</code>: play / pause</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">← →</code>: seek ±10 minutes</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">, .</code>: step events</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">0</code>: reset</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">1-5</code>: change speed</LI>
+            <LI><code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">Esc</code>: close inspect card</LI>
           </UL>
         </div>
       ),
@@ -741,7 +741,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           </UL>
           <Example>
             💡 Pair with the Event Log search box: type a single customer's
-            ID (for example <code className="text-xs bg-orange-100 px-1 rounded">#12</code>)
+            ID (for example <code className="text-xs bg-orange-100 dark:bg-bark-600 px-1 rounded">#12</code>)
             to isolate their entire event chain, then come back here and
             match it against the animation's timeline. This links the trace
             and the visual views into a single narrative.

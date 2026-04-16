@@ -114,7 +114,7 @@ export default function UtilizationTimeSeries({
   const minUnit = t('common:unit.min')
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
       <div className="text-xs font-semibold text-orange-700 mb-2">
         {t('results:utilTimeSeries.title')}
       </div>
@@ -143,7 +143,7 @@ export default function UtilizationTimeSeries({
                 x={4}
                 y={ROW_H / 2 + 3}
                 fontSize={9}
-                fill="#7c2d12"
+                className="fill-[#7c2d12] dark:fill-bark-200"
                 fontWeight={600}
               >
                 {t(row.labelKey)}
@@ -154,7 +154,7 @@ export default function UtilizationTimeSeries({
                 y={PADDING_Y}
                 width={ROW_W - PADDING_X - PADDING_Y}
                 height={ROW_H - PADDING_Y * 2}
-                fill="#fff7ed"
+                className="fill-[#fff7ed] dark:fill-bark-800"
                 rx={3}
               />
               {/* Filled area under curve */}
@@ -189,7 +189,7 @@ export default function UtilizationTimeSeries({
                 x={ROW_W - 4}
                 y={ROW_H / 2 - 3}
                 fontSize={7}
-                fill="#9ca3af"
+                className="fill-gray-400 dark:fill-bark-300"
                 textAnchor="end"
               >
                 {t('results:utilTimeSeries.avg')} {(row.avg * 100).toFixed(0)}%
@@ -198,7 +198,7 @@ export default function UtilizationTimeSeries({
                 x={ROW_W - 4}
                 y={ROW_H / 2 + 7}
                 fontSize={7}
-                fill="#9ca3af"
+                className="fill-gray-400 dark:fill-bark-300"
                 textAnchor="end"
               >
                 {t('results:utilTimeSeries.peak')} {(row.peak * 100).toFixed(0)}%

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationConfig, ScenarioPreset, SimulatorError } from '../types'
 import ParamInput from '../components/ParamInput'
 import ParamRationale from '../components/ParamRationale'
 import ScenarioButtons from '../components/ScenarioButtons'
+import { useToast } from '../hooks/useToast'
 import {
   loadCustomScenarios,
   saveCustomScenario,
@@ -31,6 +32,7 @@ export default function SettingsPage({
   error,
 }: SettingsPageProps) {
   const { t } = useTranslation(['settings', 'common', 'errors', 'scenarios'])
+  const { toast } = useToast()
   const [config, setConfig] = useState<SimulationConfig>(initialConfig)
   const [activeScenario, setActiveScenario] = useState<string | null>('weekday')
   const [showErrorDetail, setShowErrorDetail] = useState(false)
@@ -92,12 +94,14 @@ export default function SettingsPage({
     saveCustomScenario(preset)
     setCustomScenarios(loadCustomScenarios())
     setActiveScenario(id)
+    toast(t('common:toast.scenarioSaved'))
   }
 
   function handleDeleteCustom(id: string) {
     deleteCustomScenario(id)
     setCustomScenarios(loadCustomScenarios())
     if (activeScenario === id) setActiveScenario(null)
+    toast(t('common:toast.scenarioDeleted'))
   }
 
   // Fake progress: exponential curve 0 → 95%, then snaps to 100% when done
@@ -105,9 +109,65 @@ export default function SettingsPage({
     ? Math.min(95, (1 - Math.exp(-elapsed / 4)) * 100)
     : 0
 
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  const REQUIRED_KEYS: (keyof SimulationConfig)[] = [
+    'seatCount', 'staffCount', 'catCount', 'customerArrivalInterval',
+    'orderTime', 'preparationTime', 'diningTime', 'catInteractionTime',
+    'catRestProbability', 'catRestDuration', 'maxWaitTime',
+    'simulationDuration', 'randomSeed',
+  ]
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (!file || !file.name.endsWith('.json')) {
+      toast(t('common:toast.importFailed'), 'error')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string)
+        // Accept both raw config and { config: ... } wrapper
+        const cfg = parsed.config ?? parsed
+        const valid = REQUIRED_KEYS.every(
+          (k) => typeof cfg[k] === 'number'
+        )
+        if (!valid) {
+          toast(t('common:toast.importFailed'), 'error')
+          return
+        }
+        const imported: SimulationConfig = {} as SimulationConfig
+        for (const k of REQUIRED_KEYS) {
+          ;(imported as Record<string, number>)[k] = cfg[k]
+        }
+        // Also pick optional catIdleInterval if present
+        if (typeof cfg.catIdleInterval === 'number') {
+          imported.catIdleInterval = cfg.catIdleInterval
+        } else {
+          imported.catIdleInterval = config.catIdleInterval
+        }
+        setConfig(imported)
+        setActiveScenario(null)
+        toast(t('common:toast.importSuccess'))
+      } catch {
+        toast(t('common:toast.importFailed'), 'error')
+      }
+    }
+    reader.readAsText(file)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t, toast, config.catIdleInterval])
+
   return (
-    <div className="page-container">
-      <div className="mb-5">
+    <div
+      className={`page-container ${isDragOver ? 'ring-2 ring-orange-400 ring-inset bg-orange-50/50 dark:bg-orange-900/20' : ''}`}
+      onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={handleDrop}
+    >
+      <div className="mb-5" data-onboarding="scenario-bar">
         <ScenarioButtons
           scenarios={scenarios}
           customScenarios={customScenarios}
@@ -120,11 +180,11 @@ export default function SettingsPage({
       </div>
 
       {/* ── Academic disclaimer banner ───────────────── */}
-      <div className="mb-4 rounded-xl bg-cream-100 ring-1 ring-inset ring-orange-200 px-4 py-3">
-        <p className="text-[12px] font-semibold text-orange-700">
+      <div className="mb-4 rounded-xl bg-cream-100 dark:bg-bark-800 ring-1 ring-inset ring-orange-200 dark:ring-bark-600 px-4 py-3">
+        <p className="text-[12px] font-semibold text-orange-700 dark:text-orange-400">
           {t('settings:academicDisclaimer.title')}
         </p>
-        <p className="mt-1 text-[12px] leading-relaxed text-orange-800/90 select-text">
+        <p className="mt-1 text-[12px] leading-relaxed text-orange-800/90 dark:text-bark-200 select-text">
           {t('settings:academicDisclaimer.body')}
         </p>
       </div>
@@ -299,7 +359,7 @@ export default function SettingsPage({
 
       {/* ── Error display ────────────────────────────── */}
       {error && (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="mt-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2">
               <span className="text-lg">⚠️</span>
@@ -334,12 +394,12 @@ export default function SettingsPage({
 
       {/* ── Progress bar ─────────────────────────────── */}
       {isRunning && (
-        <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
-          <div className="flex justify-between text-xs text-orange-600 mb-2">
+        <div className="mt-4 rounded-xl border border-orange-200 dark:border-bark-600 bg-orange-50 dark:bg-bark-800 px-4 py-3">
+          <div className="flex justify-between text-xs text-orange-600 dark:text-orange-400 mb-2">
             <span>{t('settings:actions.runningHint')}</span>
             <span>{elapsed.toFixed(1)} {t('common:unit.sec')}</span>
           </div>
-          <div className="h-2.5 bg-orange-100 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-orange-100 dark:bg-bark-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(progressPct)} aria-valuemin={0} aria-valuemax={100}>
             <div
               className="h-full bg-orange-400 rounded-full transition-all duration-300"
               style={{ width: `${progressPct.toFixed(1)}%` }}
@@ -360,6 +420,7 @@ export default function SettingsPage({
         </button>
         <button
           type="button"
+          data-onboarding="run-button"
           onClick={handleRun}
           disabled={isRunning}
           className="btn-primary flex items-center gap-2"

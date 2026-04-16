@@ -15,6 +15,12 @@ import PageTransition from './components/PageTransition'
 import CustomCursor from './components/CustomCursor'
 import UpdateModal from './components/UpdateModal'
 import { useUpdateCheck } from './hooks/useUpdateCheck'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useToast } from './hooks/useToast'
+import { useTheme } from './hooks/useTheme'
+import ShortcutHelp from './components/ShortcutHelp'
+import OnboardingOverlay from './components/OnboardingOverlay'
+import WhatsNewModal, { useWhatsNew } from './components/WhatsNewModal'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -69,8 +75,32 @@ export default function App() {
    * (not inside PlaybackPage) so nav-away + nav-back does not re-autoplay.
    */
   const [playbackAutoStartPending, setPlaybackAutoStartPending] = useState(false)
+  const { toast } = useToast()
   const { status, result, error, elapsed, history, run, reset } = useSimulation()
   const update = useUpdateCheck()
+  const { theme, toggle: toggleTheme } = useTheme()
+  const whatsNew = useWhatsNew()
+  const [shortcutHelpVisible, setShortcutHelpVisible] = useState(false)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
+
+  useKeyboardShortcuts({
+    '?': () => setOnboardingOpen((v) => !v),
+    f: () => { if (page === 'playback' && resultsAvailable) setFullscreen((v) => !v) },
+  })
+
+  // ⌘K / Ctrl+K → shortcut help (needs its own listener because
+  // useKeyboardShortcuts intentionally ignores meta/ctrl combos)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setShortcutHelpVisible((v) => !v)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   // Persist panel open/closed whenever it changes. Keeping the side effect
   // out of the state updater is required for React 18 StrictMode purity.
@@ -113,6 +143,7 @@ export default function App() {
       // Clear pending filter when navigating away from eventlog path
       setPendingEventFilter(null)
     }
+    if (id !== 'playback') setFullscreen(false)
     setPage(id)
   }
 
@@ -144,13 +175,23 @@ export default function App() {
   const resultsAvailable = status === 'success' && result !== null
 
   return (
-    <div className="flex flex-col h-screen bg-cream-100">
+    <div className="flex flex-col h-screen bg-cream-100 dark:bg-bark-950">
       {/* ── In-window custom cursor overlay ───────────────
            Mounted at the outermost level so its `position: fixed`
            overlay is never clipped by `overflow-hidden` ancestors
            on the main/aside flex container. Renders behind nothing
            (z-index 9999) and has `pointer-events: none`. */}
       <CustomCursor />
+      <ShortcutHelp
+        visible={shortcutHelpVisible}
+        onClose={() => setShortcutHelpVisible(false)}
+      />
+      <OnboardingOverlay externalOpen={onboardingOpen} onClose={() => setOnboardingOpen(false)} />
+      <WhatsNewModal
+        visible={whatsNew.visible}
+        version={whatsNew.version}
+        onDismiss={whatsNew.dismiss}
+      />
       <UpdateModal
         visible={update.visible}
         status={update.status}
@@ -168,11 +209,12 @@ export default function App() {
 
       {/* ── Title bar area ──────────────────────────────── */}
       {/* drag-region: entire header is draggable on macOS (no interactive elements here) */}
-      <header className={`bg-white border-b border-orange-200 py-3 flex items-center gap-3 shadow-sm drag-region ${isMac ? 'pl-20 pr-5' : 'px-5'}`}>
+      {!fullscreen && (
+      <header className={`bg-white dark:bg-bark-800 border-b border-orange-200 dark:border-bark-600 py-3 flex items-center gap-3 shadow-sm drag-region ${isMac ? 'pl-20 pr-5' : 'px-5'}`}>
         <span className="text-2xl" role="img" aria-label="cat">🐱</span>
         <div className="min-w-0">
-          <h1 className="text-base font-bold text-orange-700 leading-tight">{t('common:appName')}</h1>
-          <p className="text-xs text-gray-500 truncate">{t('common:appSubtitle')}</p>
+          <h1 className="text-base font-bold text-orange-700 dark:text-orange-400 leading-tight">{t('common:appName')}</h1>
+          <p className="text-xs text-gray-500 dark:text-bark-300 truncate">{t('common:appSubtitle')}</p>
         </div>
 
         <div className="ml-auto flex items-center gap-3">
@@ -196,12 +238,38 @@ export default function App() {
             </span>
           )}
 
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-lg leading-none"
+            title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+          >
+            {theme === 'light' ? '\uD83C\uDF19' : '\u2600\uFE0F'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShortcutHelpVisible(true)}
+            className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-sm"
+            title={t('common:shortcutHelp.title')}
+          >
+            <kbd className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-bark-500 bg-gray-50 dark:bg-bark-700 text-[11px] font-mono">⌘K</kbd>
+          </button>
+          <button
+            type="button"
+            onClick={() => setOnboardingOpen(true)}
+            className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-sm"
+            title={t('common:onboarding.step1Title')}
+          >
+            <kbd className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-bark-500 bg-gray-50 dark:bg-bark-700 text-xs font-mono">?</kbd>
+          </button>
           <LanguageSwitcher />
         </div>
       </header>
+      )}
 
       {/* ── Top navigation ──────────────────────────────── */}
-      <nav className="bg-white border-b border-orange-100 px-4 flex items-center gap-1">
+      {!fullscreen && (
+      <nav className="bg-white dark:bg-bark-800 border-b border-orange-100 dark:border-bark-600 px-4 flex items-center gap-1" role="tablist" aria-label="Navigation">
         {NAV_ITEMS.map((item) => {
           const needsResult =
             item.id === 'results' ||
@@ -211,16 +279,24 @@ export default function App() {
           return (
             <button
               key={item.id}
-              onClick={() => !disabled && handleNavigate(item.id)}
-              disabled={disabled}
+              role="tab"
+              aria-selected={page === item.id}
+              data-onboarding={item.id === 'playback' ? 'nav-playback' : item.id === 'results' ? 'nav-results' : undefined}
+              onClick={() => {
+                if (disabled) {
+                  toast(t('nav:needsRunHint'), 'info')
+                } else {
+                  handleNavigate(item.id)
+                }
+              }}
               title={disabled ? t('nav:needsRunHint') : undefined}
               className={[
                 'flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-150',
                 page === item.id
-                  ? 'border-orange-500 text-orange-600'
+                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                   : disabled
-                  ? 'border-transparent text-gray-300'
-                  : 'border-transparent text-gray-500 hover:text-orange-500 hover:border-orange-300',
+                  ? 'border-transparent text-gray-300 dark:text-bark-500'
+                  : 'border-transparent text-gray-500 dark:text-bark-300 hover:text-orange-500 dark:hover:text-orange-400 hover:border-orange-300',
               ].join(' ')}
             >
               <span>{item.icon}</span>
@@ -236,12 +312,13 @@ export default function App() {
           className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-150 ${
             panelOpen
               ? 'bg-orange-500 text-white border-orange-500'
-              : 'bg-white text-orange-600 border-orange-300 hover:bg-orange-50'
+              : 'bg-white dark:bg-bark-700 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-bark-500 hover:bg-orange-50 dark:hover:bg-bark-600'
           }`}
         >
           📚 {t('common:learningPanel')}
         </button>
       </nav>
+      )}
 
       {/* ── Main area: content + sidebar ────────────────── */}
       <div className="flex-1 flex overflow-hidden">
@@ -283,6 +360,8 @@ export default function App() {
                   autoStartPending={playbackAutoStartPending}
                   onAutoStartConsumed={() => setPlaybackAutoStartPending(false)}
                   onSkipToResults={handleSkipToResults}
+                  fullscreen={fullscreen}
+                  onToggleFullscreen={() => setFullscreen((v) => !v)}
                 />
               ) : (
                 <PlaybackPageEmpty />
@@ -293,8 +372,9 @@ export default function App() {
         </main>
 
         {/* ── Learning sidebar ──────────────────────────── */}
+        {!fullscreen && (
         <aside
-          className={`flex-shrink-0 border-l border-orange-100 overflow-hidden transition-all duration-200 ${
+          className={`flex-shrink-0 border-l border-orange-100 dark:border-bark-600 overflow-hidden transition-all duration-200 ${
             panelOpen ? 'w-72' : 'w-0'
           }`}
         >
@@ -302,6 +382,7 @@ export default function App() {
             <LearningPanel page={page} onClose={togglePanel} />
           )}
         </aside>
+        )}
       </div>
     </div>
   )

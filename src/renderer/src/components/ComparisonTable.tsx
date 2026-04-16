@@ -61,7 +61,7 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr>
-            <th className="text-left text-xs text-gray-500 font-semibold pb-2 w-36">
+            <th className="text-left text-xs text-gray-500 dark:text-bark-300 font-semibold pb-2 w-36">
               {t('results:comparison.indicator')}
             </th>
             {history.map((entry, i) => (
@@ -69,7 +69,7 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
                 key={i}
                 className="text-center text-xs font-semibold pb-2 px-3 min-w-28"
               >
-                <div className="text-orange-600">{entry.label}</div>
+                <div className="text-orange-600 dark:text-orange-400">{entry.label}</div>
                 <div className="text-gray-400 font-normal mt-0.5">
                   {t('results:comparison.configSummary', {
                     seats: entry.result.config.seatCount,
@@ -81,7 +81,7 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 dark:divide-bark-600">
           {KPI_ROWS.map((row) => {
             const values = history.map((e) => e.result.metrics[row.key] as number)
             const maxVal = Math.max(...values)
@@ -89,14 +89,14 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
             const hasSpread = maxVal - minVal > 0.001
 
             return (
-              <tr key={row.key} className="hover:bg-orange-50/40 transition-colors">
+              <tr key={row.key} className="hover:bg-orange-50/40 dark:hover:bg-bark-700/40 transition-colors">
                 <td className="py-2 pr-4 text-xs text-gray-600 whitespace-nowrap">
                   <span className="mr-1">{row.icon}</span>
                   {t(`results:kpi.${row.i18nKey}.label` as const)}
                   <span className="ml-1 text-gray-400">({unitShort(row)})</span>
                 </td>
                 {values.map((val, i) => {
-                  let cellClass = 'text-gray-700'
+                  let cellClass = 'text-gray-700 dark:text-bark-200'
                   if (hasSpread && row.higherIsBetter !== null) {
                     const isBest = row.higherIsBetter ? val === maxVal : val === minVal
                     const isWorst = row.higherIsBetter ? val === minVal : val === maxVal

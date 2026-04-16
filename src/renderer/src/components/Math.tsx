@@ -61,7 +61,7 @@ export function BlockMath({ formula, className }: MathProps) {
   return (
     <div
       className={[
-        'my-2 bg-amber-50 border-l-2 border-amber-400 rounded-r-lg px-3 py-2 overflow-x-auto select-text',
+        'my-2 bg-amber-50 dark:bg-bark-700 border-l-2 border-amber-400 dark:border-amber-600 rounded-r-lg px-3 py-2 overflow-x-auto select-text',
         className ?? '',
       ].join(' ')}
       dangerouslySetInnerHTML={{ __html: html }}

@@ -84,30 +84,30 @@ export default function ConceptQueueLength({
     <div>
       <div className="text-center">
         <span className="text-lg">{friendlyMood}</span>
-        <span className="ml-1 text-sm font-bold tabular-nums text-orange-700">
+        <span className="ml-1 text-sm font-bold tabular-nums text-orange-700 dark:text-orange-400">
           {liveQ}
         </span>
-        <span className="ml-1 text-[10px] text-gray-500">
+        <span className="ml-1 text-[10px] text-gray-500 dark:text-bark-300">
           {t('concepts.queueLength.people')}
         </span>
       </div>
       <div className="mt-1 text-center leading-none break-all">
         {emojiCount === 0 ? (
-          <span className="text-[10px] text-gray-400">
+          <span className="text-[10px] text-gray-400 dark:text-bark-400">
             {t('concepts.queueLength.emptyQueue')}
           </span>
         ) : (
           <span className="text-sm">
             {'👤'.repeat(emojiCount)}
             {overflow > 0 && (
-              <span className="text-[10px] text-gray-500 ml-1">
+              <span className="text-[10px] text-gray-500 dark:text-bark-300 ml-1">
                 +{overflow}
               </span>
             )}
           </span>
         )}
       </div>
-      <div className="mt-1 text-[10px] text-gray-500 text-center leading-snug">
+      <div className="mt-1 text-[10px] text-gray-500 dark:text-bark-300 text-center leading-snug">
         {t('concepts.queueLength.friendlyPeak', { n: yMax })}
       </div>
     </div>
@@ -119,7 +119,7 @@ export default function ConceptQueueLength({
         <span
           className={
             (compact ? 'text-base' : 'text-lg') +
-            ' font-bold tabular-nums text-orange-700'
+            ' font-bold tabular-nums text-orange-700 dark:text-orange-400'
           }
         >
           {liveQ}
@@ -127,7 +127,7 @@ export default function ConceptQueueLength({
         <span
           className={
             (compact ? 'ml-1 text-[10px]' : 'ml-1 text-xs') +
-            ' text-gray-500'
+            ' text-gray-500 dark:text-bark-300'
           }
         >
           {t('concepts.queueLength.people')}
@@ -163,7 +163,7 @@ export default function ConceptQueueLength({
           strokeWidth={1}
         />
       </svg>
-      <div className="flex justify-between text-[9px] text-gray-400 mt-0.5 tabular-nums">
+      <div className="flex justify-between text-[9px] text-gray-400 dark:text-bark-400 mt-0.5 tabular-nums">
         <span>0</span>
         <span>{t('concepts.queueLength.yMax', { n: yMax })}</span>
       </div>
@@ -172,11 +172,11 @@ export default function ConceptQueueLength({
 
   const friendlyExpert = (
     <>
-      <div className="rounded-md bg-white border border-orange-200 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
+      <div className="rounded-md bg-white dark:bg-bark-700 border border-orange-200 dark:border-bark-500 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
         {t('concepts.queueLength.friendlyFormula')}
       </div>
       <p>{t('concepts.queueLength.friendlyExpertDef')}</p>
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-bark-300">
         {t('concepts.queueLength.friendlyExpertWhy')}
       </p>
     </>
@@ -186,7 +186,7 @@ export default function ConceptQueueLength({
     <>
       <BlockMath formula="\bar{L} = \frac{1}{T} \int_{0}^{T} L(t)\, dt" />
       <p>{t('concepts.queueLength.expertDef')}</p>
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-bark-300">
         {t('concepts.queueLength.expertWhy')}
       </p>
     </>

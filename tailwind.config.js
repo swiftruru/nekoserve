@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     './src/renderer/index.html',
     './src/renderer/src/**/*.{js,ts,jsx,tsx}',
@@ -25,6 +26,20 @@ export default {
           200: '#fdf0dc',
           300: '#fbe3bf',
           400: '#f8cf94',
+        },
+        // Warm dark palette — keeps the cozy café vibe in dark mode
+        bark: {
+          50:  '#faf6f1',
+          100: '#f0e8dd',
+          200: '#ddd0bf',
+          300: '#c9b69e',
+          400: '#a8917a',
+          500: '#8a7560',
+          600: '#6e5c4a',
+          700: '#4a3d30',
+          800: '#352b21',
+          900: '#261e16',
+          950: '#1a140e',
         },
       },
       keyframes: {

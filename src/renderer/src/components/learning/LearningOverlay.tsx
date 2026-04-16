@@ -62,7 +62,7 @@ export default function LearningOverlay({
           <div
             className={
               (compact ? 'text-xs' : 'text-sm') +
-              ' font-semibold text-orange-700 truncate'
+              ' font-semibold text-orange-700 dark:text-orange-400 truncate'
             }
           >
             {t('toggle')}
@@ -70,7 +70,7 @@ export default function LearningOverlay({
         </div>
 
         {/* Level switcher: friendly ↔ expert */}
-        <div className="flex items-center rounded-full border border-orange-200 bg-white overflow-hidden shrink-0">
+        <div className="flex items-center rounded-full border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-700 overflow-hidden shrink-0">
           <button
             type="button"
             onClick={() => setLevel('friendly')}
@@ -78,7 +78,7 @@ export default function LearningOverlay({
               'px-2 py-0.5 text-[10px] font-semibold transition-colors ' +
               (level === 'friendly'
                 ? 'bg-orange-500 text-white'
-                : 'text-orange-700 hover:bg-orange-50')
+                : 'text-orange-700 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600')
             }
             aria-pressed={level === 'friendly'}
           >
@@ -91,7 +91,7 @@ export default function LearningOverlay({
               'px-2 py-0.5 text-[10px] font-semibold transition-colors ' +
               (level === 'expert'
                 ? 'bg-orange-500 text-white'
-                : 'text-orange-700 hover:bg-orange-50')
+                : 'text-orange-700 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600')
             }
             aria-pressed={level === 'expert'}
           >
@@ -102,7 +102,7 @@ export default function LearningOverlay({
         <button
           type="button"
           onClick={onToggle}
-          className="text-sm text-gray-400 hover:text-gray-600 shrink-0 leading-none px-1"
+          className="text-sm text-gray-400 dark:text-bark-400 hover:text-gray-600 dark:hover:text-bark-200 shrink-0 leading-none px-1"
           aria-label={t('collapse')}
         >
           ✕

@@ -81,6 +81,16 @@ First-launch tips for unsigned builds:
 
 ### UX Features
 
+- **Dark Mode** (v0.8.0): warm "bark" dark theme that preserves the cozy cafe vibe. Toggle via header button or system preference. All pages, charts, SVG visualizations, learning content, and modals are fully adapted.
+- **Toast Notifications** (v0.8.0): visual feedback for exports, scenario save/delete, and disabled-tab clicks. Auto-dismiss after 3 seconds.
+- **Keyboard Shortcut Help** (v0.8.0): press `Cmd+K` / `Ctrl+K` or click the `⌘K` header button to view all available shortcuts.
+- **Onboarding Tour** (v0.8.0): spotlight-style 4-step walkthrough for first-time users. Press `?` or click the header button to replay anytime.
+- **What's New Modal** (v0.8.0): shows release highlights on first launch after an update.
+- **Fullscreen Playback** (v0.8.0): press `F` or click the expand button to hide header/nav/sidebar for an immersive playback view.
+- **Drag-and-Drop Scenario Import** (v0.8.0): drop a `.json` config file onto the Settings page to load parameters instantly.
+- **Smart Number Inputs** (v0.8.0): fields allow clearing to empty while editing; on blur, revert to last valid value if left blank.
+- **Disabled Tab Guidance** (v0.8.0): clicking a grayed-out tab shows a toast prompting users to run a simulation first.
+- **Accessibility** (v0.8.0): `role="tablist"`/`role="tab"`, `aria-selected`, `role="status"` on toasts, `role="progressbar"`, global `focus-visible` outlines.
 - **Scenario Comparison**: run multiple configurations and compare KPIs side-by-side (up to 3 runs)
 - **Custom Scenario Presets**: save, name, and persist your own parameter sets across restarts
 - **Progress Animation**: exponential progress bar with elapsed-time counter during simulation
@@ -110,7 +120,11 @@ A dedicated **🎞️ Simulation Playback** page animates the full event log on 
 | `←` / `→` | Seek ±10 simulation minutes |
 | `,` / `.` | Step to previous / next event |
 | `0` | Reset to `t=0` |
-| `1`–`5` | Change speed (0.5× / 1× / 2× / 4× / 8×) |
+| `1`--`5` | Change speed (0.5x / 1x / 2x / 4x / 8x) |
+| `F` | Toggle fullscreen playback (v0.8.0) |
+| `Esc` | Close inspect popover |
+| `Cmd+K` / `Ctrl+K` | Open keyboard shortcut help (v0.8.0) |
+| `?` | Open onboarding tour (v0.8.0) |
 
 The hook guards against firing shortcuts while any `<input>` / `<textarea>` / `contenteditable` element has focus, so typing `Space` in the Event Log search box does not pause the animation.
 
@@ -529,11 +543,13 @@ nekoserve/
 
 ## Roadmap
 
+- [x] Update checking via GitHub Releases (v0.7.0)
+- [x] Dark mode with warm theme (v0.8.0)
+- [x] Onboarding tour, toast notifications, keyboard shortcut help (v0.8.0)
+- [x] Fullscreen playback, drag-and-drop import, What's New modal (v0.8.0)
 - [ ] Persistent simulation history (SQLite)
-- [ ] Timeline animation playback
 - [ ] CSV import for batch parameter testing
 - [ ] macOS / Windows code signing & notarization
-- [x] Update checking via GitHub Releases (v0.7.0; auto-download for NSIS installers pending)
 - [ ] Advanced statistics (confidence intervals, multi-seed averaging)
 - [ ] Third UI language (Japanese?)
 

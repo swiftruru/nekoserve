@@ -10,7 +10,7 @@ const inlineComponents = {
 // Plain Python-ish text; language-neutral so it is NOT translated.
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="font-mono text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 leading-relaxed text-gray-700 whitespace-pre overflow-x-auto select-text">
+    <pre className="font-mono text-xs bg-gray-50 dark:bg-bark-700 border border-gray-200 dark:border-bark-600 rounded-lg px-3 py-2 leading-relaxed text-gray-700 dark:text-bark-200 whitespace-pre overflow-x-auto select-text">
       {children}
     </pre>
   )
@@ -24,10 +24,10 @@ export default function HowItWorksPage() {
 
       {/* ── Page header ────────────────────────────────── */}
       <div className="mb-5">
-        <h2 className="text-lg font-bold text-orange-700">
+        <h2 className="text-lg font-bold text-orange-700 dark:text-orange-400">
           {t('howItWorks:pageTitle')}
         </h2>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className="text-sm text-gray-500 dark:text-bark-300 mt-0.5">
           {t('howItWorks:pageSubtitle')}
         </p>
       </div>
@@ -35,12 +35,12 @@ export default function HowItWorksPage() {
       {/* ── Execution walkthrough card ─────────────────── */}
       <div className="card">
         <div className="card-title">{t('howItWorks:title')}</div>
-        <div className="text-sm text-gray-700 space-y-6 leading-relaxed">
-          <p className="text-gray-600">{t('howItWorks:intro')}</p>
+        <div className="text-sm text-gray-700 dark:text-bark-200 space-y-6 leading-relaxed">
+          <p className="text-gray-600 dark:text-bark-300">{t('howItWorks:intro')}</p>
 
           {/* Section 1: event-driven clock */}
           <div>
-            <p className="font-semibold text-orange-700 mb-1">
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
               {t('howItWorks:section1Title')}
             </p>
             <p className="mb-2">
@@ -50,14 +50,14 @@ export default function HowItWorksPage() {
             <CodeBlock>{`env = simpy.Environment()
 env.process(customer(env, cid=1))
 env.run(until=240)   # advances by events, not ticks`}</CodeBlock>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
               {t('howItWorks:section1CodeNote')}
             </p>
           </div>
 
           {/* Section 2: entity = process, resource = queue */}
           <div>
-            <p className="font-semibold text-orange-700 mb-1">
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
               {t('howItWorks:section2Title')}
             </p>
             <p className="mb-2">
@@ -70,14 +70,14 @@ env.run(until=240)   # advances by events, not ticks`}</CodeBlock>
 with seats.request() as req:
     yield req          # blocks here until a seat is free
     yield env.timeout(dining_time)`}</CodeBlock>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
               {t('howItWorks:section2CodeNote')}
             </p>
           </div>
 
           {/* Section 3: wait vs service, reneging race */}
           <div>
-            <p className="font-semibold text-orange-700 mb-1">
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
               {t('howItWorks:section3Title')}
             </p>
             <p className="mb-2">
@@ -89,14 +89,14 @@ abandon_ev = env.timeout(max_wait_time)
 yield seat_req | abandon_ev      # whichever fires first wins
 if not seat_req.triggered:
     seat_req.cancel()            # patience ran out → abandon`}</CodeBlock>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
               {t('howItWorks:section3CodeNote')}
             </p>
           </div>
 
           {/* Section 4: sub-process & dynamic capacity */}
           <div>
-            <p className="font-semibold text-orange-700 mb-1">
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
               {t('howItWorks:section4Title')}
             </p>
             <p className="mb-2">
@@ -109,14 +109,14 @@ if rng.random() < rest_prob:
     env.process(cat_rest(cid))   # fire-and-forget sub-process
 else:
     cats.put(1)                  # return the cat immediately`}</CodeBlock>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
               {t('howItWorks:section4CodeNote')}
             </p>
           </div>
 
           {/* Section 5: end-of-run aggregation */}
           <div>
-            <p className="font-semibold text-orange-700 mb-1">
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
               {t('howItWorks:section5Title')}
             </p>
             <p className="mb-2">
@@ -127,12 +127,12 @@ else:
 seat_utilization = (
     total_seat_busy / (seat_count * sim_duration)
 )`}</CodeBlock>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
               {t('howItWorks:section5CodeNote')}
             </p>
           </div>
 
-          <p className="text-gray-600 border-t border-orange-50 pt-4">
+          <p className="text-gray-600 dark:text-bark-300 border-t border-orange-50 dark:border-bark-600 pt-4">
             {t('howItWorks:outro')}
           </p>
         </div>

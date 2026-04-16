@@ -73,17 +73,17 @@ export default function ConceptEventClock({
 
   const friendlyView = (
     <div className="text-center">
-      <div className="text-[10px] text-gray-500">
+      <div className="text-[10px] text-gray-500 dark:text-bark-300">
         {t('concepts.eventClock.friendlyNext')}
       </div>
       <div className="mt-0.5 text-2xl">⚡</div>
-      <div className="mt-0.5 text-sm font-bold tabular-nums text-orange-700">
+      <div className="mt-0.5 text-sm font-bold tabular-nums text-orange-700 dark:text-orange-400">
         {nextDelta !== null ? `+${nextDelta.toFixed(1)}` : '—'}
-        <span className="ml-0.5 text-[10px] font-normal text-gray-500">
+        <span className="ml-0.5 text-[10px] font-normal text-gray-500 dark:text-bark-300">
           {t('concepts.eventClock.unitMin')}
         </span>
       </div>
-      <div className="mt-1 text-[10px] text-gray-600 leading-snug px-1">
+      <div className="mt-1 text-[10px] text-gray-600 dark:text-bark-300 leading-snug px-1">
         {t('concepts.eventClock.friendlyHint')}
       </div>
     </div>
@@ -92,18 +92,18 @@ export default function ConceptEventClock({
   const expertView = (
     <div>
       <div className="text-center">
-        <span className="text-[9px] text-gray-500">
+        <span className="text-[9px] text-gray-500 dark:text-bark-300">
           {t('concepts.eventClock.nextIn')}
         </span>{' '}
         <span
           className={
             (compact ? 'text-base' : 'text-lg') +
-            ' font-bold tabular-nums text-orange-700'
+            ' font-bold tabular-nums text-orange-700 dark:text-orange-400'
           }
         >
           {nextDelta !== null ? `+${nextDelta.toFixed(2)}` : '—'}
         </span>
-        <span className="ml-0.5 text-[9px] text-gray-500">
+        <span className="ml-0.5 text-[9px] text-gray-500 dark:text-bark-300">
           {t('concepts.eventClock.unitMin')}
         </span>
       </div>
@@ -151,7 +151,7 @@ export default function ConceptEventClock({
           fill="#ea580c"
         />
       </svg>
-      <div className="text-center text-[9px] text-gray-500 mt-0.5 tabular-nums">
+      <div className="text-center text-[9px] text-gray-500 dark:text-bark-300 mt-0.5 tabular-nums">
         t = {state.time.toFixed(1)} min · {state.appliedCount}/
         {eventLog.length} {t('concepts.eventClock.eventsApplied')}
       </div>
@@ -160,11 +160,11 @@ export default function ConceptEventClock({
 
   const friendlyExpert = (
     <>
-      <div className="rounded-md bg-white border border-orange-200 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
+      <div className="rounded-md bg-white dark:bg-bark-700 border border-orange-200 dark:border-bark-500 px-2 py-1.5 text-center text-[11px] font-semibold text-orange-700 leading-snug">
         {t('concepts.eventClock.friendlyFormula')}
       </div>
       <p>{t('concepts.eventClock.friendlyExpertDef')}</p>
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-bark-300">
         {t('concepts.eventClock.friendlyExpertWhy')}
       </p>
     </>
@@ -174,7 +174,7 @@ export default function ConceptEventClock({
     <>
       <BlockMath formula="t_{\text{next}} = \min\{t_{\text{arrive}},\, t_{\text{seat}},\, t_{\text{order}},\, \dots\}" />
       <p>{t('concepts.eventClock.expertDef')}</p>
-      <p className="text-gray-500">{t('concepts.eventClock.expertWhy')}</p>
+      <p className="text-gray-500 dark:text-bark-300">{t('concepts.eventClock.expertWhy')}</p>
     </>
   )
 

@@ -39,9 +39,9 @@ export default function ParamRationale({ params }: ParamRationaleProps) {
   }
 
   return (
-    <details className="mt-2 mb-3 rounded-xl bg-cream-50 ring-1 ring-inset ring-orange-100 open:bg-cream-100/60 open:ring-orange-200 transition-colors">
+    <details className="mt-2 mb-3 rounded-xl bg-cream-50 dark:bg-bark-800/60 ring-1 ring-inset ring-orange-100 dark:ring-bark-600 open:bg-cream-100/60 dark:open:bg-bark-700/60 open:ring-orange-200 dark:open:ring-bark-500 transition-colors">
       <summary
-        className="cursor-pointer list-none select-none px-3 py-2 text-xs font-semibold uppercase tracking-wide text-orange-500 hover:text-orange-600 marker:hidden [&::-webkit-details-marker]:hidden"
+        className="cursor-pointer list-none select-none px-3 py-2 text-xs font-semibold uppercase tracking-wide text-orange-500 dark:text-orange-400 hover:text-orange-600 marker:hidden [&::-webkit-details-marker]:hidden"
       >
         {t('settings:rationaleSection.toggle')}
       </summary>
@@ -72,10 +72,10 @@ export default function ParamRationale({ params }: ParamRationaleProps) {
           return (
             <div
               key={key}
-              className="rounded-lg bg-white/70 px-3 py-2 ring-1 ring-inset ring-orange-100/70"
+              className="rounded-lg bg-white/70 dark:bg-bark-800/70 px-3 py-2 ring-1 ring-inset ring-orange-100/70 dark:ring-bark-600/70"
             >
               <div className="mb-1 flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-bark-300">
                   {label}
                 </span>
                 {formula && (
@@ -84,27 +84,27 @@ export default function ParamRationale({ params }: ParamRationaleProps) {
                   </span>
                 )}
               </div>
-              <dl className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-[12px] leading-relaxed text-gray-700">
-                <dt className="font-semibold text-orange-600">{fieldLabel.meaning}</dt>
+              <dl className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-[12px] leading-relaxed text-gray-700 dark:text-bark-200">
+                <dt className="font-semibold text-orange-600 dark:text-orange-400">{fieldLabel.meaning}</dt>
                 <dd className="select-text">{meaning}</dd>
-                <dt className="font-semibold text-orange-600">{fieldLabel.why}</dt>
+                <dt className="font-semibold text-orange-600 dark:text-orange-400">{fieldLabel.why}</dt>
                 <dd className="select-text">{why}</dd>
-                <dt className="font-semibold text-orange-600">{fieldLabel.theory}</dt>
+                <dt className="font-semibold text-orange-600 dark:text-orange-400">{fieldLabel.theory}</dt>
                 <dd className="select-text">{theory}</dd>
-                <dt className="font-semibold text-orange-600">{fieldLabel.defaultBasis}</dt>
+                <dt className="font-semibold text-orange-600 dark:text-orange-400">{fieldLabel.defaultBasis}</dt>
                 <dd className="select-text">{defaultBasis}</dd>
                 {references.length > 0 && (
                   <>
-                    <dt className="font-semibold text-amber-700">{fieldLabel.references}</dt>
+                    <dt className="font-semibold text-amber-700 dark:text-amber-500">{fieldLabel.references}</dt>
                     <dd className="select-text">
-                      <ul className="space-y-0.5 text-[11px] text-gray-600">
+                      <ul className="space-y-0.5 text-[11px] text-gray-600 dark:text-bark-300">
                         {references.map((r) => (
                           <li key={r.url} className="list-disc ml-4">
                             <a
                               href={r.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-amber-700 underline decoration-amber-300 decoration-dotted underline-offset-2 hover:text-amber-800 hover:decoration-solid"
+                              className="text-amber-700 dark:text-amber-400 underline decoration-amber-300 dark:decoration-amber-600 decoration-dotted underline-offset-2 hover:text-amber-800 dark:hover:text-amber-300 hover:decoration-solid"
                             >
                               {r.text}
                             </a>

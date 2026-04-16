@@ -50,11 +50,11 @@ export default function StayDistribution({ customers }: Props) {
 
   if (!anyCohort) {
     return (
-      <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
-        <div className="text-xs font-semibold text-orange-700 mb-2">
+      <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+        <div className="text-xs font-semibold text-orange-700 dark:text-orange-400 mb-2">
           {t('results:stayDist.title')}
         </div>
-        <div className="text-[11px] text-gray-400 text-center py-4">
+        <div className="text-[11px] text-gray-400 dark:text-bark-400 text-center py-4">
           {t('results:stayDist.empty')}
         </div>
       </div>
@@ -132,8 +132,8 @@ export default function StayDistribution({ customers }: Props) {
     withoutCat.total > 0 ? xForValue(withoutCat.mean) : null
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
-      <div className="text-xs font-semibold text-orange-700 mb-2">
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3">
+      <div className="text-xs font-semibold text-orange-700 dark:text-orange-400 mb-2">
         {t('results:stayDist.title')}
       </div>
 
@@ -151,7 +151,7 @@ export default function StayDistribution({ customers }: Props) {
           y={PADDING_Y_TOP}
           width={innerW}
           height={innerH}
-          fill="#fff7ed"
+          className="fill-[#fff7ed] dark:fill-bark-800"
           rx={4}
         />
         {/* Cohort row separator */}
@@ -160,7 +160,7 @@ export default function StayDistribution({ customers }: Props) {
           y1={topBaseline}
           x2={plotRight}
           y2={topBaseline}
-          stroke="#fed7aa"
+          className="stroke-[#fed7aa] dark:stroke-bark-600"
           strokeWidth={0.6}
         />
 
@@ -224,7 +224,7 @@ export default function StayDistribution({ customers }: Props) {
           x={plotLeft}
           y={CHART_H - 2}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
         >
           {combinedMin.toFixed(1)} {minUnit}
         </text>
@@ -232,14 +232,14 @@ export default function StayDistribution({ customers }: Props) {
           x={plotRight}
           y={CHART_H - 2}
           fontSize={7}
-          fill="#9ca3af"
+          className="fill-gray-400 dark:fill-bark-300"
           textAnchor="end"
         >
           {combinedMax.toFixed(1)} {minUnit}
         </text>
       </svg>
 
-      <div className="mt-1 text-[11px] text-gray-600 leading-snug">
+      <div className="mt-1 text-[11px] text-gray-600 dark:text-bark-300 leading-snug">
         {bothCohorts
           ? t('results:stayDist.deltaBoth', {
               withCat: withCat.mean.toFixed(1),
