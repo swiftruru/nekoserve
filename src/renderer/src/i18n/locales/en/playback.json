@@ -21,7 +21,8 @@
     "reset": "Reset",
     "speed": "Speed",
     "stepPrev": "Previous event",
-    "stepNext": "Next event"
+    "stepNext": "Next event",
+    "screenshot": "Screenshot"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

@@ -2,6 +2,7 @@
   "title": "模擬統計結果",
   "subtitle": "模擬時長 {{duration}} 分鐘・種子 {{seed}}",
   "runLabelFallback": "運行 #{{index}}",
+  "print": "🖨 列印",
   "exportMetricsCsv": "⬇ 指標 CSV",
   "exportJson": "⬇ JSON",
   "viewMode": {
@@ -235,11 +236,47 @@
       "expertFormula": "\\text{visitRate}_{\\text{eff}} \\leq \\frac{\\text{catCount}}{\\text{idleInterval} + \\text{visitTime} + p_{\\text{rest}} \\cdot \\text{restTime}}"
     }
   },
+  "batch": {
+    "banner": "此結果基於 {{n}} 次重複模擬 (不同隨機種子)",
+    "ciHint": "KPI 卡片下方顯示 95% 信賴區間"
+  },
+  "sweep": {
+    "title": "敏感度分析結果"
+  },
+  "whatIf": {
+    "expand": "What-If 探索器：調整參數即時對比",
+    "title": "What-If 探索器",
+    "collapse": "收起",
+    "original": "原始",
+    "whatIf": "What-If",
+    "delta": "差異",
+    "adjustHint": "拖曳滑桿調整參數，結果會即時更新"
+  },
+  "history": {
+    "title": "模擬歷史紀錄",
+    "empty": "還沒有歷史紀錄。先跑一次模擬吧!",
+    "clearAll": "清空全部",
+    "clearConfirm": "確定要清空所有歷史紀錄? 此操作無法復原。",
+    "deleteConfirm": "確定要刪除「{{label}}」?",
+    "load": "載入",
+    "rename": "重新命名",
+    "renamePrompt": "輸入新名稱",
+    "collapse": "收起歷史 ▲",
+    "expand": "展開歷史 ({{count}}) ▼",
+    "current": "目前",
+    "configBrief": "{{seats}} 座 · {{staff}} 員 · {{cats}} 貓 · seed {{seed}}",
+    "abandonRateBrief": "放棄 {{rate}}%",
+    "servedBrief": "服務 {{count}} 人"
+  },
   "comparison": {
     "title": "對比檢視",
     "indicator": "指標",
     "legend": "綠色 = 較佳值・紅色 = 較差值（僅在有明顯差異時標示）",
-    "configSummary": "{{seats}} 座・{{staff}} 員・{{cats}} 貓"
+    "configSummary": "{{seats}} 座・{{staff}} 員・{{cats}} 貓",
+    "configDiff": {
+      "title": "參數差異",
+      "noChange": "所有參數相同"
+    }
   },
   "kpi": {
     "totalCustomersArrived": {
@@ -300,7 +337,9 @@
     "restProbability": "休息機率",
     "restDuration": "休息時間",
     "maxWait": "最大等待",
-    "seed": "Seed"
+    "seed": "Seed",
+    "catIdleInterval": "貓閒置間隔",
+    "simulationDuration": "模擬時長"
   },
   "eventLog": {
     "title": "事件紀錄",

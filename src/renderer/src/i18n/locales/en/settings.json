@@ -248,5 +248,22 @@
     "deleteConfirm": "Delete this custom preset?",
     "nameInputPlaceholder": "Preset name…",
     "defaultRunLabel": "Custom"
+  },
+  "batch": {
+    "toggle": "Batch mode",
+    "description": "Run the same config with different seeds, get mean and confidence intervals",
+    "replications": "Replications",
+    "runButton": "▶ Run {{count}} replications",
+    "progress": "Replicating ({{completed}} / {{total}})"
+  },
+  "sweep": {
+    "toggle": "Sensitivity analysis",
+    "description": "Sweep one parameter across a range and see how metrics respond",
+    "paramLabel": "Parameter",
+    "from": "From",
+    "to": "To",
+    "step": "Step",
+    "repsEach": "Reps each",
+    "runButton": "▶ Run parameter sweep"
   }
 }

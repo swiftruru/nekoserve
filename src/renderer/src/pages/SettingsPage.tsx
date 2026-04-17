@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationConfig, ScenarioPreset, SimulatorError } from '../types'
 import ParamInput from '../components/ParamInput'
@@ -16,26 +16,120 @@ interface SettingsPageProps {
   initialConfig: SimulationConfig
   scenarios: ScenarioPreset[]
   onRun: (config: SimulationConfig, label: string) => void
+  onRunBatch?: (config: SimulationConfig, replicationCount: number, label: string) => void
+  onRunSweep?: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => void
   onReset: () => void
   isRunning: boolean
   elapsed: number
   error: SimulatorError | null
+  batchProgress?: { completed: number; total: number } | null
+}
+
+// ── Themed dropdown (replaces native <select>) ──────────────
+
+interface ThemedSelectProps {
+  value: string
+  options: { value: string; label: string }[]
+  onChange: (value: string) => void
+  disabled?: boolean
+  accent?: 'orange' | 'purple'
+}
+
+function ThemedSelect({ value, options, onChange, disabled, accent = 'purple' }: ThemedSelectProps) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const selectedLabel = options.find((o) => o.value === value)?.label ?? value
+
+  useEffect(() => {
+    if (!open) return
+    const onClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onClickOutside)
+    document.addEventListener('keydown', onEsc)
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside)
+      document.removeEventListener('keydown', onEsc)
+    }
+  }, [open])
+
+  const isPurple = accent === 'purple'
+  const borderCls = isPurple
+    ? 'border-purple-200 dark:border-bark-500 hover:border-purple-400'
+    : 'border-orange-200 dark:border-bark-500 hover:border-orange-400'
+  const selectedCls = isPurple
+    ? 'text-purple-600 dark:text-purple-400 font-semibold bg-purple-50 dark:bg-purple-900/20'
+    : 'text-orange-600 dark:text-orange-400 font-semibold bg-orange-50 dark:bg-orange-900/20'
+
+  return (
+    <div ref={ref} className="relative flex-1">
+      <button
+        type="button"
+        onClick={() => { if (!disabled) setOpen((v) => !v) }}
+        disabled={disabled}
+        className={`w-full flex items-center justify-between gap-2 rounded-lg border ${borderCls} bg-white dark:bg-bark-700 dark:hover:border-bark-400 px-2.5 py-1.5 text-xs text-gray-700 dark:text-bark-200 transition-colors`}
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl border border-orange-200 dark:border-bark-600 bg-white dark:bg-bark-800 shadow-xl shadow-orange-500/10 dark:shadow-black/30 overflow-hidden py-1">
+          {options.map((opt) => {
+            const isSelected = opt.value === value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false) }}
+                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                  isSelected
+                    ? selectedCls
+                    : 'text-gray-600 dark:text-bark-200 hover:bg-orange-50 dark:hover:bg-bark-700'
+                }`}
+              >
+                {isSelected && <span className="mr-1.5">✓</span>}
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function SettingsPage({
   initialConfig,
   scenarios,
   onRun,
+  onRunBatch,
+  onRunSweep,
   onReset,
   isRunning,
   elapsed,
   error,
+  batchProgress,
 }: SettingsPageProps) {
   const { t } = useTranslation(['settings', 'common', 'errors', 'scenarios'])
   const { toast } = useToast()
   const [config, setConfig] = useState<SimulationConfig>(initialConfig)
   const [activeScenario, setActiveScenario] = useState<string | null>('weekday')
   const [showErrorDetail, setShowErrorDetail] = useState(false)
+  const [batchMode, setBatchMode] = useState(false)
+  const [replicationCount, setReplicationCount] = useState(10)
+  const [sweepMode, setSweepMode] = useState(false)
+
+  type SweepableParam = 'seatCount' | 'staffCount' | 'catCount' | 'customerArrivalInterval' | 'maxWaitTime'
+  const SWEEPABLE_PARAMS: SweepableParam[] = ['seatCount', 'staffCount', 'catCount', 'customerArrivalInterval', 'maxWaitTime']
+  const [sweepParam, setSweepParam] = useState<SweepableParam>('staffCount')
+  const [sweepFrom, setSweepFrom] = useState(1)
+  const [sweepTo, setSweepTo] = useState(5)
+  const [sweepStep, setSweepStep] = useState(1)
+  const [sweepReplications, setSweepReplications] = useState(5)
   const [customScenarios, setCustomScenarios] = useState<ScenarioPreset[]>(
     () => loadCustomScenarios()
   )
@@ -80,7 +174,14 @@ export default function SettingsPage({
         label = customScenarios.find((s) => s.id === activeScenario)?.name ?? fallback
       }
     }
-    onRun(config, label)
+    if (sweepMode && onRunSweep) {
+      onRunSweep(config, sweepParam, sweepFrom, sweepTo, sweepStep, sweepReplications)
+    } else if (batchMode && onRunBatch) {
+      const batchLabel = `${label} (${replicationCount}x)`
+      onRunBatch(config, replicationCount, batchLabel)
+    } else {
+      onRun(config, label)
+    }
   }
 
   function handleSaveCustom(name: string) {
@@ -354,6 +455,120 @@ export default function SettingsPage({
               disabled={isRunning}
             />
           </div>
+
+          {/* ── Advanced run modes ─────────────────────── */}
+          {onRunBatch && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Batch card */}
+              <button
+                type="button"
+                onClick={() => { setBatchMode(!batchMode); if (!batchMode) setSweepMode(false) }}
+                disabled={isRunning}
+                className={[
+                  'rounded-xl border-2 p-3 text-left transition-all duration-150',
+                  batchMode
+                    ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-500 shadow-md shadow-orange-500/10'
+                    : 'border-orange-100 dark:border-bark-600 bg-white dark:bg-bark-800 hover:border-orange-300 dark:hover:border-bark-500',
+                ].join(' ')}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">🔬</span>
+                  <span className={`text-xs font-bold ${batchMode ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-bark-200'}`}>
+                    {t('settings:batch.toggle')}
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 dark:text-bark-400 leading-relaxed">
+                  {t('settings:batch.description')}
+                </p>
+              </button>
+
+              {/* Sweep card */}
+              {onRunSweep && (
+                <button
+                  type="button"
+                  onClick={() => { setSweepMode(!sweepMode); if (!sweepMode) setBatchMode(false) }}
+                  disabled={isRunning}
+                  className={[
+                    'rounded-xl border-2 p-3 text-left transition-all duration-150',
+                    sweepMode
+                      ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-500 shadow-md shadow-purple-500/10'
+                      : 'border-orange-100 dark:border-bark-600 bg-white dark:bg-bark-800 hover:border-purple-300 dark:hover:border-bark-500',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-base">📈</span>
+                    <span className={`text-xs font-bold ${sweepMode ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-bark-200'}`}>
+                      {t('settings:sweep.toggle')}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 dark:text-bark-400 leading-relaxed">
+                    {t('settings:sweep.description')}
+                  </p>
+                </button>
+              )}
+
+              {/* Batch options (slides open below) */}
+              {batchMode && (
+                <div className="md:col-span-2 rounded-xl border border-orange-200 dark:border-bark-600 bg-orange-50/50 dark:bg-bark-800 px-4 py-3 flex items-center gap-4">
+                  <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                    {t('settings:batch.replications')}
+                  </span>
+                  <input
+                    type="range"
+                    min={2} max={50} step={1}
+                    value={replicationCount}
+                    onChange={(e) => setReplicationCount(Number(e.target.value))}
+                    disabled={isRunning}
+                    className="flex-1 accent-orange-500 h-1.5"
+                  />
+                  <span className="text-sm font-bold text-orange-600 dark:text-orange-400 tabular-nums w-8 text-center">
+                    {replicationCount}
+                  </span>
+                </div>
+              )}
+
+              {/* Sweep options (slides open below) */}
+              {sweepMode && (
+                <div className="md:col-span-2 rounded-xl border border-purple-200 dark:border-bark-600 bg-purple-50/50 dark:bg-bark-800 px-4 py-3 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-purple-700 dark:text-purple-400 shrink-0">
+                      {t('settings:sweep.paramLabel')}
+                    </span>
+                    <ThemedSelect
+                      value={sweepParam}
+                      options={SWEEPABLE_PARAMS.map((p) => ({ value: p, label: paramLabel(p) }))}
+                      onChange={(v) => setSweepParam(v as SweepableParam)}
+                      disabled={isRunning}
+                      accent="purple"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {([
+                      { label: t('settings:sweep.from'), value: sweepFrom, set: setSweepFrom, min: 0, step: 1 },
+                      { label: t('settings:sweep.to'), value: sweepTo, set: setSweepTo, min: 0, step: 1 },
+                      { label: t('settings:sweep.step'), value: sweepStep, set: (v: number) => setSweepStep(Math.max(0.1, v)), min: 0.1, step: 0.1 },
+                      { label: t('settings:sweep.repsEach'), value: sweepReplications, set: (v: number) => setSweepReplications(Math.max(1, Math.min(20, v))), min: 1, step: 1 },
+                    ] as const).map((field) => (
+                      <div key={field.label}>
+                        <label className="text-[10px] font-medium text-purple-500 dark:text-purple-400 block mb-0.5">
+                          {field.label}
+                        </label>
+                        <input
+                          type="number"
+                          value={field.value}
+                          onChange={(e) => field.set(Number(e.target.value) || field.min)}
+                          min={field.min}
+                          step={field.step}
+                          disabled={isRunning}
+                          className="w-full px-2 py-1 text-xs text-center rounded-lg border border-purple-200 dark:border-bark-500 bg-white dark:bg-bark-700 text-gray-700 dark:text-bark-200 tabular-nums"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -396,13 +611,32 @@ export default function SettingsPage({
       {isRunning && (
         <div className="mt-4 rounded-xl border border-orange-200 dark:border-bark-600 bg-orange-50 dark:bg-bark-800 px-4 py-3">
           <div className="flex justify-between text-xs text-orange-600 dark:text-orange-400 mb-2">
-            <span>{t('settings:actions.runningHint')}</span>
+            <span>
+              {batchProgress
+                ? t('settings:batch.progress', {
+                    completed: batchProgress.completed,
+                    total: batchProgress.total,
+                  })
+                : t('settings:actions.runningHint')}
+            </span>
             <span>{elapsed.toFixed(1)} {t('common:unit.sec')}</span>
           </div>
-          <div className="h-2.5 bg-orange-100 dark:bg-bark-700 rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(progressPct)} aria-valuemin={0} aria-valuemax={100} aria-label={t('settings:actions.running')}>
+          <div
+            className="h-2.5 bg-orange-100 dark:bg-bark-700 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={Math.round(batchProgress ? (batchProgress.completed / batchProgress.total) * 100 : progressPct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={t('settings:actions.running')}
+          >
             <div
               className="h-full bg-orange-400 rounded-full transition-all duration-300"
-              style={{ width: `${progressPct.toFixed(1)}%` }}
+              style={{
+                width: `${(batchProgress
+                  ? (batchProgress.completed / batchProgress.total) * 100
+                  : progressPct
+                ).toFixed(1)}%`,
+              }}
             />
           </div>
         </div>
@@ -430,6 +664,10 @@ export default function SettingsPage({
               <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               {t('settings:actions.running')}
             </>
+          ) : sweepMode ? (
+            <>{t('settings:sweep.runButton')}</>
+          ) : batchMode ? (
+            <>{t('settings:batch.runButton', { count: replicationCount })}</>
           ) : (
             <>{t('settings:actions.start')}</>
           )}

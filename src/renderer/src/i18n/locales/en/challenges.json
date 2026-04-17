@@ -1,0 +1,72 @@
+{
+  "title": "Classroom challenges",
+  "noResults": "Run a simulation first to verify your answers",
+  "verify": "Verify my answer",
+  "passed": "Passed!",
+  "failed": "Not there yet, try again",
+  "reset": "Reset progress",
+  "resetConfirm": "Reset all challenge progress? All completed records will be cleared.",
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "items": {
+    "low_abandon": {
+      "prompt": "Get the abandon rate below 10%",
+      "hint1": "High abandon rate means customers can't get seats. Try adding more seats.",
+      "hint2": "Shortening dining time also speeds up turnover.",
+      "hint3": "Slowing down the arrival rate (larger interval) also helps.",
+      "explanation": "When seats are plentiful or arrivals are slow, almost no one waits long enough to leave. The key is keeping seat utilization in a reasonable range."
+    },
+    "high_served": {
+      "prompt": "Serve 50 or more customers",
+      "hint1": "You need enough simulation time and fast enough service.",
+      "hint2": "Adding seats and staff both boost throughput.",
+      "hint3": "Shortening the arrival interval brings more people in.",
+      "explanation": "Throughput = min(arrival rate, service capacity). Getting 50+ requires both ends to keep up."
+    },
+    "staff_efficiency": {
+      "prompt": "Staff utilization > 70% with abandon rate < 15%",
+      "hint1": "Too many staff means low utilization; too few means high abandonment.",
+      "hint2": "Try keeping staff count low but giving enough seats.",
+      "hint3": "Find the sweet spot where staff are busy but not overwhelmed.",
+      "explanation": "This is the classic efficiency vs. service quality trade-off. Kingman's approximation shows wait times explode once utilization passes ~85%."
+    },
+    "cat_paradise": {
+      "prompt": "Cat visit rate > 80% with abandon rate < 20%",
+      "hint1": "Too few cats means not everyone gets visited. Add more cats.",
+      "hint2": "Shorter cat idle intervals mean more frequent visits.",
+      "hint3": "Cat visits extend stay time, so you might need more seats.",
+      "explanation": "Cat visit rate is mainly driven by cat count and idle interval. But visits lengthen customer stays, reducing seat turnover."
+    },
+    "balanced_cafe": {
+      "prompt": "Balanced: abandon rate < 10%, seat/staff utilization > 50%, cat visit rate > 50%",
+      "hint1": "This challenge requires all metrics to pass at once.",
+      "hint2": "Start with the basics: enough seats and staff to prevent abandonment.",
+      "hint3": "Then tune cat count to ensure visit rate.",
+      "explanation": "A balanced cafe needs all three resource types (seats/staff/cats) properly sized. Any excess drags down its utilization."
+    },
+    "speed_service": {
+      "prompt": "Avg wait for seat < 2 min AND avg wait for order < 3 min, while serving 30+",
+      "hint1": "Seat wait time depends on seat count and arrival rate.",
+      "hint2": "Order wait depends on staff count and prep time. Add staff or shorten prep.",
+      "hint3": "If throughput is too low, extend simulation time or increase arrivals.",
+      "explanation": "Fast service requires ample resources. Wait times relate directly to utilization (Kingman's formula)."
+    },
+    "max_throughput": {
+      "prompt": "Serve 80+ customers with abandon rate < 5%",
+      "hint1": "High arrival rate + high service capacity needed. Shorten arrival interval.",
+      "hint2": "Seats and staff both need to be generous. Under 5% abandon is strict.",
+      "hint3": "Extending simulation time accumulates more served customers.",
+      "explanation": "Very low abandon rate + high throughput requires the system to be far from overload. Typically needs utilization below 75%."
+    },
+    "minimal_resources": {
+      "prompt": "Use minimal resources (seats + staff + cats, smallest total) to achieve: abandon rate < 15%, serve 40+",
+      "hint1": "Fewer resources means higher utilization, but don't overload.",
+      "hint2": "Cat count can be minimal (1) since there's no visit rate target.",
+      "hint3": "The key is finding the minimum viable seat and staff configuration.",
+      "explanation": "Resource minimization is a core operations research problem. Each extra unit has a cost, but too few loses customers."
+    }
+  }
+}

@@ -2,6 +2,7 @@
   "title": "Simulation results",
   "subtitle": "Duration {{duration}} min · seed {{seed}}",
   "runLabelFallback": "Run #{{index}}",
+  "print": "🖨 Print",
   "exportMetricsCsv": "⬇ Metrics CSV",
   "exportJson": "⬇ JSON",
   "viewMode": {
@@ -281,11 +282,47 @@
       "description": "Fraction of time cats were busy (interacting or resting)"
     }
   },
+  "batch": {
+    "banner": "Results are based on {{n}} replications (different random seeds)",
+    "ciHint": "95% confidence intervals shown below each KPI"
+  },
+  "sweep": {
+    "title": "Sensitivity analysis results"
+  },
+  "whatIf": {
+    "expand": "What-If Explorer: tweak parameters and compare instantly",
+    "title": "What-If Explorer",
+    "collapse": "Collapse",
+    "original": "Original",
+    "whatIf": "What-If",
+    "delta": "Delta",
+    "adjustHint": "Drag the sliders to adjust, results update in real time"
+  },
+  "history": {
+    "title": "Simulation history",
+    "empty": "No history yet. Run a simulation first!",
+    "clearAll": "Clear all",
+    "clearConfirm": "Clear all history? This cannot be undone.",
+    "deleteConfirm": "Delete \"{{label}}\"?",
+    "load": "Load",
+    "rename": "Rename",
+    "renamePrompt": "Enter new name",
+    "collapse": "Collapse history ▲",
+    "expand": "Expand history ({{count}}) ▼",
+    "current": "Current",
+    "configBrief": "{{seats}} seats · {{staff}} staff · {{cats}} cats · seed {{seed}}",
+    "abandonRateBrief": "abandon {{rate}}%",
+    "servedBrief": "served {{count}}"
+  },
   "comparison": {
     "title": "Comparison view",
     "indicator": "Metric",
     "legend": "Green = better · Red = worse (only marked when spreads are meaningful)",
-    "configSummary": "{{seats}} seats · {{staff}} staff · {{cats}} cats"
+    "configSummary": "{{seats}} seats · {{staff}} staff · {{cats}} cats",
+    "configDiff": {
+      "title": "Parameter differences",
+      "noChange": "All parameters are identical"
+    }
   },
   "configSummary": {
     "title": "📄 Run parameter summary",
@@ -300,7 +337,9 @@
     "restProbability": "Rest prob.",
     "restDuration": "Rest duration",
     "maxWait": "Max wait",
-    "seed": "Seed"
+    "seed": "Seed",
+    "catIdleInterval": "Cat idle interval",
+    "simulationDuration": "Sim. duration"
   },
   "eventLog": {
     "title": "Event log",

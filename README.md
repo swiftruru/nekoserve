@@ -72,8 +72,8 @@ First-launch tips for unsigned builds:
 
 | Page | Description |
 |------|-------------|
-| **⚙️ Simulation Settings** | 14 configurable parameters, 3 built-in scenario presets, custom presets persisted in `localStorage`, plus per-parameter **design rationale** with meaning / theoretical basis / default-value basis / clickable literature references — see "Defend the Setup" below |
-| **📊 Statistics Results** | 4 themed sections (flow / wait / utilization / cat) with Hero Verdict, Bottleneck callout, count-up KPIs, queue-length + wait-time distributions, clickable key-moments timeline, Kingman theory-vs-simulation callout, and 14-term inline glossary tooltips — see "Teach the Results" below for full details |
+| **⚙️ Simulation Settings** | 14 configurable parameters, 3 built-in scenario presets, custom presets persisted in `localStorage`, per-parameter **design rationale**, plus **batch mode** (multi-seed replication with CI) and **sensitivity analysis** (parameter sweep) toggles |
+| **📊 Statistics Results** | 4 themed sections with Hero Verdict, Bottleneck callout, count-up KPIs, 7+ visualizations, Kingman theory callout, 14-term glossary tooltips, **persistent history panel**, **batch CI display**, **sweep chart**, **What-If Explorer**, **print/PDF export**, and **scenario config diff** in comparison view |
 | **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter, localized keyword search, row highlight synced to the Playback cursor |
 | **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Characters walk through real aisles (no more ghosting through walls), ambient decorations react to time of day, and an optional side-by-side **Live Learning Mode** overlay shows four live DES concept cards (Event-driven clock, Queue length, Little's Law, Utilization) with a Beginner / Pro level toggle |
 | **🎬 How it Works** | Dedicated system-simulation walkthrough: event-driven clock, entity as process, queueing vs service, dynamic capacity, end-of-run aggregation (with KaTeX-rendered formulas and small SimPy code excerpts) |
@@ -91,7 +91,15 @@ First-launch tips for unsigned builds:
 - **Smart Number Inputs** (v0.8.0): fields allow clearing to empty while editing; on blur, revert to last valid value if left blank.
 - **Disabled Tab Guidance** (v0.8.0): clicking a grayed-out tab shows a toast prompting users to run a simulation first.
 - **Accessibility** (v0.8.0 / v0.9.0): comprehensive WCAG 2.1 AA support -- see "Accessibility" section below for full details.
-- **Scenario Comparison**: run multiple configurations and compare KPIs side-by-side (up to 3 runs)
+- **Persistent Simulation History** (v1.0.0): results stored in IndexedDB, survive app restarts. Browse, load, rename, delete past runs from a collapsible history panel on the Results page.
+- **Multi-Seed Batch Run** (v1.0.0): run the same config N times (2-50) with different seeds. KPI cards show mean +/- 95% CI. Addresses the core DES methodology gap of distinguishing system behavior from noise.
+- **Parameter Sensitivity Analysis** (v1.0.0): sweep one parameter across a range, visualize how metrics respond in an interactive line chart with optional CI bands.
+- **Classroom Challenges** (v1.0.0): 8 graduated challenges (easy/medium/hard) with progressive hints, a verification system, and persisted completion state. Accessible from the navigation bar.
+- **What-If Explorer** (v1.0.0): interactive sliders on the Results page for instant parameter tweaking with debounced re-simulation and delta comparison table.
+- **Print / PDF Export** (v1.0.0): one-click print with a dedicated `@media print` stylesheet. Charts expand to full width, non-content elements hidden.
+- **Playback Screenshot** (v1.0.0): capture the current cafe scene as PNG via Electron's `capturePage` API.
+- **Scenario Config Diff** (v1.0.0): comparison view highlights parameter differences between runs with amber highlighting.
+- **Scenario Comparison**: run multiple configurations and compare KPIs side-by-side
 - **Custom Scenario Presets**: save, name, and persist your own parameter sets across restarts
 - **Progress Animation**: exponential progress bar with elapsed-time counter during simulation
 - **Window State Persistence**: restores window size and position on relaunch
@@ -548,14 +556,16 @@ nekoserve/
 │       ├── pages/                # SettingsPage, ResultsPage, EventLogPage, PlaybackPage, HowItWorksPage, AboutPage
 │       ├── components/
 │       │   ├── KpiCard, ScenarioButtons, ComparisonTable, EventLogTable, LanguageSwitcher, LearningPanel
+│       │   ├── ChallengeDrawer.tsx # Classroom challenges with themed confirm dialog
 │       │   ├── ParamInput.tsx    # Redesigned number input: floating unit, help tooltip, range bar
 │       │   ├── PageTransition.tsx # Mascot-cat sweep + cream veil overlay on page change
 │       │   ├── CustomCursor.tsx  # In-window pixel-art cursor overlay with hover / press states
 │       │   ├── Math.tsx          # <InlineMath> / <BlockMath> KaTeX wrappers
 │       │   ├── playback/         # Simulation Playback: CafeScene, PlaybackControls, TimelineScrubber, InspectPopover
+│       │   ├── results/          # SweepChart, WhatIfExplorer, HeroVerdict, BottleneckCallout, ...
 │       │   └── charts/           # UtilizationChart, WaitTimeChart, CustomerPieChart
 │       ├── hooks/
-│       │   ├── useSimulation.ts  # Simulation state, history, elapsed timer
+│       │   ├── useSimulation.ts  # Simulation state, history, batch/sweep, elapsed timer
 │       │   ├── useUpdateCheck.ts # Update checking state, auto/manual check, skip/remind actions
 │       │   ├── useMousePosition.ts # Zero-rerender cursor position tracker for CustomCursor
 │       │   ├── usePlaybackClock.ts # rAF sim-time clock driving the Playback animation
@@ -567,10 +577,13 @@ nekoserve/
 │       ├── i18n/                 # react-i18next setup + typed JSON locales
 │       ├── data/
 │       │   ├── scenarios.ts      # Built-in + custom scenario presets (localStorage)
+│       │   ├── challenges.ts    # 8 classroom challenge definitions with condition predicates
 │       │   └── learnContent/     # Bilingual learning sidebar content (zh-TW.tsx + en.tsx)
 │       └── utils/
 │           ├── export.ts         # JSON / CSV export utilities
-│           └── replay.ts         # Pure reducer rebuilding café state from the event log for Playback
+│           ├── replay.ts         # Pure reducer rebuilding café state from the event log for Playback
+│           ├── historyStore.ts   # IndexedDB CRUD for persistent simulation history
+│           └── statistics.ts     # Mean, stdDev, 95% CI with t-distribution lookup
 ├── simulator-python/
 │   ├── simulator/                # Python SimPy core (core.py, models.py)
 │   └── tests/                    # Golden test cases
@@ -586,8 +599,6 @@ nekoserve/
 
 - macOS builds are unsigned (Gatekeeper warning on first launch)
 - Windows build is a portable `.exe` with no installer
-- Simulation results are not persisted across app restarts
-- No multi-run averaging or confidence intervals yet
 
 ## Roadmap
 
@@ -596,10 +607,16 @@ nekoserve/
 - [x] Onboarding tour, toast notifications, keyboard shortcut help (v0.8.0)
 - [x] Fullscreen playback, drag-and-drop import, What's New modal (v0.8.0)
 - [x] Comprehensive accessibility / WCAG 2.1 AA (v0.9.0)
-- [ ] Persistent simulation history (SQLite)
+- [x] Persistent simulation history via IndexedDB (v1.0.0)
+- [x] Multi-seed batch run with 95% confidence intervals (v1.0.0)
+- [x] Parameter sensitivity analysis / sweep (v1.0.0)
+- [x] Classroom challenges with guided hints (v1.0.0)
+- [x] What-If Explorer for instant parameter comparison (v1.0.0)
+- [x] Print / PDF export for Results page (v1.0.0)
+- [x] Playback screenshot export as PNG (v1.0.0)
 - [ ] CSV import for batch parameter testing
 - [ ] macOS / Windows code signing & notarization
-- [ ] Advanced statistics (confidence intervals, multi-seed averaging)
+- [ ] Warm-up period configuration for initialization bias
 - [ ] Third UI language (Japanese?)
 
 ---

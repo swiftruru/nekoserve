@@ -109,6 +109,56 @@ export interface SimulationResult {
 }
 
 // ----------------------------------------------------------
+// Batch run (multi-seed replication)
+// ----------------------------------------------------------
+
+export interface MetricCI {
+  mean: number
+  stdDev: number
+  ci95Lower: number
+  ci95Upper: number
+  halfWidth: number
+  n: number
+}
+
+export interface BatchSummary {
+  avgWaitForSeat: MetricCI
+  avgWaitForOrder: MetricCI
+  avgTotalStayTime: MetricCI
+  catInteractionRate: MetricCI
+  avgCatVisitsPerCustomer: MetricCI
+  noCatVisitRate: MetricCI
+  seatUtilization: MetricCI
+  staffUtilization: MetricCI
+  catUtilization: MetricCI
+  totalCustomersServed: MetricCI
+  totalCustomersArrived: MetricCI
+  abandonRate: MetricCI
+}
+
+export interface BatchResult {
+  config: SimulationConfig
+  runs: SimulationResult[]
+  summary: BatchSummary
+  replicationCount: number
+}
+
+// ----------------------------------------------------------
+// Sweep (parameter sensitivity analysis)
+// ----------------------------------------------------------
+
+export interface SweepPoint {
+  paramValue: number
+  metrics: Record<string, MetricCI>
+}
+
+export interface SweepResult {
+  config: SimulationConfig
+  paramKey: keyof SimulationConfig
+  points: SweepPoint[]
+}
+
+// ----------------------------------------------------------
 // Preset Scenarios
 // ----------------------------------------------------------
 

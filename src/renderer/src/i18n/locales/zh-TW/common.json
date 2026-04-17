@@ -16,6 +16,7 @@
     "delete": "刪除"
   },
   "learningPanel": "學習筆記",
+  "challenges": "挑戰",
   "toast": {
     "exportSuccess": "已匯出",
     "scenarioSaved": "情境已儲存",

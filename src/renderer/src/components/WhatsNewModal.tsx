@@ -74,7 +74,7 @@ export default function WhatsNewModal({ visible, version, onDismiss }: WhatsNewM
           <button
             type="button"
             onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+            className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-bark-200 text-lg leading-none"
             aria-label={t('button.close')}
           >
             ✕

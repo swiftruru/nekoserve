@@ -21,7 +21,8 @@
     "reset": "重播",
     "speed": "速度",
     "stepPrev": "上一事件",
-    "stepNext": "下一事件"
+    "stepNext": "下一事件",
+    "screenshot": "截圖匯出"
   },
   "shortcuts": {
     "title": "鍵盤快捷鍵",

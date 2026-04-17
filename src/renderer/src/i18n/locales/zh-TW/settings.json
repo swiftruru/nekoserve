@@ -248,5 +248,22 @@
     "deleteConfirm": "確定要刪除這個自訂情境嗎？",
     "nameInputPlaceholder": "輸入情境名稱…",
     "defaultRunLabel": "自訂設定"
+  },
+  "batch": {
+    "toggle": "批次模式",
+    "description": "同一組設定用不同種子跑多次，計算平均值和信賴區間",
+    "replications": "重複次數",
+    "runButton": "▶ 執行 {{count}} 次重複",
+    "progress": "重複模擬中 ({{completed}} / {{total}})"
+  },
+  "sweep": {
+    "toggle": "敏感度分析",
+    "description": "選一個參數掃描範圍，觀察指標如何隨參數變化",
+    "paramLabel": "掃描參數",
+    "from": "起始值",
+    "to": "終止值",
+    "step": "步進",
+    "repsEach": "每點重複",
+    "runButton": "▶ 執行參數掃描"
   }
 }

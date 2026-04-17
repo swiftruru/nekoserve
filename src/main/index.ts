@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, MenuItem, ipcMain, shell, nativeImage, screen } from 'electron'
+import { app, BrowserWindow, Menu, MenuItem, ipcMain, shell, nativeImage, screen, dialog } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { registerSimulationHandler } from './simulator-bridge'
@@ -326,6 +326,29 @@ app.whenReady().then(() => {
   ipcMain.on('locale-changed', (_event, locale: string) => {
     setMainLocale(locale)
     buildAppMenu()
+  })
+
+  // Screenshot capture IPC
+  ipcMain.handle('capture-screenshot', async (_event, rect: { x: number; y: number; width: number; height: number }) => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (!win) return false
+    try {
+      const image = await win.webContents.capturePage({
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      })
+      const { filePath } = await dialog.showSaveDialog(win, {
+        defaultPath: `nekoserve-screenshot-${Date.now()}.png`,
+        filters: [{ name: 'PNG', extensions: ['png'] }],
+      })
+      if (!filePath) return false
+      fs.writeFileSync(filePath, image.toPNG())
+      return true
+    } catch {
+      return false
+    }
   })
 
   buildAppMenu()

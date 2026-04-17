@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationResult } from '../types'
 import { buildReplayContext, replayUpTo } from '../utils/replay'
@@ -86,6 +86,7 @@ export default function PlaybackPage({
   const [speed, setSpeed] = useState<number>(DEFAULT_SPEED)
   const [focus, setFocus] = useState<FocusTarget | null>(null)
   const [learningMode, setLearningMode] = useState(false)
+  const sceneRef = useRef<HTMLDivElement>(null)
 
   // Precompute metric snapshots once per simulation result. The Learning
   // Overlay concept cards pull from this series in O(log N) per frame
@@ -182,6 +183,18 @@ export default function PlaybackPage({
     },
     [setSimTime],
   )
+
+  const handleScreenshot = useCallback(() => {
+    const el = sceneRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    window.electronAPI.captureScreenshot({
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+    })
+  }, [])
 
   const handleSelectFocus = useCallback((target: FocusTarget | null) => {
     setFocus((prev) => {
@@ -313,7 +326,7 @@ export default function PlaybackPage({
             : ''
         }
       >
-        <div className="card p-3 relative">
+        <div ref={sceneRef} className="card p-3 relative">
           <CafeScene
             state={state}
             config={config}
@@ -371,6 +384,7 @@ export default function PlaybackPage({
         onSpeedChange={handleSpeed}
         onStepPrev={stepPrev}
         onStepNext={stepNext}
+        onScreenshot={handleScreenshot}
       />
 
     </div>

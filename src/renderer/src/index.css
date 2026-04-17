@@ -840,3 +840,70 @@
 .dark .learn-panel-scroll::-webkit-scrollbar-thumb:hover {
   background: #8a7560;
 }
+
+/* ── Print / PDF export styles ────────────────────────────── */
+@media print {
+  /* Force light mode colors */
+  html { color-scheme: light; }
+  body { background: white !important; color: #1f2937 !important; }
+
+  /* Hide non-content elements */
+  header,
+  nav,
+  aside,
+  .drag-region,
+  .no-drag,
+  .custom-cursor-overlay,
+  .page-veil,
+  .cat-sweep-ltr,
+  .cat-sweep-rtl,
+  [data-onboarding],
+  button[aria-label],
+  .btn-primary,
+  .btn-secondary {
+    display: none !important;
+  }
+
+  /* Show main content full-width */
+  #main-content {
+    overflow: visible !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .page-container {
+    max-width: 100% !important;
+    padding: 12px !important;
+  }
+
+  /* Cards print cleanly */
+  .card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    page-break-inside: avoid;
+  }
+
+  /* Charts expand to fill width */
+  .recharts-responsive-container {
+    width: 100% !important;
+  }
+
+  /* Force dark mode overrides off */
+  .dark .card,
+  .dark .card-title,
+  .dark body {
+    background: white !important;
+    color: #1f2937 !important;
+    border-color: #e5e7eb !important;
+  }
+
+  /* Page breaks between major sections */
+  [class*="ResultsSection"],
+  [class*="results-section"] {
+    page-break-before: auto;
+    page-break-inside: avoid;
+  }
+
+  /* Restore native cursor */
+  * { cursor: auto !important; }
+}

@@ -22,6 +22,7 @@ import ShortcutHelp from './components/ShortcutHelp'
 import OnboardingOverlay from './components/OnboardingOverlay'
 import WhatsNewModal, { useWhatsNew } from './components/WhatsNewModal'
 import RouteAnnouncer from './components/RouteAnnouncer'
+import ChallengeDrawer from './components/ChallengeDrawer'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -77,13 +78,18 @@ export default function App() {
    */
   const [playbackAutoStartPending, setPlaybackAutoStartPending] = useState(false)
   const { toast } = useToast()
-  const { status, result, error, elapsed, history, run, reset } = useSimulation()
+  const {
+    status, result, error, elapsed, history,
+    batchResult, batchProgress, sweepResult,
+    run, runBatch, runSweep, reset, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
+  } = useSimulation()
   const update = useUpdateCheck()
   const { theme, toggle: toggleTheme } = useTheme()
   const whatsNew = useWhatsNew()
   const [shortcutHelpVisible, setShortcutHelpVisible] = useState(false)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const [challengeDrawerOpen, setChallengeDrawerOpen] = useState(false)
 
   useKeyboardShortcuts({
     '?': () => setOnboardingOpen((v) => !v),
@@ -103,6 +109,13 @@ export default function App() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  // Exit fullscreen whenever the user leaves the Playback page, regardless
+  // of which code path triggered the navigation (handleNavigate, skip-to-
+  // results, chart click, auto-nav after run, etc.).
+  useEffect(() => {
+    if (page !== 'playback') setFullscreen(false)
+  }, [page])
+
   // Persist panel open/closed whenever it changes. Keeping the side effect
   // out of the state updater is required for React 18 StrictMode purity.
   useEffect(() => {
@@ -116,15 +129,26 @@ export default function App() {
   function handleRunSimulation(cfg: SimulationConfig, label: string) {
     setConfig(cfg)
     run(cfg, label).then(() => {
-      // Every fresh run resets the shared sim-time cursor so Playback does
-      // not start mid-way through the new event log.
       setPlaybackTime(0)
-      // Arm the auto-play trigger and land the user on Playback: the run's
-      // outcome is more memorable as an animation than as a KPI card, and
-      // the "Skip to results" button on Playback gives a one-click escape
-      // hatch for users who only want the numbers.
       setPlaybackAutoStartPending(true)
       setPage('playback')
+    })
+  }
+
+  function handleRunBatch(cfg: SimulationConfig, replicationCount: number, label: string) {
+    setConfig(cfg)
+    runBatch(cfg, replicationCount, label).then(() => {
+      setPlaybackTime(0)
+      setPlaybackAutoStartPending(true)
+      setPage('playback')
+    })
+  }
+
+  function handleRunSweep(cfg: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) {
+    setConfig(cfg)
+    runSweep(cfg, paramKey, from, to, step, replications).then(() => {
+      // Sweep doesn't produce a playback-meaningful result, go to results
+      setPage('results')
     })
   }
 
@@ -141,10 +165,8 @@ export default function App() {
 
   function handleNavigate(id: Page) {
     if (id !== 'eventlog') {
-      // Clear pending filter when navigating away from eventlog path
       setPendingEventFilter(null)
     }
-    if (id !== 'playback') setFullscreen(false)
     setPage(id)
   }
 
@@ -202,6 +224,11 @@ export default function App() {
         version={whatsNew.version}
         onDismiss={whatsNew.dismiss}
       />
+      <ChallengeDrawer
+        visible={challengeDrawerOpen}
+        onClose={() => setChallengeDrawerOpen(false)}
+        metrics={result?.metrics ?? null}
+      />
       <UpdateModal
         visible={update.visible}
         status={update.status}
@@ -251,11 +278,27 @@ export default function App() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors text-lg leading-none"
+            className="no-drag text-gray-400 hover:text-orange-500 dark:text-bark-400 dark:hover:text-orange-400 transition-colors leading-none"
             title={theme === 'light' ? t('common:a11y.darkMode') : t('common:a11y.lightMode')}
             aria-label={theme === 'light' ? t('common:a11y.darkMode') : t('common:a11y.lightMode')}
           >
-            {theme === 'light' ? '\uD83C\uDF19' : '\u2600\uFE0F'}
+            {theme === 'light' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            )}
           </button>
           <button
             type="button"
@@ -318,18 +361,27 @@ export default function App() {
           )
         })}
 
-        {/* Learning panel toggle */}
-        <button
-          type="button"
-          onClick={togglePanel}
-          className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-150 ${
-            panelOpen
-              ? 'bg-orange-500 text-white border-orange-500'
-              : 'bg-white dark:bg-bark-700 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-bark-500 hover:bg-orange-50 dark:hover:bg-bark-600'
-          }`}
-        >
-          📚 {t('common:learningPanel')}
-        </button>
+        {/* Challenge & Learning panel toggles */}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setChallengeDrawerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-white dark:bg-bark-700 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-bark-500 hover:bg-purple-50 dark:hover:bg-bark-600 transition-colors duration-150"
+          >
+            🏆 {t('common:challenges')}
+          </button>
+          <button
+            type="button"
+            onClick={togglePanel}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-150 ${
+              panelOpen
+                ? 'bg-orange-500 text-white border-orange-500'
+                : 'bg-white dark:bg-bark-700 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-bark-500 hover:bg-orange-50 dark:hover:bg-bark-600'
+            }`}
+          >
+            📚 {t('common:learningPanel')}
+          </button>
+        </div>
       </nav>
       )}
 
@@ -342,18 +394,27 @@ export default function App() {
                 initialConfig={config}
                 scenarios={SCENARIOS}
                 onRun={handleRunSimulation}
+                onRunBatch={handleRunBatch}
+                onRunSweep={handleRunSweep}
                 onReset={reset}
                 isRunning={status === 'running'}
                 elapsed={elapsed}
                 error={status === 'error' ? error : null}
+                batchProgress={batchProgress}
               />
             )}
             {page === 'results' && result && (
               <ResultsPage
                 result={result}
                 history={history}
+                batchResult={batchResult}
+                sweepResult={sweepResult}
                 onChartClick={handleChartClick}
                 onJumpToPlayback={handleJumpToPlayback}
+                onDeleteHistory={deleteHistoryEntry}
+                onClearHistory={clearHistory}
+                onRenameHistory={renameHistoryEntry}
+                onLoadHistory={loadHistoryResult}
               />
             )}
             {page === 'eventlog' && result && (

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { SimulationResult, EventType } from '../types'
+import type { SimulationResult, EventType, BatchResult, SweepResult } from '../types'
+import SweepChart from '../components/results/SweepChart'
+import WhatIfExplorer from '../components/results/WhatIfExplorer'
 import type { HistoryEntry } from '../hooks/useSimulation'
 import KpiCard from '../components/KpiCard'
 import UtilizationChart from '../components/charts/UtilizationChart'
@@ -32,13 +34,14 @@ import { useToast } from '../hooks/useToast'
 interface ResultsPageProps {
   result: SimulationResult
   history: HistoryEntry[]
+  batchResult?: BatchResult | null
+  sweepResult?: SweepResult | null
   onChartClick?: (eventTypes: EventType[]) => void
-  /**
-   * Called when the user clicks a key-moment bubble in the Flow
-   * section timeline. Parent (App.tsx) jumps the shared playback
-   * cursor to that sim-time and switches to the Playback page.
-   */
   onJumpToPlayback?: (simTime: number) => void
+  onDeleteHistory?: (id: number) => void
+  onClearHistory?: () => void
+  onRenameHistory?: (id: number, label: string) => void
+  onLoadHistory?: (entry: HistoryEntry) => void
 }
 
 export default function ResultsPage({
@@ -46,15 +49,31 @@ export default function ResultsPage({
   history,
   onChartClick,
   onJumpToPlayback,
+  onDeleteHistory,
+  onClearHistory,
+  onRenameHistory,
+  onLoadHistory,
+  batchResult,
+  sweepResult,
 }: ResultsPageProps) {
   const { t } = useTranslation(['results', 'common'])
   const { toast } = useToast()
   const { metrics, config, eventLog } = result
   const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
   const [level, setLevel] = useState<LearningLevel>('expert')
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const unitPeople = t('common:unit.people')
   const unitMin = t('common:unit.min')
+
+  // Helper: get CI for a metric key from batchResult
+  const batchSummary = batchResult?.summary ?? null
+  function ciFor(key: string, scale = 1) {
+    if (!batchSummary) return undefined
+    const ci = (batchSummary as Record<string, { ci95Lower: number; ci95Upper: number; n: number }>)[key]
+    if (!ci) return undefined
+    return { lower: ci.ci95Lower * scale, upper: ci.ci95Upper * scale, n: ci.n }
+  }
 
   const verdict = useMemo(() => generateVerdict(metrics), [metrics])
 
@@ -123,6 +142,13 @@ export default function ResultsPage({
 
           <button
             type="button"
+            onClick={() => window.print()}
+            className="btn-secondary text-xs px-3 py-1.5"
+          >
+            {t('results:print')}
+          </button>
+          <button
+            type="button"
             onClick={() => { exportMetricsCSV(result); toast(t('common:toast.exportSuccess')) }}
             className="btn-secondary text-xs px-3 py-1.5"
           >
@@ -164,7 +190,154 @@ export default function ResultsPage({
         </div>
       </div>
 
-      {/* ── Comparison view (unchanged) ────────────────────── */}
+      {/* ── Batch info banner ─────────────────────────────────── */}
+      {batchResult && (
+        <div className="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/60 dark:bg-purple-900/20 px-4 py-2.5 flex items-center gap-2">
+          <span className="text-lg">🔬</span>
+          <div className="text-xs text-purple-700 dark:text-purple-300">
+            <span className="font-semibold">
+              {t('results:batch.banner', { n: batchResult.replicationCount })}
+            </span>
+            <span className="ml-2 text-purple-500 dark:text-purple-400">
+              {t('results:batch.ciHint')}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sweep chart ──────────────────────────────────────── */}
+      {sweepResult && sweepResult.points.length > 0 && (
+        <SweepChart
+          paramLabel={t(`results:configSummary.${
+            sweepResult.paramKey === 'customerArrivalInterval' ? 'arrivalInterval' :
+            sweepResult.paramKey === 'maxWaitTime' ? 'maxWait' :
+            sweepResult.paramKey === 'seatCount' ? 'seats' :
+            sweepResult.paramKey === 'staffCount' ? 'staff' :
+            sweepResult.paramKey === 'catCount' ? 'cats' :
+            sweepResult.paramKey
+          }` as const)}
+          points={sweepResult.points}
+        />
+      )}
+
+      {/* ── History panel ────────────────────────────────────── */}
+      {history.length > 0 && (
+        <div className="card">
+          <button
+            type="button"
+            onClick={() => setHistoryOpen((v) => !v)}
+            className="w-full flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
+          >
+            <span>📂</span>
+            {historyOpen
+              ? t('results:history.collapse')
+              : t('results:history.expand', { count: history.length })}
+          </button>
+          {historyOpen && (
+            <div className="mt-3 space-y-1.5">
+              {history.map((entry) => {
+                const isCurrent = entry.result === result
+                const m = entry.result.metrics
+                const c = entry.result.config
+                return (
+                  <div
+                    key={entry.id}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
+                      isCurrent
+                        ? 'bg-orange-100 dark:bg-bark-700 ring-1 ring-orange-400'
+                        : 'bg-gray-50 dark:bg-bark-800 hover:bg-orange-50 dark:hover:bg-bark-700'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-800 dark:text-bark-100 truncate">
+                        {entry.label}
+                        {isCurrent && (
+                          <span className="ml-1.5 text-[10px] text-orange-500 font-bold">
+                            {t('results:history.current')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-gray-400 dark:text-bark-400 mt-0.5">
+                        {t('results:history.configBrief', {
+                          seats: c.seatCount,
+                          staff: c.staffCount,
+                          cats: c.catCount,
+                          seed: c.randomSeed,
+                        })}
+                        {' · '}
+                        {t('results:history.servedBrief', { count: m.totalCustomersServed })}
+                        {' · '}
+                        {t('results:history.abandonRateBrief', { rate: (m.abandonRate * 100).toFixed(1) })}
+                      </div>
+                      <div className="text-gray-300 dark:text-bark-500 mt-0.5">
+                        {new Date(entry.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!isCurrent && onLoadHistory && (
+                        <button
+                          type="button"
+                          onClick={() => onLoadHistory(entry)}
+                          className="px-2 py-1 rounded bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+                        >
+                          {t('results:history.load')}
+                        </button>
+                      )}
+                      {onRenameHistory && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newName = window.prompt(
+                              t('results:history.renamePrompt'),
+                              entry.label,
+                            )
+                            if (newName && newName.trim()) {
+                              onRenameHistory(entry.id, newName.trim())
+                            }
+                          }}
+                          className="px-2 py-1 rounded text-gray-500 dark:text-bark-300 hover:bg-gray-200 dark:hover:bg-bark-600 transition-colors"
+                          title={t('results:history.rename')}
+                        >
+                          ✏️
+                        </button>
+                      )}
+                      {onDeleteHistory && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(t('results:history.deleteConfirm', { label: entry.label }))) {
+                              onDeleteHistory(entry.id)
+                            }
+                          }}
+                          className="px-2 py-1 rounded text-red-400 hover:bg-red-50 dark:hover:bg-bark-600 transition-colors"
+                          title={t('common:button.delete')}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+              {onClearHistory && history.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(t('results:history.clearConfirm'))) {
+                      onClearHistory()
+                    }
+                  }}
+                  className="mt-2 text-xs text-red-400 hover:text-red-500 transition-colors"
+                >
+                  {t('results:history.clearAll')}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Comparison view ────────────────────────────────── */}
       {viewMode === 'compare' && history.length >= 2 && (
         <ComparisonTable history={history} />
       )}
@@ -202,37 +375,41 @@ export default function ResultsPage({
               <div className="grid grid-cols-2 gap-2">
                 <KpiCard
                   label={t('results:kpi.totalCustomersArrived.label')}
-                  numeric={metrics.totalCustomersArrived}
+                  numeric={batchSummary ? batchSummary.totalCustomersArrived.mean : metrics.totalCustomersArrived}
                   unit={unitPeople}
                   icon="🚶"
+                  ci={ciFor('totalCustomersArrived')}
                 />
                 <KpiCard
                   label={t('results:kpi.totalCustomersServed.label')}
-                  numeric={metrics.totalCustomersServed}
+                  numeric={batchSummary ? batchSummary.totalCustomersServed.mean : metrics.totalCustomersServed}
                   unit={unitPeople}
                   icon="✅"
                   highlight="good"
+                  ci={ciFor('totalCustomersServed')}
                 />
                 <KpiCard
                   label={t('results:kpi.abandonRate.label')}
-                  numeric={metrics.abandonRate * 100}
+                  numeric={(batchSummary ? batchSummary.abandonRate.mean : metrics.abandonRate) * 100}
                   decimals={1}
                   numericSuffix="%"
                   icon="❌"
                   highlight={
-                    metrics.abandonRate > 0.3
+                    (batchSummary ? batchSummary.abandonRate.mean : metrics.abandonRate) > 0.3
                       ? 'danger'
-                      : metrics.abandonRate > 0.15
+                      : (batchSummary ? batchSummary.abandonRate.mean : metrics.abandonRate) > 0.15
                       ? 'warning'
                       : 'normal'
                   }
+                  ci={ciFor('abandonRate', 100)}
                 />
                 <KpiCard
                   label={t('results:kpi.avgTotalStayTime.label')}
-                  numeric={metrics.avgTotalStayTime}
+                  numeric={batchSummary ? batchSummary.avgTotalStayTime.mean : metrics.avgTotalStayTime}
                   decimals={1}
                   unit={unitMin}
                   icon="⏱️"
+                  ci={ciFor('avgTotalStayTime')}
                 />
               </div>
               <FlowDiagram
@@ -276,22 +453,24 @@ export default function ResultsPage({
               <div className="grid grid-cols-2 gap-2">
                 <KpiCard
                   label={t('results:kpi.avgWaitForSeat.label')}
-                  numeric={metrics.avgWaitForSeat}
+                  numeric={batchSummary ? batchSummary.avgWaitForSeat.mean : metrics.avgWaitForSeat}
                   decimals={1}
                   unit={unitMin}
                   icon="🪑"
                   highlight={
-                    metrics.avgWaitForSeat > config.maxWaitTime * 0.7
+                    (batchSummary ? batchSummary.avgWaitForSeat.mean : metrics.avgWaitForSeat) > config.maxWaitTime * 0.7
                       ? 'warning'
                       : 'normal'
                   }
+                  ci={ciFor('avgWaitForSeat')}
                 />
                 <KpiCard
                   label={t('results:kpi.avgWaitForOrder.label')}
-                  numeric={metrics.avgWaitForOrder}
+                  numeric={batchSummary ? batchSummary.avgWaitForOrder.mean : metrics.avgWaitForOrder}
                   decimals={1}
                   unit={unitMin}
                   icon="☕"
+                  ci={ciFor('avgWaitForOrder')}
                 />
               </div>
               <StayBreakdown
@@ -342,26 +521,29 @@ export default function ResultsPage({
               <div className="grid grid-cols-3 gap-2">
                 <KpiCard
                   label={t('results:kpi.seatUtilization.label')}
-                  numeric={metrics.seatUtilization * 100}
+                  numeric={(batchSummary ? batchSummary.seatUtilization.mean : metrics.seatUtilization) * 100}
                   decimals={1}
                   numericSuffix="%"
                   icon="🏠"
-                  highlight={metrics.seatUtilization > 0.9 ? 'warning' : 'normal'}
+                  highlight={(batchSummary ? batchSummary.seatUtilization.mean : metrics.seatUtilization) > 0.9 ? 'warning' : 'normal'}
+                  ci={ciFor('seatUtilization', 100)}
                 />
                 <KpiCard
                   label={t('results:kpi.staffUtilization.label')}
-                  numeric={metrics.staffUtilization * 100}
+                  numeric={(batchSummary ? batchSummary.staffUtilization.mean : metrics.staffUtilization) * 100}
                   decimals={1}
                   numericSuffix="%"
                   icon="👩‍💼"
-                  highlight={metrics.staffUtilization > 0.9 ? 'warning' : 'normal'}
+                  highlight={(batchSummary ? batchSummary.staffUtilization.mean : metrics.staffUtilization) > 0.9 ? 'warning' : 'normal'}
+                  ci={ciFor('staffUtilization', 100)}
                 />
                 <KpiCard
                   label={t('results:kpi.catUtilization.label')}
-                  numeric={metrics.catUtilization * 100}
+                  numeric={(batchSummary ? batchSummary.catUtilization.mean : metrics.catUtilization) * 100}
                   decimals={1}
                   numericSuffix="%"
                   icon="😺"
+                  ci={ciFor('catUtilization', 100)}
                 />
               </div>
               <UtilizationChart
@@ -405,23 +587,25 @@ export default function ResultsPage({
               <div className="grid grid-cols-2 gap-2">
                 <KpiCard
                   label={t('results:kpi.catInteractionRate.label')}
-                  numeric={metrics.catInteractionRate * 100}
+                  numeric={(batchSummary ? batchSummary.catInteractionRate.mean : metrics.catInteractionRate) * 100}
                   decimals={1}
                   numericSuffix="%"
                   icon="🐱"
                   highlight={
-                    metrics.catInteractionRate > 0.7
+                    (batchSummary ? batchSummary.catInteractionRate.mean : metrics.catInteractionRate) > 0.7
                       ? 'good'
-                      : metrics.catInteractionRate < 0.3
+                      : (batchSummary ? batchSummary.catInteractionRate.mean : metrics.catInteractionRate) < 0.3
                       ? 'warning'
                       : 'normal'
                   }
+                  ci={ciFor('catInteractionRate', 100)}
                 />
                 <KpiCard
                   label={t('results:kpi.avgCatVisitsPerCustomer.label')}
-                  numeric={metrics.avgCatVisitsPerCustomer}
+                  numeric={batchSummary ? batchSummary.avgCatVisitsPerCustomer.mean : metrics.avgCatVisitsPerCustomer}
                   decimals={2}
                   icon="💖"
+                  ci={ciFor('avgCatVisitsPerCustomer')}
                 />
               </div>
               <CustomerPieChart
@@ -436,6 +620,9 @@ export default function ResultsPage({
               <StayDistribution customers={customerMetrics} />
             </div>
           </ResultsSection>
+
+          {/* ── What-If explorer ──────────────────────────── */}
+          <WhatIfExplorer baseConfig={config} baseMetrics={metrics} />
 
           {/* ── Config summary (unchanged, bottom of page) ─── */}
           <div className="card">

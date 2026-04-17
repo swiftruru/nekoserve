@@ -2,26 +2,16 @@ import AnimatedNumber from './results/AnimatedNumber'
 
 interface KpiCardProps {
   label: string
-  /**
-   * Static display value. Used when the number is already a formatted
-   * string (e.g. percentages pre-formatted by the caller). Ignored
-   * when `numeric` is provided.
-   */
   value?: string | number
-  /**
-   * Optional raw number that will be animated via AnimatedNumber.
-   * When provided, this takes precedence over `value` and drives the
-   * count-up display. Use for KPIs whose value is a plain scalar.
-   */
   numeric?: number
-  /** Decimal places for the animated numeric display. Defaults to 0. */
   decimals?: number
-  /** Suffix appended after the animated number (e.g. "%"). */
   numericSuffix?: string
   unit?: string
   icon?: string
   highlight?: 'normal' | 'warning' | 'danger' | 'good'
   description?: string
+  /** Confidence interval range (shown as +/- below the main value) */
+  ci?: { lower: number; upper: number; n: number } | null
 }
 
 const HIGHLIGHT_STYLES = {
@@ -48,6 +38,7 @@ export default function KpiCard({
   icon,
   highlight = 'normal',
   description,
+  ci,
 }: KpiCardProps) {
   return (
     <div
@@ -71,6 +62,13 @@ export default function KpiCard({
         </span>
         {unit && <span className="text-sm text-gray-500 dark:text-bark-300">{unit}</span>}
       </div>
+      {ci && (
+        <div className="text-[10px] text-gray-400 dark:text-bark-400 tabular-nums">
+          95% CI: [{ci.lower.toFixed(decimals)}, {ci.upper.toFixed(decimals)}]
+          {numericSuffix ?? ''}
+          <span className="ml-1 text-gray-300 dark:text-bark-500">(n={ci.n})</span>
+        </div>
+      )}
       {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
     </div>
   )

@@ -16,6 +16,7 @@ interface PlaybackControlsProps {
   onSpeedChange: (speed: number) => void
   onStepPrev: () => void
   onStepNext: () => void
+  onScreenshot?: () => void
 }
 
 export const SPEED_OPTIONS = [0.5, 1, 2, 4, 8] as const
@@ -28,6 +29,7 @@ export default function PlaybackControls({
   onSpeedChange,
   onStepPrev,
   onStepNext,
+  onScreenshot,
 }: PlaybackControlsProps) {
   const { t } = useTranslation('playback')
 
@@ -93,6 +95,17 @@ export default function PlaybackControls({
             )
           })}
         </div>
+        {onScreenshot && (
+          <button
+            type="button"
+            onClick={onScreenshot}
+            className="btn-secondary px-3"
+            title={t('playback:controls.screenshot')}
+            aria-label={t('playback:controls.screenshot')}
+          >
+            📷
+          </button>
+        )}
         <ShortcutHelp />
       </div>
     </div>

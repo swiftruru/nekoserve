@@ -124,6 +124,12 @@ const electronAPI = {
   onMenuCheckForUpdate: (callback: () => void): void => {
     ipcRenderer.on('menu-check-for-update', () => callback())
   },
+
+  // ── Screenshot API ──────────────────────────────────────────
+
+  /** Capture a region of the page as PNG and save via dialog. */
+  captureScreenshot: (rect: { x: number; y: number; width: number; height: number }): Promise<boolean> =>
+    ipcRenderer.invoke('capture-screenshot', rect),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

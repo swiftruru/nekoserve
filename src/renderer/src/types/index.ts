@@ -2,6 +2,11 @@
 export type {
   SimulationConfig,
   MetricSummary,
+  MetricCI,
+  BatchSummary,
+  BatchResult,
+  SweepPoint,
+  SweepResult,
   EventType,
   EventLogItem,
   SimulationResult,

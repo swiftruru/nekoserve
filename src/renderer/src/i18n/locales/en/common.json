@@ -16,6 +16,7 @@
     "delete": "Delete"
   },
   "learningPanel": "Learning notes",
+  "challenges": "Challenges",
   "toast": {
     "exportSuccess": "Exported successfully",
     "scenarioSaved": "Scenario saved",

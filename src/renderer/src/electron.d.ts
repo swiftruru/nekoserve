@@ -28,6 +28,9 @@ declare global {
       openReleasesPage: () => Promise<void>
       onUpdateAvailable: (callback: (info: UpdateInfo) => void) => void
       onMenuCheckForUpdate: (callback: () => void) => void
+
+      // Screenshot
+      captureScreenshot: (rect: { x: number; y: number; width: number; height: number }) => Promise<boolean>
     }
   }
 }

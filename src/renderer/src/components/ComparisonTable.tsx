@@ -1,6 +1,7 @@
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { HistoryEntry } from '../hooks/useSimulation'
-import type { MetricSummary } from '../types'
+import type { MetricSummary, SimulationConfig } from '../types'
 
 type ResultsKpiKey =
   | 'totalCustomersArrived'
@@ -35,6 +36,24 @@ const KPI_ROWS: KpiRow[] = [
   { key: 'catUtilization',        i18nKey: 'catUtilization',        icon: '😺',    unit: 'percent', higherIsBetter: null  },
 ]
 
+// Config keys we want to compare, mapped to their i18n label in configSummary
+const CONFIG_KEYS: { key: keyof SimulationConfig; i18nKey: string; unit?: string }[] = [
+  { key: 'seatCount', i18nKey: 'seats' },
+  { key: 'staffCount', i18nKey: 'staff' },
+  { key: 'catCount', i18nKey: 'cats' },
+  { key: 'customerArrivalInterval', i18nKey: 'arrivalInterval', unit: 'min' },
+  { key: 'orderTime', i18nKey: 'orderTime', unit: 'min' },
+  { key: 'preparationTime', i18nKey: 'preparationTime', unit: 'min' },
+  { key: 'diningTime', i18nKey: 'diningTime', unit: 'min' },
+  { key: 'catInteractionTime', i18nKey: 'interactionTime', unit: 'min' },
+  { key: 'catIdleInterval', i18nKey: 'catIdleInterval', unit: 'min' },
+  { key: 'catRestProbability', i18nKey: 'restProbability' },
+  { key: 'catRestDuration', i18nKey: 'restDuration', unit: 'min' },
+  { key: 'maxWaitTime', i18nKey: 'maxWait', unit: 'min' },
+  { key: 'simulationDuration', i18nKey: 'simulationDuration', unit: 'min' },
+  { key: 'randomSeed', i18nKey: 'seed' },
+]
+
 interface ComparisonTableProps {
   history: HistoryEntry[]
 }
@@ -49,6 +68,16 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
   const { t } = useTranslation(['results', 'common'])
   if (history.length < 2) return null
 
+  const configs = history.map((e) => e.result.config)
+
+  // Find config keys that differ across any pair of runs
+  const diffKeys = useMemo(() => {
+    return CONFIG_KEYS.filter(({ key }) => {
+      const vals = configs.map((c) => c[key])
+      return vals.some((v) => v !== vals[0])
+    })
+  }, [configs])
+
   const unitShort = (row: KpiRow) => {
     if (row.unit === 'percent') return '%'
     if (row.unit === 'people') return t('common:unit.people')
@@ -58,6 +87,60 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
   return (
     <div className="card overflow-x-auto">
       <div className="card-title mb-3">{t('results:comparison.title')}</div>
+
+      {/* ── Config Diff ────────────────────────────────────── */}
+      <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-3 py-2">
+        <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1.5">
+          {t('results:comparison.configDiff.title')}
+        </div>
+        {diffKeys.length === 0 ? (
+          <div className="text-xs text-amber-600/70 dark:text-amber-500/70">
+            {t('results:comparison.configDiff.noChange')}
+          </div>
+        ) : (
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr>
+                <th className="text-left text-amber-600 dark:text-amber-400 font-semibold pb-1 w-28" />
+                {history.map((entry, i) => (
+                  <th key={i} className="text-center text-amber-600 dark:text-amber-400 font-semibold pb-1 px-3 min-w-20">
+                    {entry.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {diffKeys.map(({ key, i18nKey, unit }) => {
+                const values = configs.map((c) => c[key])
+                return (
+                  <tr key={key}>
+                    <td className="py-0.5 pr-2 text-amber-700 dark:text-amber-300 font-medium whitespace-nowrap">
+                      {t(`results:configSummary.${i18nKey}` as const)}
+                    </td>
+                    {values.map((val, i) => {
+                      const differs = val !== values[0]
+                      return (
+                        <td
+                          key={i}
+                          className={`py-0.5 px-3 text-center font-mono ${
+                            differs
+                              ? 'text-amber-800 dark:text-amber-200 font-bold bg-amber-100/60 dark:bg-amber-800/30 rounded'
+                              : 'text-amber-600/60 dark:text-amber-400/60'
+                          }`}
+                        >
+                          {val}{unit ? ` ${unit}` : ''}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ── KPI comparison table ──────────────────────────── */}
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr>
