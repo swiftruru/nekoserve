@@ -641,8 +641,6 @@ nekoserve/
 - [x] Interactive formula explainer: click any symbol to see plain-language explanation (v1.2.0)
 - [x] Floating Beginner/Expert toggle on Results and How-It-Works pages (v1.2.0)
 - [x] CI formula double-render fix in learning content (v1.2.0)
-- [ ] macOS / Windows code signing & notarization
-- [ ] Third UI language (Japanese?)
 
 ---
 
