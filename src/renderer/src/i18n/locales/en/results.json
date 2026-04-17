@@ -147,6 +147,7 @@
     "empty": "Not enough data to compare",
     "tooltip": "{{from}}-{{to}} {{unit}}: {{count}} customers",
     "deltaBoth": "Cat-visited average stay: {{withCat}} min; without a visit: {{withoutCat}} min — delta {{delta}} min",
+    "meanLabel": "avg {{value}}",
     "onlyWithCat": "Every customer met a cat this run (avg stay {{avg}} min)",
     "onlyWithoutCat": "No customer met a cat this run (avg stay {{avg}} min)"
   },
@@ -284,10 +285,12 @@
   },
   "batch": {
     "banner": "Results are based on {{n}} replications (different random seeds)",
-    "ciHint": "95% confidence intervals shown below each KPI"
+    "ciHint": "95% confidence intervals shown below each KPI",
+    "exportCsv": "⬇ Batch CSV"
   },
   "sweep": {
-    "title": "Sensitivity analysis results"
+    "title": "Sensitivity analysis results",
+    "exportCsv": "⬇ Sweep CSV"
   },
   "whatIf": {
     "expand": "What-If Explorer: tweak parameters and compare instantly",
@@ -310,6 +313,9 @@
     "collapse": "Collapse history ▲",
     "expand": "Expand history ({{count}}) ▼",
     "current": "Current",
+    "selectHint": "Select 2-4 runs to compare",
+    "maxCompare": "You can compare up to 4 runs",
+    "compareSelected": "Compare ({{count}})",
     "configBrief": "{{seats}} seats · {{staff}} staff · {{cats}} cats · seed {{seed}}",
     "abandonRateBrief": "abandon {{rate}}%",
     "servedBrief": "served {{count}}"

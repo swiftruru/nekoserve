@@ -4,6 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area,
 } from 'recharts'
 import type { MetricCI } from '../../types'
+import ThemedSelect from '../ThemedSelect'
 
 interface SweepPoint {
   paramValue: number
@@ -47,17 +48,16 @@ export default function SweepChart({ paramLabel, points }: SweepChartProps) {
     <div className="card">
       <div className="flex items-center gap-3 mb-3 flex-wrap">
         <div className="card-title">{t('results:sweep.title')}</div>
-        <select
-          value={selectedMetric}
-          onChange={(e) => setSelectedMetric(e.target.value)}
-          className="text-xs rounded border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-800 text-gray-700 dark:text-bark-200 px-2 py-1"
-        >
-          {METRIC_OPTIONS.map((o) => (
-            <option key={o.key} value={o.key}>
-              {t(`results:kpi.${o.key}.label` as const)}
-            </option>
-          ))}
-        </select>
+        <div className="w-44">
+          <ThemedSelect
+            value={selectedMetric}
+            options={METRIC_OPTIONS.map((o) => ({
+              value: o.key,
+              label: t(`results:kpi.${o.key}.label` as const),
+            }))}
+            onChange={setSelectedMetric}
+          />
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>

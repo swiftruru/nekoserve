@@ -22,6 +22,7 @@ import ShortcutHelp from './components/ShortcutHelp'
 import OnboardingOverlay from './components/OnboardingOverlay'
 import WhatsNewModal, { useWhatsNew } from './components/WhatsNewModal'
 import RouteAnnouncer from './components/RouteAnnouncer'
+import ErrorBoundary from './components/ErrorBoundary'
 import ChallengeDrawer from './components/ChallengeDrawer'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
@@ -81,7 +82,7 @@ export default function App() {
   const {
     status, result, error, elapsed, history,
     batchResult, batchProgress, sweepResult,
-    run, runBatch, runSweep, reset, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
+    run, runBatch, runSweep, cancel, reset, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
   } = useSimulation()
   const update = useUpdateCheck()
   const { theme, toggle: toggleTheme } = useTheme()
@@ -109,12 +110,22 @@ export default function App() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  // Exit fullscreen whenever the user leaves the Playback page, regardless
-  // of which code path triggered the navigation (handleNavigate, skip-to-
-  // results, chart click, auto-nav after run, etc.).
+  // Exit fullscreen whenever the user leaves the Playback page
   useEffect(() => {
     if (page !== 'playback') setFullscreen(false)
   }, [page])
+
+  // Dynamic window title
+  useEffect(() => {
+    const pageName = t(`nav:${page}` as const)
+    if (status === 'running') {
+      document.title = `NekoServe - ${t('common:status.running')}`
+    } else if (page === 'results' && result) {
+      document.title = `NekoServe - ${pageName} (seed ${result.config.randomSeed})`
+    } else {
+      document.title = `NekoServe - ${pageName}`
+    }
+  }, [page, status, result, t])
 
   // Persist panel open/closed whenever it changes. Keeping the side effect
   // out of the state updater is required for React 18 StrictMode purity.
@@ -136,8 +147,11 @@ export default function App() {
   }
 
   function handleRunBatch(cfg: SimulationConfig, replicationCount: number, label: string) {
+    const start = Date.now()
     setConfig(cfg)
     runBatch(cfg, replicationCount, label).then(() => {
+      const secs = ((Date.now() - start) / 1000).toFixed(1)
+      toast(t('settings:batch.complete', { count: replicationCount, seconds: secs }))
       setPlaybackTime(0)
       setPlaybackAutoStartPending(true)
       setPage('playback')
@@ -145,9 +159,11 @@ export default function App() {
   }
 
   function handleRunSweep(cfg: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) {
+    const start = Date.now()
     setConfig(cfg)
     runSweep(cfg, paramKey, from, to, step, replications).then(() => {
-      // Sweep doesn't produce a playback-meaningful result, go to results
+      const secs = ((Date.now() - start) / 1000).toFixed(1)
+      toast(t('settings:sweep.complete', { seconds: secs }))
       setPage('results')
     })
   }
@@ -388,6 +404,7 @@ export default function App() {
       {/* ── Main area: content + sidebar ────────────────── */}
       <div className="flex-1 flex overflow-hidden">
         <main id="main-content" className="flex-1 overflow-y-auto">
+          <ErrorBoundary>
           <PageTransition pageKey={page}>
             {page === 'settings' && (
               <SettingsPage
@@ -397,6 +414,7 @@ export default function App() {
                 onRunBatch={handleRunBatch}
                 onRunSweep={handleRunSweep}
                 onReset={reset}
+                onCancel={cancel}
                 isRunning={status === 'running'}
                 elapsed={elapsed}
                 error={status === 'error' ? error : null}
@@ -443,6 +461,7 @@ export default function App() {
             {page === 'howitworks' && <HowItWorksPage />}
             {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} updateChecking={update.status === 'checking'} />}
           </PageTransition>
+          </ErrorBoundary>
         </main>
 
         {/* ── Learning sidebar ──────────────────────────── */}

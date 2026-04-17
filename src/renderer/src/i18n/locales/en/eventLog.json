@@ -12,5 +12,28 @@
   },
   "empty": "No events match the current filter",
   "searchLabel": "Search events",
-  "filterResultAnnounce": "{{count}} events shown"
+  "filterResultAnnounce": "{{count}} events shown",
+  "sort": {
+    "ascending": "ascending",
+    "descending": "descending"
+  },
+  "timeRange": {
+    "from": "From",
+    "to": "To",
+    "reset": "Reset range",
+    "unit": "min"
+  },
+  "stats": {
+    "title": "Event statistics",
+    "total": "{{count}} total events"
+  },
+  "journey": {
+    "tracking": "Tracking Customer #{{id}}",
+    "clear": "Clear tracking",
+    "clickHint": "Click a customer ID to track their journey"
+  },
+  "jumpTime": {
+    "placeholder": "Go to...",
+    "go": "Go"
+  }
 }

@@ -352,6 +352,55 @@ export const LEARN_CONTENT_EN: LearnContent = {
         </div>
       ),
     },
+    {
+      id: 'batch-replication',
+      icon: '🔁',
+      title: 'Batch replication: why one run is not enough',
+      content: (
+        <div>
+          <P>
+            Simulation results come from a random number generator. Change the <B>random seed</B> and
+            every KPI changes too, because arrival times, service times, and cat behavior are all random
+            variables. Drawing conclusions from a single run is like rolling a die once and calling the result
+            the average.
+          </P>
+          <P>
+            <B>Replication</B> means running the same parameters N times (usually 10+) with different seeds
+            and averaging the results. The more you run, the more the average stabilizes toward the true
+            system behavior.
+          </P>
+          <Note>
+            💡 Enable "Batch mode" at the bottom of the Settings page, set the replication count, and run.
+            The app uses seed, seed+1, seed+2, ... automatically and computes the mean and confidence interval.
+          </Note>
+          <P>This is not optional overhead. In DES, results without replication are considered unreliable.</P>
+        </div>
+      ),
+    },
+    {
+      id: 'sensitivity-analysis',
+      icon: '📈',
+      title: 'Sensitivity analysis: which parameter matters most',
+      content: (
+        <div>
+          <P>
+            You have 14 adjustable parameters, but not all of them affect results equally.
+            <B> Sensitivity analysis</B> means holding everything else fixed, changing one parameter across a
+            range, and watching how KPIs respond.
+          </P>
+          <P>
+            For example, sweep staff count from 1 to 5: if the abandon rate drops from 40% to 2%, staff is
+            the key parameter. If it barely moves, the bottleneck is elsewhere.
+          </P>
+          <Example>
+            💡 Enable "Sensitivity analysis" at the bottom of the Settings page, pick the parameter and range.
+            The app runs a batch at each sweep point and shows the result as a line chart.
+            Look for the "knee" in the curve, where the slope flattens. That is where adding more of the
+            resource stops helping as much.
+          </Example>
+        </div>
+      ),
+    },
   ],
 
   // ══════════════════════════════════════════════════════════
@@ -465,6 +514,97 @@ export const LEARN_CONTENT_EN: LearnContent = {
             the most utilized resource and run again. Use the Compare tab to view the
             two runs side-by-side.
           </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'confidence-intervals',
+      icon: '📐',
+      title: 'Confidence intervals: how reliable is the average',
+      content: (
+        <div>
+          <P>
+            After a batch run you have N KPI values. The mean is a point estimate, but the
+            <B> 95% confidence interval (CI)</B> tells you how precise that estimate is.
+          </P>
+          <P>
+            Intuitive reading: if you re-ran the entire batch many times and computed a CI each time,
+            95% of those intervals would contain the true average.
+            A <B>narrow interval</B> means the estimate is precise;
+            a <B>wide interval</B> means you need more replications.
+          </P>
+          <Formula>
+            <BlockMath formula={String.raw`\bar{X} \pm t_{\alpha/2,\, n-1} \cdot \frac{s}{\sqrt{n}}`} />
+          </Formula>
+          <P>
+            Here n is the replication count, s is the standard deviation, and t is the t-distribution
+            critical value. With small samples, t is larger than 1.96 (wider, more conservative);
+            once n exceeds about 30, it approaches the normal distribution.
+          </P>
+          <Note>
+            💡 The small text below each KPI card shows the 95% CI. If the interval spans more than
+            20% of the mean, the results are still unstable. Try increasing replications to 20 or 30.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'sweep-charts',
+      icon: '📈',
+      title: 'Reading sweep charts: finding the tipping point',
+      content: (
+        <div>
+          <P>
+            Sensitivity analysis results are displayed as a line chart.
+            The <B>X-axis</B> is the swept parameter value,
+            the <B>Y-axis</B> is the KPI you selected (switch via the dropdown).
+            Each point is the mean of multiple replications at that parameter value,
+            and the shaded band is the 95% CI.
+          </P>
+          <P>The goal is not to read individual numbers, but to <B>spot trends and tipping points</B>:</P>
+          <UL>
+            <LI>Steep sections mean the parameter has a large marginal effect.</LI>
+            <LI>Where the curve flattens is the point of diminishing returns: adding more has little effect.</LI>
+            <LI>If the CI band is wide, that region has high variance and needs more replications.</LI>
+          </UL>
+          <Example>
+            💡 Typical observation: increasing seats from 5 to 10 drops the abandon rate from 50% to 5%
+            (steep section). From 10 to 15, it only drops from 5% to 3% (flat section).
+            Conclusion: 10 seats is enough; extra seats have diminishing returns.
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'what-if-explorer',
+      icon: '🔮',
+      title: 'What-If Explorer: compare without re-running',
+      content: (
+        <div>
+          <P>
+            At the bottom of the Results page there is a <B>"What-If Explorer"</B> panel.
+            Open it to reveal four sliders: seats, staff, cats, and arrival interval.
+          </P>
+          <P>
+            Drag any slider and the app automatically re-runs a simulation in the background
+            (takes about 0.5 seconds), then shows the new results alongside the original in a
+            comparison table: <B>green</B> means the metric improved, <B>red</B> means it got worse.
+          </P>
+          <Note>
+            💡 What-If is for quick exploration:
+            instead of going back to Settings, changing a parameter, and clicking Run,
+            you can drag a slider right on the Results page and instantly see
+            "what if I had one more staff member."
+          </Note>
+          <P>
+            The difference from sensitivity analysis: sensitivity analysis systematically sweeps
+            an entire range and draws a trend chart. What-If is for trying a single value on the
+            spot when inspiration strikes.
+          </P>
+          <P>
+            What-If results are <B>not saved to history</B>,
+            so you can experiment freely without cluttering your saved experiments.
+          </P>
         </div>
       ),
     },

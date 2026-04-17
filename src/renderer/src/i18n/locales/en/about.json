@@ -1,7 +1,6 @@
 {
   "appName": "NekoServe",
   "subtitle": "Cat café seat & service simulation",
-  "version": "v0.6.0",
   "courseBackground": {
     "title": "📖 Course background",
     "author": "Author",
@@ -24,7 +23,7 @@
   },
   "description": {
     "title": "📖 About the project",
-    "body": "NekoServe is a desktop application that simulates the customer service flow of a cat café. Using discrete-event simulation, it faithfully reproduces the full journey of each customer (arrival, queueing, seating, ordering, dining, interacting with cats, and leaving) and computes key service metrics. It is designed for classroom demonstration and service-system analysis."
+    "body": "NekoServe is a desktop application that simulates the customer service flow of a cat café. Using discrete-event simulation, it faithfully reproduces the full journey of each customer (arrival, queueing, seating, ordering, dining, interacting with cats, and leaving) and computes key service metrics. It is designed for classroom demonstration and service-system analysis. Version 1.0.0 adds batch replication with 95% confidence intervals, parameter sensitivity analysis, and classroom challenges, moving the teaching experience from single-run observation to statistical inference."
   },
   "architecture": {
     "title": "🏗️ System architecture",
@@ -43,7 +42,10 @@
     "step2": "Click \"Run simulation\" and wait for it to finish (typically under 5 seconds)",
     "step3": "Inspect KPI cards and charts on the Results page",
     "step4": "Inspect the full event timeline on the Event Log page, filtering by type",
-    "step5": "Adjust parameters and re-run to compare scenarios side-by-side"
+    "step5": "Adjust parameters and re-run to compare scenarios side-by-side",
+    "step6": "Enable Batch mode to run multiple seeds and get averaged results with 95% confidence intervals",
+    "step7": "Enable Sensitivity analysis to sweep a single parameter and see how metrics respond",
+    "step8": "Click the Challenges button in the nav bar to try 8 guided exercises that test your understanding"
   },
   "experiment": {
     "title": "🔬 Designing simulation experiments",
@@ -60,7 +62,9 @@
     "principle4Item3": "<strong>Sanity-check with Little's Law</strong>: N ≈ λ × W. Large deviations usually mean the run was too short.",
     "principle5Title": "Principle 5: relieving bottlenecks",
     "principle5BodyA": "Find the resource with the highest utilization (seats / staff / cats) and expand its capacity first. By the Theory of Constraints, investing in non-bottleneck resources barely moves system throughput.",
-    "principle5BodyB": "Example: seats 95% utilized, staff 60% utilized. Adding staff will not shorten the seat queue; add seats first, or shorten dining time to turn tables faster."
+    "principle5BodyB": "Example: seats 95% utilized, staff 60% utilized. Adding staff will not shorten the seat queue; add seats first, or shorten dining time to turn tables faster.",
+    "principle6Title": "Principle 6: replicate and quantify uncertainty",
+    "principle6Body": "A single simulation run is like a single dice roll: the result may be higher or lower than average. Enable Batch mode to run 10+ replications with different random seeds. The app computes the mean and 95% confidence interval automatically. A narrow interval means your estimate is precise; a wide interval means you need more replications. This is not optional overhead; it is standard DES methodology."
   },
   "onboardingReset": {
     "title": "Onboarding tour",

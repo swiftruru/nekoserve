@@ -189,15 +189,26 @@ export default function StayDistribution({ customers }: Props) {
         {/* Top row: with cat (pink) */}
         {renderCohortBars(withCat, '#ec4899', topBaseline, rowHeight - 2)}
         {withCatMeanX !== null && (
-          <line
-            x1={withCatMeanX}
-            y1={PADDING_Y_TOP + 1}
-            x2={withCatMeanX}
-            y2={topBaseline}
-            stroke="#be185d"
-            strokeDasharray="2 2"
-            strokeWidth={1}
-          />
+          <>
+            <line
+              x1={withCatMeanX}
+              y1={PADDING_Y_TOP + 1}
+              x2={withCatMeanX}
+              y2={topBaseline}
+              stroke="#be185d"
+              strokeDasharray="2 2"
+              strokeWidth={1}
+            />
+            <text
+              x={withCatMeanX + 3}
+              y={PADDING_Y_TOP + 9}
+              fontSize={7}
+              fill="#be185d"
+              fontWeight={600}
+            >
+              {t('results:stayDist.meanLabel', { value: withCat.mean.toFixed(1) })}
+            </text>
+          </>
         )}
 
         {/* Bottom row: without cat (blue) */}
@@ -208,15 +219,26 @@ export default function StayDistribution({ customers }: Props) {
           rowHeight - 2,
         )}
         {withoutCatMeanX !== null && (
-          <line
-            x1={withoutCatMeanX}
-            y1={topBaseline + 1}
-            x2={withoutCatMeanX}
-            y2={bottomBaseline}
-            stroke="#0284c7"
-            strokeDasharray="2 2"
-            strokeWidth={1}
-          />
+          <>
+            <line
+              x1={withoutCatMeanX}
+              y1={topBaseline + 1}
+              x2={withoutCatMeanX}
+              y2={bottomBaseline}
+              stroke="#0284c7"
+              strokeDasharray="2 2"
+              strokeWidth={1}
+            />
+            <text
+              x={withoutCatMeanX + 3}
+              y={topBaseline + 9}
+              fontSize={7}
+              fill="#0284c7"
+              fontWeight={600}
+            >
+              {t('results:stayDist.meanLabel', { value: withoutCat.mean.toFixed(1) })}
+            </text>
+          </>
         )}
 
         {/* Axis labels: min and max of combined range */}

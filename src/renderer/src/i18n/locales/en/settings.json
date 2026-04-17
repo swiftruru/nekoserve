@@ -227,13 +227,24 @@
           { "text": "L'Ecuyer (1999), Good Parameters and Implementations for Combined Multiple Recursive Random Number Generators, Operations Research 47(1)", "url": "https://doi.org/10.1287/opre.47.1.159" }
         ]
       }
+    },
+    "warmUpDuration": {
+      "label": "Warm-up period",
+      "help": "The simulation runs normally during warm-up, but metrics are not counted. Use this to eliminate initialization bias from an empty system. Set to 0 to disable."
     }
   },
   "actions": {
     "start": "▶ Run simulation",
     "running": "Simulating…",
+    "cancel": "Cancel",
+    "cancelled": "Simulation cancelled",
     "reset": "Reset settings",
     "runningHint": "Running simulation, please wait…"
+  },
+  "validation": {
+    "lowArrival": "Arrival interval exceeds simulation duration; very few customers will arrive",
+    "shortDuration": "Simulation duration is short (< 30 min); results may be unstable",
+    "extremeResources": "Very large resource counts; simulation may be slow"
   },
   "errorPanel": {
     "title": "Simulation failed",
@@ -254,7 +265,8 @@
     "description": "Run the same config with different seeds, get mean and confidence intervals",
     "replications": "Replications",
     "runButton": "▶ Run {{count}} replications",
-    "progress": "Replicating ({{completed}} / {{total}})"
+    "progress": "Replicating ({{completed}} / {{total}})",
+    "complete": "Batch complete: {{count}} replications in {{seconds}}s"
   },
   "sweep": {
     "toggle": "Sensitivity analysis",
@@ -264,6 +276,17 @@
     "to": "To",
     "step": "Step",
     "repsEach": "Reps each",
-    "runButton": "▶ Run parameter sweep"
+    "runButton": "▶ Run parameter sweep",
+    "complete": "Sweep complete in {{seconds}}s"
+  },
+  "csvImport": {
+    "button": "Import CSV",
+    "preview": "CSV preview: {{count}} parameter sets",
+    "runAll": "▶ Run all",
+    "cancel": "Cancel",
+    "invalidFile": "Invalid CSV file format",
+    "missingColumns": "CSV missing required columns: {{columns}}",
+    "running": "Running ({{completed}} / {{total}})",
+    "complete": "CSV batch complete: {{count}} sets in {{seconds}}s"
   }
 }

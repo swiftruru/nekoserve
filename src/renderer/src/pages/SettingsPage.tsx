@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationConfig, ScenarioPreset, SimulatorError } from '../types'
 import ParamInput from '../components/ParamInput'
 import ParamRationale from '../components/ParamRationale'
+import ThemedSelect from '../components/ThemedSelect'
 import ScenarioButtons from '../components/ScenarioButtons'
 import { useToast } from '../hooks/useToast'
 import {
@@ -19,87 +20,11 @@ interface SettingsPageProps {
   onRunBatch?: (config: SimulationConfig, replicationCount: number, label: string) => void
   onRunSweep?: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => void
   onReset: () => void
+  onCancel?: () => void
   isRunning: boolean
   elapsed: number
   error: SimulatorError | null
   batchProgress?: { completed: number; total: number } | null
-}
-
-// ── Themed dropdown (replaces native <select>) ──────────────
-
-interface ThemedSelectProps {
-  value: string
-  options: { value: string; label: string }[]
-  onChange: (value: string) => void
-  disabled?: boolean
-  accent?: 'orange' | 'purple'
-}
-
-function ThemedSelect({ value, options, onChange, disabled, accent = 'purple' }: ThemedSelectProps) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  const selectedLabel = options.find((o) => o.value === value)?.label ?? value
-
-  useEffect(() => {
-    if (!open) return
-    const onClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    document.addEventListener('mousedown', onClickOutside)
-    document.addEventListener('keydown', onEsc)
-    return () => {
-      document.removeEventListener('mousedown', onClickOutside)
-      document.removeEventListener('keydown', onEsc)
-    }
-  }, [open])
-
-  const isPurple = accent === 'purple'
-  const borderCls = isPurple
-    ? 'border-purple-200 dark:border-bark-500 hover:border-purple-400'
-    : 'border-orange-200 dark:border-bark-500 hover:border-orange-400'
-  const selectedCls = isPurple
-    ? 'text-purple-600 dark:text-purple-400 font-semibold bg-purple-50 dark:bg-purple-900/20'
-    : 'text-orange-600 dark:text-orange-400 font-semibold bg-orange-50 dark:bg-orange-900/20'
-
-  return (
-    <div ref={ref} className="relative flex-1">
-      <button
-        type="button"
-        onClick={() => { if (!disabled) setOpen((v) => !v) }}
-        disabled={disabled}
-        className={`w-full flex items-center justify-between gap-2 rounded-lg border ${borderCls} bg-white dark:bg-bark-700 dark:hover:border-bark-400 px-2.5 py-1.5 text-xs text-gray-700 dark:text-bark-200 transition-colors`}
-      >
-        <span className="truncate">{selectedLabel}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}>
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl border border-orange-200 dark:border-bark-600 bg-white dark:bg-bark-800 shadow-xl shadow-orange-500/10 dark:shadow-black/30 overflow-hidden py-1">
-          {options.map((opt) => {
-            const isSelected = opt.value === value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => { onChange(opt.value); setOpen(false) }}
-                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                  isSelected
-                    ? selectedCls
-                    : 'text-gray-600 dark:text-bark-200 hover:bg-orange-50 dark:hover:bg-bark-700'
-                }`}
-              >
-                {isSelected && <span className="mr-1.5">✓</span>}
-                {opt.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
 }
 
 export default function SettingsPage({
@@ -109,6 +34,7 @@ export default function SettingsPage({
   onRunBatch,
   onRunSweep,
   onReset,
+  onCancel,
   isRunning,
   elapsed,
   error,
@@ -130,6 +56,9 @@ export default function SettingsPage({
   const [sweepTo, setSweepTo] = useState(5)
   const [sweepStep, setSweepStep] = useState(1)
   const [sweepReplications, setSweepReplications] = useState(5)
+  const [csvConfigs, setCsvConfigs] = useState<SimulationConfig[] | null>(null)
+  const csvInputRef = useRef<HTMLInputElement>(null)
+
   const [customScenarios, setCustomScenarios] = useState<ScenarioPreset[]>(
     () => loadCustomScenarios()
   )
@@ -140,7 +69,7 @@ export default function SettingsPage({
     | 'customerArrivalInterval' | 'maxWaitTime'
     | 'orderTime' | 'preparationTime' | 'diningTime'
     | 'catInteractionTime' | 'catRestProbability' | 'catRestDuration'
-    | 'simulationDuration' | 'randomSeed'
+    | 'simulationDuration' | 'randomSeed' | 'warmUpDuration'
   const paramLabel = (k: ParamKey) => t(`settings:parameters.${k}.label` as const)
   const paramHelp = (k: ParamKey) => t(`settings:parameters.${k}.help` as const)
   const unitMin = t('common:unit.min')
@@ -164,7 +93,20 @@ export default function SettingsPage({
     onReset()
   }
 
+  function validateConfig() {
+    if (config.customerArrivalInterval > config.simulationDuration) {
+      toast(t('settings:validation.lowArrival'), 'info')
+    }
+    if (config.simulationDuration < 30) {
+      toast(t('settings:validation.shortDuration'), 'info')
+    }
+    if (config.seatCount * config.staffCount * config.catCount > 1000) {
+      toast(t('settings:validation.extremeResources'), 'info')
+    }
+  }
+
   function handleRun() {
+    validateConfig()
     const fallback = t('settings:scenario.defaultRunLabel')
     let label = fallback
     if (activeScenario) {
@@ -182,6 +124,80 @@ export default function SettingsPage({
     } else {
       onRun(config, label)
     }
+  }
+
+  function handleCsvFile(file: File) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const text = reader.result as string
+        const lines = text.split(/\r?\n/).filter((l) => l.trim())
+        if (lines.length < 2) { toast(t('settings:csvImport.invalidFile'), 'error'); return }
+        const headers = lines[0].split(',').map((h) => h.trim())
+        // Map CSV headers (snake_case) to config keys (camelCase)
+        const headerMap: Record<string, keyof SimulationConfig> = {
+          seat_count: 'seatCount', staff_count: 'staffCount', cat_count: 'catCount',
+          customer_arrival_interval: 'customerArrivalInterval', customer_arrival_interval_min: 'customerArrivalInterval',
+          order_time: 'orderTime', order_time_min: 'orderTime',
+          preparation_time: 'preparationTime', preparation_time_min: 'preparationTime',
+          dining_time: 'diningTime', dining_time_min: 'diningTime',
+          cat_interaction_time: 'catInteractionTime', cat_interaction_time_min: 'catInteractionTime',
+          cat_idle_interval: 'catIdleInterval', cat_idle_interval_min: 'catIdleInterval',
+          cat_rest_probability: 'catRestProbability',
+          cat_rest_duration: 'catRestDuration', cat_rest_duration_min: 'catRestDuration',
+          max_wait_time: 'maxWaitTime', max_wait_time_min: 'maxWaitTime',
+          simulation_duration: 'simulationDuration', simulation_duration_min: 'simulationDuration',
+          random_seed: 'randomSeed',
+          // Also accept camelCase headers directly
+          seatCount: 'seatCount', staffCount: 'staffCount', catCount: 'catCount',
+          customerArrivalInterval: 'customerArrivalInterval', orderTime: 'orderTime',
+          preparationTime: 'preparationTime', diningTime: 'diningTime',
+          catInteractionTime: 'catInteractionTime', catIdleInterval: 'catIdleInterval',
+          catRestProbability: 'catRestProbability', catRestDuration: 'catRestDuration',
+          maxWaitTime: 'maxWaitTime', simulationDuration: 'simulationDuration', randomSeed: 'randomSeed',
+        }
+        const colMap = headers.map((h) => headerMap[h] ?? null)
+        const missing = REQUIRED_KEYS.filter((k) => !colMap.includes(k))
+        if (missing.length > 0) {
+          toast(t('settings:csvImport.missingColumns', { columns: missing.join(', ') }), 'error')
+          return
+        }
+        const configs: SimulationConfig[] = []
+        for (let i = 1; i < lines.length; i++) {
+          const vals = lines[i].split(',').map((v) => v.trim())
+          const cfg = { ...config } as Record<string, number>
+          let valid = true
+          for (let j = 0; j < colMap.length; j++) {
+            const key = colMap[j]
+            if (!key) continue
+            const num = parseFloat(vals[j])
+            if (isNaN(num)) { valid = false; break }
+            cfg[key] = num
+          }
+          if (valid) configs.push(cfg as unknown as SimulationConfig)
+        }
+        if (configs.length === 0) { toast(t('settings:csvImport.invalidFile'), 'error'); return }
+        setCsvConfigs(configs)
+      } catch {
+        toast(t('settings:csvImport.invalidFile'), 'error')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  async function handleCsvRunAll() {
+    if (!csvConfigs || csvConfigs.length === 0) return
+    const start = Date.now()
+    for (let i = 0; i < csvConfigs.length; i++) {
+      const cfg = csvConfigs[i]
+      const label = `CSV #${i + 1}`
+      onRun(cfg, label)
+      // Small delay to let the UI update
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    const secs = ((Date.now() - start) / 1000).toFixed(1)
+    toast(t('settings:csvImport.complete', { count: csvConfigs.length, seconds: secs }))
+    setCsvConfigs(null)
   }
 
   function handleSaveCustom(name: string) {
@@ -454,6 +470,15 @@ export default function SettingsPage({
               tooltip={paramHelp('randomSeed')}
               disabled={isRunning}
             />
+            <ParamInput
+              label={paramLabel('warmUpDuration')}
+              value={config.warmUpDuration}
+              onChange={(v) => set('warmUpDuration', Math.max(0, v))}
+              min={0} max={480} step={5}
+              unit={unitMin}
+              tooltip={paramHelp('warmUpDuration')}
+              disabled={isRunning}
+            />
           </div>
 
           {/* ── Advanced run modes ─────────────────────── */}
@@ -642,8 +667,47 @@ export default function SettingsPage({
         </div>
       )}
 
+      {/* ── CSV import preview ─────────────────────── */}
+      {csvConfigs && (
+        <div className="mt-4 rounded-xl border border-green-200 dark:border-green-800/50 bg-green-50/60 dark:bg-green-900/20 px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-green-700 dark:text-green-400">
+              {t('settings:csvImport.preview', { count: csvConfigs.length })}
+            </span>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setCsvConfigs(null)} className="btn-secondary text-xs px-3 py-1">
+                {t('settings:csvImport.cancel')}
+              </button>
+              <button type="button" onClick={handleCsvRunAll} disabled={isRunning} className="btn-primary text-xs px-3 py-1">
+                {t('settings:csvImport.runAll')}
+              </button>
+            </div>
+          </div>
+          <div className="max-h-32 overflow-y-auto text-[10px] font-mono text-green-800 dark:text-green-300 bg-green-100/50 dark:bg-green-900/30 rounded-lg px-2 py-1">
+            {csvConfigs.map((cfg, i) => (
+              <div key={i}>#{i + 1}: seats={cfg.seatCount} staff={cfg.staffCount} cats={cfg.catCount} interval={cfg.customerArrivalInterval} seed={cfg.randomSeed}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Action buttons ───────────────────────────── */}
       <div className="mt-4 flex gap-3 justify-end">
+        <input
+          ref={csvInputRef}
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCsvFile(f); e.target.value = '' }}
+        />
+        <button
+          type="button"
+          onClick={() => csvInputRef.current?.click()}
+          disabled={isRunning}
+          className="btn-secondary text-xs"
+        >
+          {t('settings:csvImport.button')}
+        </button>
         <button
           type="button"
           onClick={handleReset}
@@ -652,26 +716,36 @@ export default function SettingsPage({
         >
           {t('settings:actions.reset')}
         </button>
-        <button
-          type="button"
-          data-onboarding="run-button"
-          onClick={handleRun}
-          disabled={isRunning}
-          className="btn-primary flex items-center gap-2"
-        >
-          {isRunning ? (
-            <>
-              <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              {t('settings:actions.running')}
-            </>
-          ) : sweepMode ? (
-            <>{t('settings:sweep.runButton')}</>
-          ) : batchMode ? (
-            <>{t('settings:batch.runButton', { count: replicationCount })}</>
-          ) : (
-            <>{t('settings:actions.start')}</>
-          )}
-        </button>
+        {isRunning && onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-semibold rounded-xl px-6 py-2.5 shadow-lg shadow-red-500/25 transition-all duration-150 flex items-center gap-2"
+          >
+            {t('settings:actions.cancel')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            data-onboarding="run-button"
+            onClick={handleRun}
+            disabled={isRunning}
+            className="btn-primary flex items-center gap-2"
+          >
+            {isRunning ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                {t('settings:actions.running')}
+              </>
+            ) : sweepMode ? (
+              <>{t('settings:sweep.runButton')}</>
+            ) : batchMode ? (
+              <>{t('settings:batch.runButton', { count: replicationCount })}</>
+            ) : (
+              <>{t('settings:actions.start')}</>
+            )}
+          </button>
+        )}
       </div>
     </div>
   )

@@ -614,9 +614,12 @@ nekoserve/
 - [x] What-If Explorer for instant parameter comparison (v1.0.0)
 - [x] Print / PDF export for Results page (v1.0.0)
 - [x] Playback screenshot export as PNG (v1.0.0)
-- [ ] CSV import for batch parameter testing
+- [x] CSV import for batch parameter testing (v1.1.0)
+- [x] Warm-up period configuration for initialization bias (v1.1.0)
+- [x] Wait time percentiles P50/P95/P99 (v1.1.0)
+- [x] Event Log: column sorting, time range filter, customer journey tracking (v1.1.0)
+- [x] Simulation cancel button, parameter validation, ErrorBoundary (v1.1.0)
 - [ ] macOS / Windows code signing & notarization
-- [ ] Warm-up period configuration for initialization bias
 - [ ] Third UI language (Japanese?)
 
 ---

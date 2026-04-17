@@ -227,13 +227,24 @@
           { "text": "L'Ecuyer (1999), Good Parameters and Implementations for Combined Multiple Recursive Random Number Generators, Operations Research 47(1)", "url": "https://doi.org/10.1287/opre.47.1.159" }
         ]
       }
+    },
+    "warmUpDuration": {
+      "label": "暖機期",
+      "help": "暖機期間模擬照常運作，但指標不計入統計。用來排除系統從空閒狀態啟動的初始偏差。設為 0 表示不啟用。"
     }
   },
   "actions": {
     "start": "▶ 開始模擬",
     "running": "模擬進行中…",
+    "cancel": "取消",
+    "cancelled": "模擬已取消",
     "reset": "重設設定",
     "runningHint": "模擬進行中，請稍候…"
+  },
+  "validation": {
+    "lowArrival": "到達間隔大於模擬時長，幾乎不會有顧客到達",
+    "shortDuration": "模擬時長很短（< 30 分鐘），統計結果可能不穩定",
+    "extremeResources": "資源數量非常大，模擬可能較慢"
   },
   "errorPanel": {
     "title": "模擬執行失敗",
@@ -254,7 +265,8 @@
     "description": "同一組設定用不同種子跑多次，計算平均值和信賴區間",
     "replications": "重複次數",
     "runButton": "▶ 執行 {{count}} 次重複",
-    "progress": "重複模擬中 ({{completed}} / {{total}})"
+    "progress": "重複模擬中 ({{completed}} / {{total}})",
+    "complete": "批次完成: {{count}} 次重複, 耗時 {{seconds}} 秒"
   },
   "sweep": {
     "toggle": "敏感度分析",
@@ -264,6 +276,17 @@
     "to": "終止值",
     "step": "步進",
     "repsEach": "每點重複",
-    "runButton": "▶ 執行參數掃描"
+    "runButton": "▶ 執行參數掃描",
+    "complete": "掃描完成, 耗時 {{seconds}} 秒"
+  },
+  "csvImport": {
+    "button": "匯入 CSV",
+    "preview": "CSV 預覽: {{count}} 組參數",
+    "runAll": "▶ 全部執行",
+    "cancel": "取消",
+    "invalidFile": "CSV 檔案格式不正確",
+    "missingColumns": "CSV 缺少必要欄位: {{columns}}",
+    "running": "執行中 ({{completed}} / {{total}})",
+    "complete": "CSV 批次完成: {{count}} 組, 耗時 {{seconds}} 秒"
   }
 }

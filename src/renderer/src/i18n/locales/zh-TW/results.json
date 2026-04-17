@@ -147,6 +147,7 @@
     "empty": "還沒有足夠的資料比較",
     "tooltip": "{{from}}-{{to}} {{unit}}：{{count}} 人",
     "deltaBoth": "有貓的人平均停留 {{withCat}} 分；沒貓的人 {{withoutCat}} 分 — 差距 {{delta}} 分",
+    "meanLabel": "平均 {{value}}",
     "onlyWithCat": "這次每位顧客都被貓拜訪過（平均停留 {{avg}} 分）",
     "onlyWithoutCat": "這次沒有顧客被貓拜訪（平均停留 {{avg}} 分）"
   },
@@ -238,10 +239,12 @@
   },
   "batch": {
     "banner": "此結果基於 {{n}} 次重複模擬 (不同隨機種子)",
-    "ciHint": "KPI 卡片下方顯示 95% 信賴區間"
+    "ciHint": "KPI 卡片下方顯示 95% 信賴區間",
+    "exportCsv": "⬇ 批次 CSV"
   },
   "sweep": {
-    "title": "敏感度分析結果"
+    "title": "敏感度分析結果",
+    "exportCsv": "⬇ 掃描 CSV"
   },
   "whatIf": {
     "expand": "What-If 探索器：調整參數即時對比",
@@ -264,6 +267,9 @@
     "collapse": "收起歷史 ▲",
     "expand": "展開歷史 ({{count}}) ▼",
     "current": "目前",
+    "selectHint": "勾選 2-4 筆進行對比",
+    "maxCompare": "最多勾選 4 筆進行對比",
+    "compareSelected": "對比 ({{count}})",
     "configBrief": "{{seats}} 座 · {{staff}} 員 · {{cats}} 貓 · seed {{seed}}",
     "abandonRateBrief": "放棄 {{rate}}%",
     "servedBrief": "服務 {{count}} 人"

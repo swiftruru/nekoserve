@@ -1,5 +1,5 @@
 import i18n from '@i18n/index'
-import type { SimulationResult, EventLogItem, EventType } from '../types'
+import type { SimulationResult, EventLogItem, EventType, BatchResult, SweepResult } from '../types'
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
@@ -40,6 +40,12 @@ const METRIC_KEYS: (keyof SimulationResult['metrics'])[] = [
   'seatUtilization',
   'staffUtilization',
   'catUtilization',
+  'waitForSeatP50',
+  'waitForSeatP95',
+  'waitForSeatP99',
+  'waitForOrderP50',
+  'waitForOrderP95',
+  'waitForOrderP99',
 ]
 
 const METRIC_HEADERS: Record<keyof SimulationResult['metrics'], string> = {
@@ -53,6 +59,12 @@ const METRIC_HEADERS: Record<keyof SimulationResult['metrics'], string> = {
   seatUtilization:       'seat_utilization',
   staffUtilization:      'staff_utilization',
   catUtilization:        'cat_utilization',
+  waitForSeatP50:        'wait_for_seat_p50_min',
+  waitForSeatP95:        'wait_for_seat_p95_min',
+  waitForSeatP99:        'wait_for_seat_p99_min',
+  waitForOrderP50:       'wait_for_order_p50_min',
+  waitForOrderP95:       'wait_for_order_p95_min',
+  waitForOrderP99:       'wait_for_order_p99_min',
 }
 
 const CONFIG_KEYS: (keyof SimulationResult['config'])[] = [
@@ -129,6 +141,51 @@ function localizedEventDescription(e: EventLogItem): string {
     defaultValue: e.description ?? '',
   })
 }
+
+// ── Batch summary CSV ────────────────────────────────────────
+
+export function exportBatchSummaryCSV(batch: BatchResult): void {
+  const headers = ['metric', 'mean', 'std_dev', 'ci95_lower', 'ci95_upper', 'n']
+  const rows = METRIC_KEYS.map((key) => {
+    const ci = batch.summary[key as keyof typeof batch.summary]
+    return [
+      escapeCSV(METRIC_HEADERS[key]),
+      escapeCSV(ci.mean.toFixed(4)),
+      escapeCSV(ci.stdDev.toFixed(4)),
+      escapeCSV(ci.ci95Lower.toFixed(4)),
+      escapeCSV(ci.ci95Upper.toFixed(4)),
+      escapeCSV(ci.n),
+    ].join(',')
+  })
+  const csv = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+  downloadBlob(blob, `nekoserve-batch-summary-${timestamp()}.csv`)
+}
+
+// ── Sweep data CSV ───────────────────────────────────────────
+
+export function exportSweepCSV(sweep: SweepResult): void {
+  const headers = ['param_value', 'metric', 'mean', 'ci95_lower', 'ci95_upper']
+  const rows: string[] = []
+  for (const point of sweep.points) {
+    for (const key of METRIC_KEYS) {
+      const ci = point.metrics[key]
+      if (!ci) continue
+      rows.push([
+        escapeCSV(point.paramValue),
+        escapeCSV(METRIC_HEADERS[key]),
+        escapeCSV(ci.mean.toFixed(4)),
+        escapeCSV(ci.ci95Lower.toFixed(4)),
+        escapeCSV(ci.ci95Upper.toFixed(4)),
+      ].join(','))
+    }
+  }
+  const csv = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+  downloadBlob(blob, `nekoserve-sweep-${timestamp()}.csv`)
+}
+
+// ── Event log CSV ─────────────────────────────────────────────
 
 export function exportEventLogCSV(events: EventLogItem[]): void {
   const rows = events.map((e) => [

@@ -26,6 +26,7 @@ class SimulationConfig:
     maxWaitTime: float = 20.0              # minutes
     simulationDuration: float = 240.0      # minutes
     randomSeed: int = 42
+    warmUpDuration: float = 0.0            # minutes (0 = disabled)
 
     def to_dict(self) -> dict:
         return asdict(self)

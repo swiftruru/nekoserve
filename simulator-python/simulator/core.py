@@ -28,6 +28,19 @@ from .models import SimulationConfig
 # Helpers
 # ──────────────────────────────────────────────────────────────
 
+def _percentile(lst: list[float], p: float) -> float:
+    """Compute the p-th percentile (0-100) of a sorted list."""
+    if not lst:
+        return 0.0
+    s = sorted(lst)
+    k = (len(s) - 1) * p / 100.0
+    f = int(k)
+    c = f + 1
+    if c >= len(s):
+        return round(s[f], 2)
+    return round(s[f] + (k - f) * (s[c] - s[f]), 2)
+
+
 def _normal(rng: random.Random, mean: float) -> float:
     """Normal distribution sample, std = mean * 0.2, clamped to min 1.0."""
     return max(1.0, rng.gauss(mean, mean * 0.2))
@@ -255,16 +268,43 @@ def run_simulation(config_dict: dict) -> dict:
         while True:
             inter = rng.expovariate(1.0 / config.customerArrivalInterval)
             yield env.timeout(inter)
-            if env.now >= config.simulationDuration:
+            if env.now >= total_duration:
                 break
             env.process(customer(cid))
             cid += 1
 
-    # Boot cat processes, then start the customer generator.
+    # ── Warm-up reset process ─────────────────────────────
+    warm_up = config.warmUpDuration
+
+    def warm_up_reset():
+        """Wait until warm-up ends, then clear all accumulators."""
+        nonlocal total_arrived, total_served, total_abandoned
+        nonlocal total_cat_visits, customers_with_visit
+        nonlocal total_seat_busy, total_staff_busy, total_cat_busy
+        if warm_up <= 0:
+            return
+        yield env.timeout(warm_up)
+        total_arrived = 0
+        total_served = 0
+        total_abandoned = 0
+        total_cat_visits = 0
+        customers_with_visit = 0
+        total_seat_busy = 0.0
+        total_staff_busy = 0.0
+        total_cat_busy = 0.0
+        wait_seat_times.clear()
+        wait_order_times.clear()
+        stay_times.clear()
+
+    total_duration = config.simulationDuration + warm_up
+
+    # Boot cat processes, warm-up reset, then start the customer generator.
     for i in range(1, config.catCount + 1):
         env.process(cat(i))
+    if warm_up > 0:
+        env.process(warm_up_reset())
     env.process(generator())
-    env.run(until=config.simulationDuration)
+    env.run(until=total_duration)
 
     # ── Compute metrics ────────────────────────────────────
     sim_dur = config.simulationDuration
@@ -308,6 +348,12 @@ def run_simulation(config_dict: dict) -> dict:
             "totalCustomersServed": total_served,
             "totalCustomersArrived": total_arrived,
             "abandonRate": abandon_rate,
+            "waitForSeatP50": _percentile(wait_seat_times, 50),
+            "waitForSeatP95": _percentile(wait_seat_times, 95),
+            "waitForSeatP99": _percentile(wait_seat_times, 99),
+            "waitForOrderP50": _percentile(wait_order_times, 50),
+            "waitForOrderP95": _percentile(wait_order_times, 95),
+            "waitForOrderP99": _percentile(wait_order_times, 99),
         },
         "eventLog": sorted(event_log, key=lambda e: e["timestamp"]),
     }

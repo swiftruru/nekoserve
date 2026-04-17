@@ -12,5 +12,28 @@
   },
   "empty": "沒有符合條件的事件",
   "searchLabel": "搜尋事件",
-  "filterResultAnnounce": "顯示 {{count}} 筆事件"
+  "filterResultAnnounce": "顯示 {{count}} 筆事件",
+  "sort": {
+    "ascending": "升冪",
+    "descending": "降冪"
+  },
+  "timeRange": {
+    "from": "從",
+    "to": "到",
+    "reset": "重設範圍",
+    "unit": "分鐘"
+  },
+  "stats": {
+    "title": "事件統計",
+    "total": "共 {{count}} 筆事件"
+  },
+  "journey": {
+    "tracking": "追蹤顧客 #{{id}} 的旅程",
+    "clear": "取消追蹤",
+    "clickHint": "點擊顧客編號追蹤其完整旅程"
+  },
+  "jumpTime": {
+    "placeholder": "跳至...",
+    "go": "前往"
+  }
 }

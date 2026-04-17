@@ -132,6 +132,46 @@ seat_utilization = (
             </p>
           </div>
 
+          {/* Section 6: replication */}
+          <div>
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
+              {t('howItWorks:section6Title')}
+            </p>
+            <p className="mb-2">
+              <Trans i18nKey="howItWorks:section6Concept" components={inlineComponents} />
+            </p>
+            <p className="mb-2">{t('howItWorks:section6Model')}</p>
+            <CodeBlock>{`results = []
+for i in range(num_replications):
+    env = simpy.Environment()
+    setup(env, config, seed=base_seed + i)
+    env.run(until=sim_duration)
+    results.append(collect_metrics())
+mean_kpis = average(results)`}</CodeBlock>
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
+              {t('howItWorks:section6CodeNote')}
+            </p>
+          </div>
+
+          {/* Section 7: CI & sensitivity analysis */}
+          <div>
+            <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
+              {t('howItWorks:section7Title')}
+            </p>
+            <p className="mb-2">
+              <Trans i18nKey="howItWorks:section7Concept" components={inlineComponents} />
+            </p>
+            <p className="mb-2">{t('howItWorks:section7Model')}</p>
+            <CodeBlock>{`mean = sum(values) / n
+std  = sqrt(sum((x - mean)**2 for x in values) / (n - 1))
+t_crit = t_table[n - 1]       # e.g. 2.262 for n=10
+half_width = t_crit * std / sqrt(n)
+ci_95 = (mean - half_width, mean + half_width)`}</CodeBlock>
+            <p className="text-xs text-gray-500 dark:text-bark-400 mt-1">
+              {t('howItWorks:section7CodeNote')}
+            </p>
+          </div>
+
           <p className="text-gray-600 dark:text-bark-300 border-t border-orange-50 dark:border-bark-600 pt-4">
             {t('howItWorks:outro')}
           </p>

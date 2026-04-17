@@ -144,7 +144,7 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr>
-            <th className="text-left text-xs text-gray-500 dark:text-bark-300 font-semibold pb-2 w-36">
+            <th className="text-left text-xs text-gray-500 dark:text-bark-300 font-semibold pb-2 w-36 sticky left-0 bg-white dark:bg-bark-800 z-10">
               {t('results:comparison.indicator')}
             </th>
             {history.map((entry, i) => (
@@ -173,7 +173,7 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
 
             return (
               <tr key={row.key} className="hover:bg-orange-50/40 dark:hover:bg-bark-700/40 transition-colors">
-                <td className="py-2 pr-4 text-xs text-gray-600 whitespace-nowrap">
+                <td className="py-2 pr-4 text-xs text-gray-600 whitespace-nowrap sticky left-0 bg-white dark:bg-bark-800 z-10">
                   <span className="mr-1">{row.icon}</span>
                   {t(`results:kpi.${row.i18nKey}.label` as const)}
                   <span className="ml-1 text-gray-400">({unitShort(row)})</span>

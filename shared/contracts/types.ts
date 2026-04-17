@@ -37,6 +37,8 @@ export interface SimulationConfig {
   simulationDuration: number
   /** 隨機種子，用於可重現模擬結果 */
   randomSeed: number
+  /** 暖機期（分鐘），暖機期間的指標不計入統計。預設 0（不啟用）。 */
+  warmUpDuration: number
 }
 
 // ----------------------------------------------------------
@@ -68,6 +70,18 @@ export interface MetricSummary {
   totalCustomersArrived: number
   /** 放棄等待比例 (0–1) */
   abandonRate: number
+  /** 等待座位 P50 (分鐘) */
+  waitForSeatP50: number
+  /** 等待座位 P95 (分鐘) */
+  waitForSeatP95: number
+  /** 等待座位 P99 (分鐘) */
+  waitForSeatP99: number
+  /** 等待點餐 P50 (分鐘) */
+  waitForOrderP50: number
+  /** 等待點餐 P95 (分鐘) */
+  waitForOrderP95: number
+  /** 等待點餐 P99 (分鐘) */
+  waitForOrderP99: number
 }
 
 export type EventType =

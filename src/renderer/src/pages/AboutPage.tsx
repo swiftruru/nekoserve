@@ -152,6 +152,9 @@ export default function AboutPage({ onCheckForUpdate, updateChecking }: AboutPag
             <li>{t('about:usage.step3')}</li>
             <li>{t('about:usage.step4')}</li>
             <li>{t('about:usage.step5')}</li>
+            <li>{t('about:usage.step6')}</li>
+            <li>{t('about:usage.step7')}</li>
+            <li>{t('about:usage.step8')}</li>
           </ol>
         </div>
 
@@ -190,6 +193,10 @@ export default function AboutPage({ onCheckForUpdate, updateChecking }: AboutPag
               <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">{t('about:experiment.principle5Title')}</p>
               <p className="mb-1">{t('about:experiment.principle5BodyA')}</p>
               <p>{t('about:experiment.principle5BodyB')}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">{t('about:experiment.principle6Title')}</p>
+              <p>{t('about:experiment.principle6Body')}</p>
             </div>
           </div>
         </div>

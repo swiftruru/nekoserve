@@ -23,6 +23,7 @@ export const SCENARIOS: ScenarioPreset[] = [
       maxWaitTime: 25,
       simulationDuration: 240,
       randomSeed: 42,
+      warmUpDuration: 0,
     },
   },
   {
@@ -44,6 +45,7 @@ export const SCENARIOS: ScenarioPreset[] = [
       maxWaitTime: 15,
       simulationDuration: 360,
       randomSeed: 42,
+      warmUpDuration: 0,
     },
   },
   {
@@ -65,6 +67,7 @@ export const SCENARIOS: ScenarioPreset[] = [
       maxWaitTime: 20,
       simulationDuration: 240,
       randomSeed: 42,
+      warmUpDuration: 0,
     },
   },
 ]
@@ -86,10 +89,33 @@ export function isBuiltInScenarioId(id: string): boolean {
 
 const CUSTOM_KEY = 'nekoserve:custom-scenarios'
 
+const CONFIG_NUMBER_KEYS: string[] = [
+  'seatCount', 'staffCount', 'catCount', 'customerArrivalInterval',
+  'orderTime', 'preparationTime', 'diningTime', 'catInteractionTime',
+  'catIdleInterval', 'catRestProbability', 'catRestDuration',
+  'maxWaitTime', 'simulationDuration', 'randomSeed',
+]
+
+function isValidScenario(p: unknown): p is ScenarioPreset {
+  if (!p || typeof p !== 'object') return false
+  const obj = p as Record<string, unknown>
+  if (typeof obj.id !== 'string' || typeof obj.name !== 'string') return false
+  if (!obj.config || typeof obj.config !== 'object') return false
+  const cfg = obj.config as Record<string, unknown>
+  return CONFIG_NUMBER_KEYS.every((k) => typeof cfg[k] === 'number' && isFinite(cfg[k] as number) && (cfg[k] as number) >= 0)
+}
+
 export function loadCustomScenarios(): ScenarioPreset[] {
   try {
     const raw = localStorage.getItem(CUSTOM_KEY)
-    return raw ? (JSON.parse(raw) as ScenarioPreset[]) : []
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown[]
+    if (!Array.isArray(parsed)) return []
+    const valid = parsed.filter(isValidScenario)
+    if (valid.length < parsed.length) {
+      console.warn(`[NekoServe] Skipped ${parsed.length - valid.length} invalid custom scenario(s)`)
+    }
+    return valid
   } catch {
     return []
   }

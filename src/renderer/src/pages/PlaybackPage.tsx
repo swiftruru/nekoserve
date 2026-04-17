@@ -46,6 +46,17 @@ interface PlaybackPageProps {
 }
 
 const DEFAULT_SPEED = 4
+const SPEED_STORAGE_KEY = 'nekoserve:playback-speed'
+
+function loadSpeed(): number {
+  try {
+    const v = parseFloat(localStorage.getItem(SPEED_STORAGE_KEY) ?? '')
+    return SPEED_OPTIONS.includes(v as typeof SPEED_OPTIONS[number]) ? v : DEFAULT_SPEED
+  } catch { return DEFAULT_SPEED }
+}
+function saveSpeed(s: number) {
+  try { localStorage.setItem(SPEED_STORAGE_KEY, String(s)) } catch { /* ok */ }
+}
 
 function formatSimClock(minutes: number): string {
   const total = Math.max(0, Math.floor(minutes))
@@ -83,7 +94,7 @@ export default function PlaybackPage({
   }, [eventLog])
 
   const [playing, setPlaying] = useState(false)
-  const [speed, setSpeed] = useState<number>(DEFAULT_SPEED)
+  const [speed, setSpeed] = useState<number>(() => loadSpeed())
   const [focus, setFocus] = useState<FocusTarget | null>(null)
   const [learningMode, setLearningMode] = useState(false)
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -172,7 +183,7 @@ export default function PlaybackPage({
     setSimTime(picked)
   }, [timestamps, simTime, setSimTime])
 
-  const handleSpeed = useCallback((s: number) => setSpeed(s), [])
+  const handleSpeed = useCallback((s: number) => { setSpeed(s); saveSpeed(s) }, [])
 
   const handleScrub = useCallback(
     (t: number) => {

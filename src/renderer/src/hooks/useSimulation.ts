@@ -46,6 +46,7 @@ interface UseSimulationReturn extends SimulationState {
   run: (config: SimulationConfig, label?: string) => Promise<void>
   runBatch: (config: SimulationConfig, replicationCount: number, label?: string) => Promise<void>
   runSweep: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => Promise<void>
+  cancel: () => void
   reset: () => void
   clearHistory: () => void
   deleteHistoryEntry: (id: number) => void
@@ -73,6 +74,8 @@ const METRIC_KEYS: (keyof MetricSummary)[] = [
   'catInteractionRate', 'avgCatVisitsPerCustomer', 'noCatVisitRate',
   'seatUtilization', 'staffUtilization', 'catUtilization',
   'totalCustomersServed', 'totalCustomersArrived', 'abandonRate',
+  'waitForSeatP50', 'waitForSeatP95', 'waitForSeatP99',
+  'waitForOrderP50', 'waitForOrderP95', 'waitForOrderP99',
 ]
 
 function buildBatchSummary(runs: SimulationResult[]): BatchSummary {
@@ -87,6 +90,7 @@ function buildBatchSummary(runs: SimulationResult[]): BatchSummary {
 export function useSimulation(): UseSimulationReturn {
   const [state, setState] = useState<SimulationState>(INITIAL_STATE)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const abortRef = useRef(false)
 
   // Load persisted history on mount
   useEffect(() => {
@@ -173,6 +177,8 @@ export function useSimulation(): UseSimulationReturn {
     const startTime = Date.now()
     const baseSeed = config.randomSeed
 
+    abortRef.current = false
+
     setState((prev) => ({
       ...prev,
       status: 'running',
@@ -191,6 +197,7 @@ export function useSimulation(): UseSimulationReturn {
     let lastError: SimulatorError | null = null
 
     for (let i = 0; i < replicationCount; i++) {
+      if (abortRef.current) break
       try {
         const seedConfig = { ...config, randomSeed: baseSeed + i }
         const result = await window.electronAPI.runSimulation(seedConfig)
@@ -271,12 +278,13 @@ export function useSimulation(): UseSimulationReturn {
     replications: number,
   ) => {
     if (timerRef.current) clearInterval(timerRef.current)
+    abortRef.current = false
     const startTime = Date.now()
 
     // Generate parameter values
     const paramValues: number[] = []
     for (let v = from; v <= to + step * 0.01; v += step) {
-      paramValues.push(Math.round(v * 1000) / 1000) // avoid float drift
+      paramValues.push(Math.round(v * 1000) / 1000)
     }
 
     const totalRuns = paramValues.length * replications
@@ -301,8 +309,10 @@ export function useSimulation(): UseSimulationReturn {
     let firstResult: SimulationResult | null = null
 
     for (const paramValue of paramValues) {
+      if (abortRef.current) break
       const runs: SimulationResult[] = []
       for (let r = 0; r < replications; r++) {
+        if (abortRef.current) break
         try {
           const sweepConfig = {
             ...config,
@@ -361,6 +371,17 @@ export function useSimulation(): UseSimulationReturn {
     }))
   }, [])
 
+  const cancel = useCallback(() => {
+    abortRef.current = true
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = null
+    setState((prev) => ({
+      ...prev,
+      status: prev.result ? 'success' : 'idle',
+      batchProgress: null,
+    }))
+  }, [])
+
   const reset = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = null
@@ -407,6 +428,7 @@ export function useSimulation(): UseSimulationReturn {
     run,
     runBatch,
     runSweep,
+    cancel,
     reset,
     clearHistory,
     deleteHistoryEntry,

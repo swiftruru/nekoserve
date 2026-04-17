@@ -4,6 +4,7 @@ import type { SimulationResult, EventType, BatchResult, SweepResult } from '../t
 import SweepChart from '../components/results/SweepChart'
 import WhatIfExplorer from '../components/results/WhatIfExplorer'
 import type { HistoryEntry } from '../hooks/useSimulation'
+import ConfirmDialog from '../components/ConfirmDialog'
 import KpiCard from '../components/KpiCard'
 import UtilizationChart from '../components/charts/UtilizationChart'
 import WaitTimeChart from '../components/charts/WaitTimeChart'
@@ -28,7 +29,7 @@ import { buildReplayContext } from '../utils/replay'
 import { buildSnapshotSeries } from '../utils/snapshotSeries'
 import { extractCustomerMetrics } from '../utils/customerMetrics'
 import { extractKeyMoments } from '../utils/keyMoments'
-import { exportResultJSON, exportMetricsCSV } from '../utils/export'
+import { exportResultJSON, exportMetricsCSV, exportBatchSummaryCSV, exportSweepCSV } from '../utils/export'
 import { useToast } from '../hooks/useToast'
 
 interface ResultsPageProps {
@@ -59,9 +60,13 @@ export default function ResultsPage({
   const { t } = useTranslation(['results', 'common'])
   const { toast } = useToast()
   const { metrics, config, eventLog } = result
-  const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
+  const [selectedForCompare, setSelectedForCompare] = useState<Set<number>>(new Set())
   const [level, setLevel] = useState<LearningLevel>('expert')
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [historyPage, setHistoryPage] = useState(0)
+  const HISTORY_PAGE_SIZE = 5
+  const [confirmClear, setConfirmClear] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<{ id: number; label: string } | null>(null)
 
   const unitPeople = t('common:unit.people')
   const unitMin = t('common:unit.min')
@@ -161,31 +166,10 @@ export default function ResultsPage({
           >
             {t('results:exportJson')}
           </button>
-          {history.length >= 2 && (
-            <div className="flex rounded-lg border border-orange-200 overflow-hidden text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => setViewMode('single')}
-                className={`px-3 py-1.5 transition-colors ${
-                  viewMode === 'single'
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-white text-gray-500 hover:bg-orange-50'
-                }`}
-              >
-                {t('results:viewMode.single')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('compare')}
-                className={`px-3 py-1.5 border-l border-orange-200 transition-colors ${
-                  viewMode === 'compare'
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-white text-gray-500 hover:bg-orange-50'
-                }`}
-              >
-                {t('results:viewMode.compare', { count: history.length })}
-              </button>
-            </div>
+          {selectedForCompare.size >= 2 && (
+            <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-3 py-1.5 rounded-lg">
+              {t('results:history.compareSelected', { count: selectedForCompare.size })}
+            </span>
           )}
         </div>
       </div>
@@ -194,7 +178,7 @@ export default function ResultsPage({
       {batchResult && (
         <div className="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/60 dark:bg-purple-900/20 px-4 py-2.5 flex items-center gap-2">
           <span className="text-lg">🔬</span>
-          <div className="text-xs text-purple-700 dark:text-purple-300">
+          <div className="flex-1 text-xs text-purple-700 dark:text-purple-300">
             <span className="font-semibold">
               {t('results:batch.banner', { n: batchResult.replicationCount })}
             </span>
@@ -202,147 +186,222 @@ export default function ResultsPage({
               {t('results:batch.ciHint')}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={() => { exportBatchSummaryCSV(batchResult); toast(t('common:toast.exportSuccess')) }}
+            className="btn-secondary text-xs px-3 py-1 shrink-0"
+          >
+            {t('results:batch.exportCsv')}
+          </button>
         </div>
       )}
 
       {/* ── Sweep chart ──────────────────────────────────────── */}
       {sweepResult && sweepResult.points.length > 0 && (
-        <SweepChart
-          paramLabel={t(`results:configSummary.${
-            sweepResult.paramKey === 'customerArrivalInterval' ? 'arrivalInterval' :
-            sweepResult.paramKey === 'maxWaitTime' ? 'maxWait' :
-            sweepResult.paramKey === 'seatCount' ? 'seats' :
-            sweepResult.paramKey === 'staffCount' ? 'staff' :
-            sweepResult.paramKey === 'catCount' ? 'cats' :
-            sweepResult.paramKey
-          }` as const)}
-          points={sweepResult.points}
-        />
-      )}
-
-      {/* ── History panel ────────────────────────────────────── */}
-      {history.length > 0 && (
-        <div className="card">
-          <button
-            type="button"
-            onClick={() => setHistoryOpen((v) => !v)}
-            className="w-full flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
-          >
-            <span>📂</span>
-            {historyOpen
-              ? t('results:history.collapse')
-              : t('results:history.expand', { count: history.length })}
-          </button>
-          {historyOpen && (
-            <div className="mt-3 space-y-1.5">
-              {history.map((entry) => {
-                const isCurrent = entry.result === result
-                const m = entry.result.metrics
-                const c = entry.result.config
-                return (
-                  <div
-                    key={entry.id}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
-                      isCurrent
-                        ? 'bg-orange-100 dark:bg-bark-700 ring-1 ring-orange-400'
-                        : 'bg-gray-50 dark:bg-bark-800 hover:bg-orange-50 dark:hover:bg-bark-700'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-800 dark:text-bark-100 truncate">
-                        {entry.label}
-                        {isCurrent && (
-                          <span className="ml-1.5 text-[10px] text-orange-500 font-bold">
-                            {t('results:history.current')}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-gray-400 dark:text-bark-400 mt-0.5">
-                        {t('results:history.configBrief', {
-                          seats: c.seatCount,
-                          staff: c.staffCount,
-                          cats: c.catCount,
-                          seed: c.randomSeed,
-                        })}
-                        {' · '}
-                        {t('results:history.servedBrief', { count: m.totalCustomersServed })}
-                        {' · '}
-                        {t('results:history.abandonRateBrief', { rate: (m.abandonRate * 100).toFixed(1) })}
-                      </div>
-                      <div className="text-gray-300 dark:text-bark-500 mt-0.5">
-                        {new Date(entry.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {!isCurrent && onLoadHistory && (
-                        <button
-                          type="button"
-                          onClick={() => onLoadHistory(entry)}
-                          className="px-2 py-1 rounded bg-orange-500 text-white hover:bg-orange-600 transition-colors"
-                        >
-                          {t('results:history.load')}
-                        </button>
-                      )}
-                      {onRenameHistory && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newName = window.prompt(
-                              t('results:history.renamePrompt'),
-                              entry.label,
-                            )
-                            if (newName && newName.trim()) {
-                              onRenameHistory(entry.id, newName.trim())
-                            }
-                          }}
-                          className="px-2 py-1 rounded text-gray-500 dark:text-bark-300 hover:bg-gray-200 dark:hover:bg-bark-600 transition-colors"
-                          title={t('results:history.rename')}
-                        >
-                          ✏️
-                        </button>
-                      )}
-                      {onDeleteHistory && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm(t('results:history.deleteConfirm', { label: entry.label }))) {
-                              onDeleteHistory(entry.id)
-                            }
-                          }}
-                          className="px-2 py-1 rounded text-red-400 hover:bg-red-50 dark:hover:bg-bark-600 transition-colors"
-                          title={t('common:button.delete')}
-                        >
-                          🗑️
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-              {onClearHistory && history.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(t('results:history.clearConfirm'))) {
-                      onClearHistory()
-                    }
-                  }}
-                  className="mt-2 text-xs text-red-400 hover:text-red-500 transition-colors"
-                >
-                  {t('results:history.clearAll')}
-                </button>
-              )}
-            </div>
-          )}
+        <div className="space-y-2">
+          <SweepChart
+            paramLabel={t(`results:configSummary.${
+              sweepResult.paramKey === 'customerArrivalInterval' ? 'arrivalInterval' :
+              sweepResult.paramKey === 'maxWaitTime' ? 'maxWait' :
+              sweepResult.paramKey === 'seatCount' ? 'seats' :
+              sweepResult.paramKey === 'staffCount' ? 'staff' :
+              sweepResult.paramKey === 'catCount' ? 'cats' :
+              sweepResult.paramKey
+            }` as const)}
+            points={sweepResult.points}
+          />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => { exportSweepCSV(sweepResult); toast(t('common:toast.exportSuccess')) }}
+              className="btn-secondary text-xs px-3 py-1.5"
+            >
+              {t('results:sweep.exportCsv')}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* ── Comparison view ────────────────────────────────── */}
-      {viewMode === 'compare' && history.length >= 2 && (
-        <ComparisonTable history={history} />
+      {/* ── History panel ────────────────────────────────────── */}
+      {history.length > 0 && (() => {
+        const reversed = [...history].reverse()
+        const totalPages = Math.ceil(reversed.length / HISTORY_PAGE_SIZE)
+        const paged = reversed.slice(historyPage * HISTORY_PAGE_SIZE, (historyPage + 1) * HISTORY_PAGE_SIZE)
+        return (
+          <div className="card">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen((v) => !v)}
+              className="w-full flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
+            >
+              <span>📂</span>
+              {historyOpen
+                ? t('results:history.collapse')
+                : t('results:history.expand', { count: history.length })}
+            </button>
+            {historyOpen && (
+              <div className="mt-3">
+                {history.length >= 2 && (
+                  <div className="text-[10px] text-gray-400 dark:text-bark-400 mb-2">
+                    {t('results:history.selectHint')}
+                  </div>
+                )}
+
+                {/* Paged list */}
+                <div className="space-y-1">
+                  {paged.map((entry) => {
+                    const isCurrent = entry.result === result
+                    const isSelected = selectedForCompare.has(entry.id)
+                    const m = entry.result.metrics
+                    const c = entry.result.config
+                    return (
+                      <div
+                        key={entry.id}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all duration-150 ${
+                          isCurrent
+                            ? 'bg-orange-50 dark:bg-bark-700 border border-orange-300 dark:border-orange-600'
+                            : isSelected
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700'
+                            : 'bg-gray-50 dark:bg-bark-800 border border-transparent hover:border-orange-200 dark:hover:border-bark-500'
+                        }`}
+                      >
+                        {/* Custom checkbox */}
+                        {history.length >= 2 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedForCompare((prev) => {
+                                const next = new Set(prev)
+                                if (next.has(entry.id)) {
+                                  next.delete(entry.id)
+                                } else {
+                                  if (next.size >= 4) {
+                                    toast(t('results:history.maxCompare'), 'info')
+                                    return prev
+                                  }
+                                  next.add(entry.id)
+                                }
+                                return next
+                              })
+                            }}
+                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                              isSelected
+                                ? 'bg-orange-500 border-orange-500 text-white'
+                                : 'border-gray-300 dark:border-bark-500 hover:border-orange-400'
+                            }`}
+                            aria-pressed={isSelected}
+                          >
+                            {isSelected && (
+                              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="2 6 5 9 10 3" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-gray-800 dark:text-bark-100 truncate">
+                              {entry.label}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[9px] text-white bg-orange-500 px-1.5 py-0.5 rounded-full font-bold leading-none shrink-0">
+                                {t('results:history.current')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-gray-400 dark:text-bark-400 mt-0.5 leading-snug">
+                            {c.seatCount} / {c.staffCount} / {c.catCount}
+                            {' · '}
+                            {t('results:history.servedBrief', { count: m.totalCustomersServed })}
+                            {' · '}
+                            {t('results:history.abandonRateBrief', { rate: (m.abandonRate * 100).toFixed(1) })}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {!isCurrent && onLoadHistory && (
+                            <button
+                              type="button"
+                              onClick={() => onLoadHistory(entry)}
+                              className="px-2 py-1 rounded-lg text-[10px] font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+                            >
+                              {t('results:history.load')}
+                            </button>
+                          )}
+                          {onRenameHistory && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newName = window.prompt(t('results:history.renamePrompt'), entry.label)
+                                if (newName && newName.trim()) onRenameHistory(entry.id, newName.trim())
+                              }}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-bark-400 hover:bg-gray-200 dark:hover:bg-bark-600 transition-colors text-xs"
+                              title={t('results:history.rename')}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                          {onDeleteHistory && (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId({ id: entry.id, label: entry.label })}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-bark-600 transition-colors text-xs"
+                              title={t('common:button.delete')}
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Pagination + clear */}
+                <div className="mt-2 flex items-center justify-between">
+                  {totalPages > 1 ? (
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setHistoryPage(i)}
+                          className={`w-6 h-6 rounded-md text-[10px] font-medium transition-colors ${
+                            historyPage === i
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-gray-100 dark:bg-bark-700 text-gray-500 dark:text-bark-300 hover:bg-orange-100 dark:hover:bg-bark-600'
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                  ) : <div />}
+                  {onClearHistory && history.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmClear(true)}
+                      className="text-[10px] text-red-400 hover:text-red-500 transition-colors"
+                    >
+                      {t('results:history.clearAll')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* ── Comparison view (勾選 2+ 筆時顯示) ──────────────── */}
+      {selectedForCompare.size >= 2 && (
+        <ComparisonTable
+          history={history.filter((e) => selectedForCompare.has(e.id))}
+        />
       )}
 
-      {viewMode !== 'compare' && (
+      {selectedForCompare.size < 2 && (
         <>
           {/* ── Hero Verdict ───────────────────────────────── */}
           <HeroVerdict metrics={metrics} level={level} />
@@ -463,6 +522,7 @@ export default function ResultsPage({
                       : 'normal'
                   }
                   ci={ciFor('avgWaitForSeat')}
+                  description={`P50: ${metrics.waitForSeatP50} / P95: ${metrics.waitForSeatP95} / P99: ${metrics.waitForSeatP99}`}
                 />
                 <KpiCard
                   label={t('results:kpi.avgWaitForOrder.label')}
@@ -471,6 +531,7 @@ export default function ResultsPage({
                   unit={unitMin}
                   icon="☕"
                   ci={ciFor('avgWaitForOrder')}
+                  description={`P50: ${metrics.waitForOrderP50} / P95: ${metrics.waitForOrderP95} / P99: ${metrics.waitForOrderP99}`}
                 />
               </div>
               <StayBreakdown
@@ -644,6 +705,22 @@ export default function ResultsPage({
           </div>
         </>
       )}
+
+      {/* Themed confirm dialogs */}
+      <ConfirmDialog
+        visible={confirmClear}
+        icon="🗑️"
+        message={t('results:history.clearConfirm')}
+        onConfirm={() => { onClearHistory?.(); setConfirmClear(false) }}
+        onCancel={() => setConfirmClear(false)}
+      />
+      <ConfirmDialog
+        visible={confirmDeleteId !== null}
+        icon="🗑️"
+        message={confirmDeleteId ? t('results:history.deleteConfirm', { label: confirmDeleteId.label }) : ''}
+        onConfirm={() => { if (confirmDeleteId) onDeleteHistory?.(confirmDeleteId.id); setConfirmDeleteId(null) }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   )
 }
