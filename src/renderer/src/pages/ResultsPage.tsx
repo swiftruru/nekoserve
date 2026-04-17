@@ -23,6 +23,7 @@ import UtilizationTimeSeries from '../components/results/UtilizationTimeSeries'
 import StayDistribution from '../components/results/StayDistribution'
 import type { LearningLevel } from '../components/learning/types'
 import { BlockMath } from '../components/Math'
+import InteractiveFormula from '../components/results/InteractiveFormula'
 import { renderWithTerms } from '../components/results/TermTooltip'
 import { generateVerdict } from '../utils/verdict'
 import { buildReplayContext } from '../utils/replay'
@@ -104,7 +105,7 @@ export default function ResultsPage({
   )
 
   return (
-    <div className="page-container space-y-4">
+    <div className="page-container space-y-4" data-testid="results-page">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <h2 className="text-lg font-bold text-orange-700 dark:text-orange-400">{t('results:title')}</h2>
@@ -115,36 +116,6 @@ export default function ResultsPage({
           })}
         </span>
         <div className="ml-auto flex items-center gap-2 flex-wrap">
-          {/* Level pill: Beginner / Pro */}
-          <div className="flex items-center rounded-full border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-800 overflow-hidden shrink-0">
-            <button
-              type="button"
-              onClick={() => setLevel('friendly')}
-              className={
-                'px-2.5 py-1 text-[11px] font-semibold transition-colors ' +
-                (level === 'friendly'
-                  ? 'bg-orange-500 text-white'
-                  : 'text-orange-700 hover:bg-orange-50')
-              }
-              aria-pressed={level === 'friendly'}
-            >
-              🐣 {t('results:level.friendly')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setLevel('expert')}
-              className={
-                'px-2.5 py-1 text-[11px] font-semibold transition-colors ' +
-                (level === 'expert'
-                  ? 'bg-orange-500 text-white'
-                  : 'text-orange-700 hover:bg-orange-50')
-              }
-              aria-pressed={level === 'expert'}
-            >
-              🎓 {t('results:level.expert')}
-            </button>
-          </div>
-
           <button
             type="button"
             onClick={() => window.print()}
@@ -232,6 +203,7 @@ export default function ResultsPage({
             <button
               type="button"
               onClick={() => setHistoryOpen((v) => !v)}
+              data-testid="results-history-toggle"
               className="w-full flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
             >
               <span>📂</span>
@@ -257,6 +229,7 @@ export default function ResultsPage({
                     return (
                       <div
                         key={entry.id}
+                        data-testid="results-history-entry"
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all duration-150 ${
                           isCurrent
                             ? 'bg-orange-50 dark:bg-bark-700 border border-orange-300 dark:border-orange-600'
@@ -426,7 +399,17 @@ export default function ResultsPage({
             expertExpand={
               <>
                 <p>{renderWithTerms(t('results:sectionExpand.flow.expert'))}</p>
-                <BlockMath formula={t('results:sectionExpand.flow.expertFormula')} />
+                <InteractiveFormula
+                  formula={t('results:sectionExpand.flow.expertFormula')}
+                  parts={[
+                    { symbol: '\\lambda', partKey: 'lambda' },
+                    { symbol: '\\frac{1}{\\text{arr.Interval}}', partKey: 'invArrival' },
+                    { symbol: 'X_k', partKey: 'Xk' },
+                    { symbol: '\\text{Exp}', partKey: 'expDist' },
+                    { symbol: 'N(t)', partKey: 'Nt' },
+                    { symbol: '\\text{Poisson}', partKey: 'poisson' },
+                  ]}
+                />
               </>
             }
           >
@@ -446,6 +429,7 @@ export default function ResultsPage({
                   icon="✅"
                   highlight="good"
                   ci={ciFor('totalCustomersServed')}
+                  testId="results-kpi-total-served"
                 />
                 <KpiCard
                   label={t('results:kpi.abandonRate.label')}
@@ -504,7 +488,19 @@ export default function ResultsPage({
             expertExpand={
               <>
                 <p>{renderWithTerms(t('results:sectionExpand.wait.expert'))}</p>
-                <BlockMath formula={t('results:sectionExpand.wait.expertFormula')} />
+                <InteractiveFormula
+                  formula={t('results:sectionExpand.wait.expertFormula')}
+                  parts={[
+                    { symbol: 'L', partKey: 'L' },
+                    { symbol: '\\lambda', partKey: 'lambda' },
+                    { symbol: 'W', partKey: 'W' },
+                    { symbol: 'W_q', partKey: 'Wq' },
+                    { symbol: '\\mu', partKey: 'mu' },
+                    { symbol: 'c', partKey: 'cServer' },
+                    { symbol: '\\rho', partKey: 'rho' },
+                    { symbol: '\\text{Erlang-C}', partKey: 'erlangC' },
+                  ]}
+                />
               </>
             }
           >
@@ -574,7 +570,18 @@ export default function ResultsPage({
             expertExpand={
               <>
                 <p>{renderWithTerms(t('results:sectionExpand.utilization.expert'))}</p>
-                <BlockMath formula={t('results:sectionExpand.utilization.expertFormula')} />
+                <InteractiveFormula
+                  formula={t('results:sectionExpand.utilization.expertFormula')}
+                  parts={[
+                    { symbol: '\\rho', partKey: 'rho' },
+                    { symbol: '\\lambda', partKey: 'lambda' },
+                    { symbol: 'E[S]', partKey: 'ES' },
+                    { symbol: 'c', partKey: 'cServer' },
+                    { symbol: 'W_q', partKey: 'Wq' },
+                    { symbol: 'C_a^2', partKey: 'Ca2' },
+                    { symbol: 'C_s^2', partKey: 'Cs2' },
+                  ]}
+                />
               </>
             }
           >
@@ -640,7 +647,16 @@ export default function ResultsPage({
             expertExpand={
               <>
                 <p>{renderWithTerms(t('results:sectionExpand.cat.expert'))}</p>
-                <BlockMath formula={t('results:sectionExpand.cat.expertFormula')} />
+                <InteractiveFormula
+                  formula={t('results:sectionExpand.cat.expertFormula')}
+                  parts={[
+                    { symbol: '\\text{visitRate}_{eff}', partKey: 'visitRateEff' },
+                    { symbol: '\\text{catCount}', partKey: 'catCount' },
+                    { symbol: '\\text{idleInterval}', partKey: 'idleInterval' },
+                    { symbol: 'p_{rest}', partKey: 'pRest' },
+                    { symbol: '\\text{restTime}', partKey: 'restTime' },
+                  ]}
+                />
               </>
             }
           >
@@ -721,6 +737,36 @@ export default function ResultsPage({
         onConfirm={() => { if (confirmDeleteId) onDeleteHistory?.(confirmDeleteId.id); setConfirmDeleteId(null) }}
         onCancel={() => setConfirmDeleteId(null)}
       />
+
+      {/* Floating level switcher (sticky bottom-right) */}
+      <div className="fixed bottom-5 right-5 z-40 flex items-center rounded-full border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-700 shadow-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setLevel('friendly')}
+          className={
+            'px-3 py-1.5 text-xs font-semibold transition-colors ' +
+            (level === 'friendly'
+              ? 'bg-orange-500 text-white'
+              : 'text-orange-700 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600')
+          }
+          aria-pressed={level === 'friendly'}
+        >
+          🐣 {t('results:level.friendly')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setLevel('expert')}
+          className={
+            'px-3 py-1.5 text-xs font-semibold transition-colors ' +
+            (level === 'expert'
+              ? 'bg-orange-500 text-white'
+              : 'text-orange-700 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600')
+          }
+          aria-pressed={level === 'expert'}
+        >
+          🎓 {t('results:level.expert')}
+        </button>
+      </div>
     </div>
   )
 }

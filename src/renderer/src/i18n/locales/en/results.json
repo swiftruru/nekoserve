@@ -376,5 +376,143 @@
       "tooltipUnit": "",
       "legendSuffix": "{{count}} ({{percent}}%)"
     }
+  },
+
+  "formulaParts": {
+    "lambda": {
+      "label": "Arrival rate",
+      "desc": "How many customers walk in per minute, on average. Imagine standing at the door with a clicker, counting heads. If 12 people come in an hour, the rate is 12/60 = 0.2 per minute.",
+      "unit": "per min",
+      "example": "You set 'one customer every 5 min,' so arrival rate = 1/5 = 0.2. That means 0.2 people walk in per minute on average."
+    },
+    "invArrival": {
+      "label": "Inverse of interval",
+      "desc": "Just flipping the question: 'one customer every 5 minutes' becomes '0.2 customers every minute.' Like converting speed from 'hours per mile' to 'miles per hour.' It's the same info, just flipped.",
+      "unit": "",
+      "example": "Interval = 5 min, flip it: 1/5 = 0.2"
+    },
+    "Xk": {
+      "label": "Gap between customer k-1 and k",
+      "desc": "How long between the last customer and the next one. The key point: it's different every time! Sometimes they come back-to-back, sometimes there's a long gap. Like a convenience store: you can't predict when the next person pushes the door open.",
+      "unit": "min",
+      "example": "Customer #1 came after 3 min, #2 after 8 min, #3 after just 1 min."
+    },
+    "expDist": {
+      "label": "Exponential distribution",
+      "desc": "A pattern that describes random gaps. Its most important feature: no matter how long you've already waited, the chance of someone showing up next minute stays the same. Like waiting for a bus: waiting 10 minutes doesn't make the next bus come any faster.",
+      "unit": "",
+      "example": "You've been waiting 20 minutes with no customer. But the chance of someone arriving in the next minute is exactly the same as it was when you first started waiting."
+    },
+    "Nt": {
+      "label": "How many arrived in t minutes",
+      "desc": "From opening to now, how many customers have walked in total. This number keeps climbing over time.",
+      "unit": "people",
+      "example": "Rate 0.2/min over 240 min: about 0.2 x 240 = 48 customers. But it might actually be 42 or 55, because it's random."
+    },
+    "poisson": {
+      "label": "Poisson distribution",
+      "desc": "A pattern that predicts 'how many things happen in a fixed time window.' Once you know the average, it tells you the realistic range. Like knowing 12 customers come per hour on average, but some hours it's 8 and others it's 15. Poisson describes exactly that kind of wobble around the average.",
+      "unit": "",
+      "example": "Average 12/hour, but actual numbers wobble between roughly 8 and 16, with the occasional outlier."
+    },
+
+    "L": {
+      "label": "Average people in the shop",
+      "desc": "Imagine snapping a photo of the shop every minute and counting heads. Add up all the counts and divide by the number of photos. That's L. It tells you 'how crowded is it usually.'",
+      "unit": "people",
+      "example": "L = 6 means if you walk in at a random time, you'd see about 6 customers (some queueing, some eating)."
+    },
+    "W": {
+      "label": "Average time spent in the shop",
+      "desc": "From the moment a customer pushes the door open to the moment they walk out, how long are they inside? All waiting plus all service time, everything counts.",
+      "unit": "min",
+      "example": "Wait for seat: 3 min + wait for food: 10 min + eating: 15 min = 28 min total."
+    },
+    "Wq": {
+      "label": "Queue waiting time",
+      "desc": "The time spent just standing in line, doing nothing, waiting for your turn. From the moment you join the queue to the moment it's finally your turn.",
+      "unit": "min",
+      "example": "You arrive and see 2 people ahead of you. You stand there for 3 minutes before getting a seat. Those 3 minutes = Wq."
+    },
+    "mu": {
+      "label": "Service speed",
+      "desc": "How many customers one staff member can handle per minute. Simple math: if serving one person takes 8 minutes, speed = 1/8. Like walking speed, but for processing customers.",
+      "unit": "per min",
+      "example": "Making one meal takes 8 min on average. Service speed = 1/8 = 0.125 per min."
+    },
+    "cServer": {
+      "label": "Number of service points",
+      "desc": "How many 'windows' can serve customers at the same time. 10 seats = c is 10, 2 staff = c is 2. More windows means more customers handled simultaneously, shorter queues.",
+      "unit": "",
+      "example": "A bank with 3 tellers: c = 3, can serve 3 customers at once."
+    },
+    "rho": {
+      "label": "How busy (utilization)",
+      "desc": "How busy this resource is. 0% = dead quiet. 100% = non-stop busy. Once it passes 85%, queues suddenly get very long, like highway traffic: traffic flow hits a critical point and everything jams up at once.",
+      "unit": "%",
+      "example": "75% = busy but manageable. 90% = queues are getting long. 99% = total meltdown."
+    },
+    "erlangC": {
+      "label": "Erlang-C formula",
+      "desc": "A classic formula that calculates 'how long will customers wait.' Just plug in arrival speed, service speed, and number of windows, and it predicts the wait time. Call centers use it to decide how many agents to hire.",
+      "unit": "",
+      "example": "Arrival speed = 0.2/min, service time = 8 min, windows = 2. Plug these in and get the average wait."
+    },
+
+    "ES": {
+      "label": "Average service time",
+      "desc": "How long it takes to serve one customer on average. E[S]: the E just means 'average' (expected value), S means 'service.' So E[S] = average service time. That's literally it.",
+      "unit": "min",
+      "example": "E[S] = 8 just means 'one service takes 8 minutes on average.' Sometimes 6, sometimes 10, but 8 on average."
+    },
+    "Ca2": {
+      "label": "How chaotic are the arrivals",
+      "desc": "Measures how 'messy' customer arrivals are. = 1 means normal random (like raindrops hitting a window, no pattern but natural). > 1 means chaotic (a tour group shows up, then nothing for ages, then another group). < 1 means very regular (like appointments, evenly spaced).",
+      "unit": "",
+      "example": "Ca = 1: normal random. Ca = 2: very irregular, people come in clusters. Ca = 0.5: almost like scheduled appointments."
+    },
+    "Cs2": {
+      "label": "How unpredictable is service time",
+      "desc": "Some customers are quick, others take forever. This measures how big the difference is. Bigger number = some super fast, some super slow, making the queue harder to predict and waits longer.",
+      "unit": "",
+      "example": "Small: every customer takes about the same time (like self-checkout). Large: some take 3 min, others 15 min (like a doctor's visit)."
+    },
+    "kingman": {
+      "label": "Kingman quick estimate",
+      "desc": "A formula for quickly estimating wait time. Core idea: busier + more chaotic = longer waits. There's a key piece: the denominator is '1 minus utilization,' so as utilization approaches 100%, the denominator approaches 0, and wait time explodes. That's why you can't run resources at full capacity.",
+      "unit": "",
+      "example": "Imagine a sink almost full (95% utilization). One more drop of water (one more customer) and it overflows. That's what Kingman's formula is saying."
+    },
+
+    "visitRateEff": {
+      "label": "Actual cat visit speed",
+      "desc": "How many cat visits can actually happen per minute. It's not just 'how many cats there are,' because each cat needs time to wander, interact, and possibly nap. This number accounts for all that time overhead.",
+      "unit": "per min",
+      "example": "3 cats, but each needs 4 min wandering + 10 min interaction + 30% chance of a 15-min nap. Actual visit rate is much lower than you'd think."
+    },
+    "catCount": {
+      "label": "Number of cats",
+      "desc": "How many cats are in the cafe. More cats = more chances for customers to get a visit. But each cat needs its own wandering and napping time, so doubling cats doesn't double the visit rate.",
+      "unit": "",
+      "example": ""
+    },
+    "idleInterval": {
+      "label": "Cat wandering time",
+      "desc": "After finishing a visit, the cat wanders around the cafe for a while before approaching the next customer. This 'looking for someone' time is the idle interval.",
+      "unit": "min",
+      "example": "Set to 4 min means the cat wanders for about 4 minutes before walking up to the next customer."
+    },
+    "pRest": {
+      "label": "Nap chance",
+      "desc": "After each interaction, how likely the cat is to take a nap. Like flipping a coin: 0.3 means 30% chance of resting (roughly 1 out of every 3 interactions).",
+      "unit": "",
+      "example": "0.3 = about 3 naps per 10 interactions. 0 = never rests (iron cat). 1 = always rests (lazy cat)."
+    },
+    "restTime": {
+      "label": "Nap duration",
+      "desc": "Once a cat decides to rest, how long it sleeps on average. During the nap, it's completely unavailable, like the shop temporarily has one fewer cat.",
+      "unit": "min",
+      "example": "Set to 15 min: the cat sleeps about 15 minutes before waking up and finding the next customer."
+    }
   }
 }

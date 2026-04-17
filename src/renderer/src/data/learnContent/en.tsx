@@ -533,9 +533,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
             A <B>narrow interval</B> means the estimate is precise;
             a <B>wide interval</B> means you need more replications.
           </P>
-          <Formula>
-            <BlockMath formula={String.raw`\bar{X} \pm t_{\alpha/2,\, n-1} \cdot \frac{s}{\sqrt{n}}`} />
-          </Formula>
+          <BlockMath formula={String.raw`\bar{X} \pm t_{\alpha/2,\, n-1} \cdot \frac{s}{\sqrt{n}}`} />
           <P>
             Here n is the replication count, s is the standard deviation, and t is the t-distribution
             critical value. With small samples, t is larger than 1.96 (wider, more conservative);

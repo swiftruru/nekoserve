@@ -20,9 +20,9 @@
   "section4Model": "這是為什麼貓咪池在程式裡選用 Container 而非一般 Resource，因為 Container 可以動態 .get(n) 取走、.put(n) 放回。顧客完成互動後擲一次骰子：若命中休息機率，引擎會 fire-and-forget 地啟動一條新的「貓咪休息流程」，那隻貓暫時不回池子，等到 CAT_END_REST 事件觸發才重新可用。同時間，原本的顧客已經繼續往 CUSTOMER_LEAVE 走。",
   "section4CodeNote": "這行開一條新的子流程但不等它，主流程顧客可以立刻離開；貓咪的休息在平行宇宙裡自己跑完後才 cats.put(1) 回池中。",
   "section5Title": "📊 從事件紀錄到統計結果：模擬尾聲發生什麼",
-  "section5Concept": "模擬的「結果」並不是在某一刻被算出來的，而是在跑的過程中<strong>一點一滴累積</strong>出來的。每位顧客的等待時間、每座資源忙碌的分鐘數，都會在事件發生的當下被寫進一個 list 或累加器。模擬時鐘一達到預設時長、引擎停下來那一刻，才把所有累積數據做最後一次聚合，算出平均等待、利用率(busy time ÷ 總時長 ÷ 容量)、放棄率等。你在統計結果頁看到的所有 KPI，全部都來自這一次的總決算，而不是模擬中途重算的。",
+  "section5Concept": "模擬的「結果」並不是在某一刻被算出來的，而是在跑的過程中<strong>一點一滴累積</strong>出來的。每位顧客的等待時間、每座資源忙碌的分鐘數，都會在事件發生的當下被寫進一個 list 或累加器。模擬時鐘一達到預設時長、引擎停下來那一刻，才把所有累積數據做最後一次聚合，算出平均等待、利用率(busy time / 總時長 / 容量)、放棄率等。你在統計結果頁看到的所有 KPI，全部都來自這一次的總決算，而不是模擬中途重算的。",
   "section5Model": "wait_seat_times[]、stay_times[] 是 per-entity list;total_seat_busy、total_staff_busy 是 busy-time 累加器。env.run() 回來之後，core.py 只做一次簡單的除法就組出 MetricSummary，然後把它和整份事件紀錄一起丟回 Electron 端給你看。",
-  "section5CodeNote": "聚合的計算就這麼直白：之所以要 × seatCount，是因為有多個座位同時在服務，把總忙碌時間除以「容量 × 時長」才是正確的平均利用率。",
+  "section5CodeNote": "聚合的計算就這麼直白：之所以要 x seatCount，是因為有多個座位同時在服務，把總忙碌時間除以「容量 x 時長」才是正確的平均利用率。",
   "section6Title": "🎲 跑一次就像擲一次硬幣：為什麼需要重複實驗",
   "section6Concept": "前面五步走完，你拿到了一份統計結果。但這份結果只是<strong>一次隨機抽樣</strong>。換一個隨機種子再跑一次，所有 KPI 都會不一樣，因為顧客到達時間、服務時間、貓咪行為全都是隨機變數。單次結果可能剛好偏高或偏低，你無法知道它離「真實平均」有多遠。解法是<strong>批次重複(replication)</strong>：用同一組參數、不同的隨機種子跑 N 次，取所有結果的平均。跑越多次，平均值越穩定。這不是多此一舉，而是 DES 方法論裡的標準做法。",
   "section6Model": "NekoServe 的批次模式會自動用 seed, seed+1, seed+2, ... 依序跑 N 次，每次都是獨立的模擬。跑完之後把 N 份 MetricSummary 收集起來，對每個 KPI 計算平均值和標準差。",
@@ -31,5 +31,144 @@
   "section7Concept": "有了 N 次重複的平均值，下一個問題是：「這個平均值到底有多可靠？」<strong>95% 信賴區間(CI)</strong>給出答案。它的意思是：如果我們重新跑整組批次很多次，有 95% 的機率真實平均值會落在這個區間內。區間越窄，估計越精確；區間很寬，代表 N 不夠多、還需要更多重複。另一個重要工具是<strong>敏感度分析(sensitivity analysis)</strong>：固定所有參數，只改一個（例如店員數從 1 到 5），觀察 KPI 隨之怎麼變化。這可以告訴你「哪個參數影響最大」，比盲目調整有效率得多。",
   "section7Model": "NekoServe 用 t-distribution 計算 CI，因為樣本數通常不大（5 到 50 次）。敏感度分析會在每個掃描點跑一組批次，結果用折線圖呈現，帶狀陰影就是每個點的 CI。",
   "section7CodeNote": "t-distribution 會根據樣本數自動調整臨界值：樣本越少，區間越寬（越保守）。當 N 大於 30 左右，t 值趨近 1.96，和常態分布幾乎一樣。",
-  "outro": "從時間怎麼推進、實體怎麼排隊、每一站怎麼切成等待與服務、資源容量怎麼動態變化、統計怎麼被組出來、為什麼要重複實驗、到如何用信賴區間量化不確定性：這就是一次模擬從執行到分析的完整生命週期。下一次你按下「開始模擬」時，試著在腦中回放這七步；統計結果頁的 KPI 與事件紀錄頁的事件，就不再是孤立的數字與字串，而是這整場時間遊戲的片段。"
+  "outro": "從時間怎麼推進、實體怎麼排隊、每一站怎麼切成等待與服務、資源容量怎麼動態變化、統計怎麼被組出來、為什麼要重複實驗、到如何用信賴區間量化不確定性：這就是一次模擬從執行到分析的完整生命週期。下一次你按下「開始模擬」時，試著在腦中回放這七步；統計結果頁的 KPI 與事件紀錄頁的事件，就不再是孤立的數字與字串，而是這整場時間遊戲的片段。",
+
+  "showCode": "顯示 SimPy 程式碼 ▼",
+  "hideCode": "收起程式碼 ▲",
+  "levelFriendly": "小白",
+  "levelExpert": "專業",
+
+  "takeaway1": "💡 引擎只在事件發生時才做事。兩個事件之間完全快轉，這就是 DES 能跑這麼快的原因。",
+  "takeaway2": "💡 實體不會直接跟彼此說話。它們只透過共享資源和佇列互動，這讓模型保持簡潔。",
+  "takeaway3": "💡 yield req | timeout 讓兩個事件競賽。先觸發的那個決定了顧客的命運。",
+  "takeaway4": "💡 子流程獨立運作。顧客早就走了，貓咪的休息在自己的時間線上默默跑完。",
+  "takeaway5": "💡 指標在模擬中逐筆累積，結束時只做一次簡單的除法就算出所有 KPI。",
+  "takeaway6": "💡 每一次模擬都是一次隨機抽樣。跑越多次、取平均，估計就越穩定。",
+  "takeaway7": "💡 CI 窄表示估計精確，CI 寬表示重複次數不夠，你需要跑更多。",
+
+  "friendlyIntro": "按下「開始模擬」之後，這個 app 會在背景跑一場「時間快轉遊戲」: 客人一個接一個來、搶座位、點餐、跟貓玩、然後離開。這一頁用最簡單的方式帶你走一遍這場遊戲的規則，不需要任何程式背景。",
+
+  "friendlySection1Concept": "想像你在看一部<strong>快轉的電影</strong>。沒事發生的畫面會直接跳過，只有「有人來了」「餐好了」「客人走了」這種重要時刻才會停下來。模擬時鐘就是這樣跑的，所以一場 240 分鐘的模擬，電腦只花不到一秒就能跑完。",
+  "friendlySection1Model": "在我們的貓咪咖啡廳裡，「重要時刻」包括客人到達、等太久離開、餐點好了、貓咪睡醒了。不重要的時間統統跳過，超級有效率。",
+
+  "friendlySection2Concept": "每位客人進門後，要依序搶三樣東西: <strong>座位</strong>、<strong>店員</strong>（點餐）、<strong>貓咪</strong>（互動）。每一樣東西數量有限，搶不到就得排隊。排隊的人越多，等越久。就是這麼直覺。",
+  "friendlySection2Model": "座位、店員、貓咪各自有一條隊伍。同一位客人會依序經過這三條隊伍。事件紀錄裡看到的 CUSTOMER_WAIT_SEAT，就是這位客人正在排座位。",
+
+  "friendlySection3Concept": "排隊其實有兩段時間: 第一段是<strong>乾等</strong>（還沒輪到自己），第二段是<strong>被服務</strong>（輪到了，正在處理）。如果乾等太久，客人會失去耐心直接走人。這像是一場比賽: 座位先空出來，還是客人先受不了?",
+  "friendlySection3Model": "在這個模型裡，如果客人等超過你設定的「最長等待時間」，就會觸發放棄離開的事件。這是整個模型裡唯一讓客人走不同路線的地方。",
+
+  "friendlySection4Concept": "貓咪不會永遠陪客人。互動結束後，每隻貓都會<strong>擲一次骰子</strong>決定要不要去休息。命中了就去角落睡一覺，休息完才會回來找下一位客人。這段時間，咖啡廳就少了一隻可以互動的貓。",
+  "friendlySection4Model": "客人離開的時候，貓咪可能還在睡覺，兩邊完全不會互相等。這就是「獨立跑自己的」的概念，很像現實生活。",
+
+  "friendlySection5Concept": "模擬不是跑完才開始算成績，而是<strong>一邊跑一邊記帳</strong>。每位客人等了多久、每個座位忙了多久，都在事件發生的當下就記下來了。跑完之後只要做一次加減乘除，所有數字就出來了。",
+  "friendlySection5Model": "你在統計結果頁看到的 KPI，全部都來自這份「帳本」。跑完的那一刻算一次總帳，就是最終結果。",
+
+  "friendlySection6Concept": "跑一次模擬就像<strong>擲一次骰子</strong>，結果每次都不一樣，因為客人什麼時候來、吃多久、貓咪要不要睡，全部都是隨機的。只看一次結果可能剛好偏高或偏低，所以要跑很多次、取平均，結果才可靠。就像問卷調查: 問越多人，結果越準。",
+  "friendlySection6Model": "批次模式會自動幫你跑 N 次，每次用不同的隨機種子。跑完之後把所有結果平均，就是比較穩定的答案。",
+
+  "friendlySection7Concept": "跑完很多次之後，你會拿到一個平均值。但這個平均值到底準不準? <strong>誤差帶</strong>就是答案: 帶越窄代表越準、越確定，帶很寬就代表跑的次數不夠多，需要再多跑幾次。",
+  "friendlySection7Model": "結果頁 KPI 卡片下面的小字就是誤差帶。如果帶很寬，試著把重複次數調到 20 或 30 次。",
+
+  "friendlyTakeaway1": "💡 沒事的時候直接快轉，所以模擬超快!",
+  "friendlyTakeaway2": "💡 客人不會直接跟其他客人互動，大家都只是在搶座位和店員而已。",
+  "friendlyTakeaway3": "💡 排隊和耐心同時在倒數，誰先歸零誰就贏。",
+  "friendlyTakeaway4": "💡 客人走了，貓咪自己在旁邊睡，誰也不等誰。",
+  "friendlyTakeaway5": "💡 模擬一邊跑一邊記帳，最後只要做一次加減乘除。",
+  "friendlyTakeaway6": "💡 就像問卷調查: 問越多人，結果越穩!",
+  "friendlyTakeaway7": "💡 誤差帶很窄 = 答案很穩，很寬 = 樣本還不夠多。",
+
+  "friendlyOutro": "快轉時鐘、排隊搶資源、耐心比賽、貓咪擲骰子休息、一邊跑一邊記帳、多跑幾次取平均、再用誤差帶看穩不穩。這就是每一次模擬從頭到尾在做的事。下次按下「開始模擬」的時候，試著在腦中回想這七步吧!",
+
+  "demo": {
+    "felStepper": {
+      "nextBtn": "下一個事件",
+      "resetBtn": "重設",
+      "clockLabel": "時鐘",
+      "jumpLabel": "跳躍",
+      "felLabel": "待處理事件清單 (FEL)",
+      "emptyFel": "所有事件已處理完畢",
+      "friendlyHint": "按「下一個事件」看看時間怎麼跳!",
+      "events": {
+        "arrive": "顧客到達",
+        "waitSeat": "等候座位",
+        "seated": "入座",
+        "order": "點餐",
+        "prepDone": "餐點完成",
+        "startDine": "開始用餐",
+        "finishDine": "用餐完畢",
+        "leave": "離開"
+      }
+    },
+    "resourceQueue": {
+      "addBtn": "新增顧客",
+      "releaseBtn": "釋放座位",
+      "capacityLabel": "座位容量",
+      "seatedLabel": "已入座",
+      "queueLabel": "排隊中",
+      "emptyQueue": "佇列空了",
+      "friendlyFull": "滿了! 新客人只能排隊等 🙈",
+      "friendlyAvailable": "有空位了! 🎉"
+    },
+    "patienceRace": {
+      "startBtn": "開始競賽",
+      "resetBtn": "重設",
+      "seatSpeed": "座位釋放速度",
+      "patience": "顧客耐心",
+      "seatBar": "座位空出",
+      "patienceBar": "耐心耗盡",
+      "seated": "入座成功!",
+      "abandoned": "放棄離開!",
+      "racing": "競賽進行中...",
+      "fast": "快",
+      "slow": "慢",
+      "high": "高",
+      "low": "低"
+    },
+    "catPool": {
+      "flipBtn": "貓咪結束互動",
+      "restProb": "休息機率",
+      "poolLabel": "可用貓咪池",
+      "restingLabel": "休息中",
+      "resultRest": "命中! 去休息了",
+      "resultReturn": "沒命中，直接回池中",
+      "friendlyResultRest": "😴💤 命中! 這隻貓要去睡覺了~",
+      "friendlyResultReturn": "😸✨ 沒命中! 精神很好，繼續待命!",
+      "catAvailable": "待命",
+      "catResting": "休息中 ({{sec}}s)"
+    },
+    "accumulator": {
+      "nextBtn": "下一位顧客",
+      "aggregateBtn": "模擬結束，聚合!",
+      "resetBtn": "重設",
+      "customerLabel": "顧客 #{{id}}",
+      "waitCol": "等待時間",
+      "busyCol": "忙碌時間",
+      "totalBusy": "累計忙碌",
+      "avgWait": "平均等待",
+      "utilization": "利用率",
+      "step": "第 {{n}} / {{total}} 位"
+    },
+    "replication": {
+      "rerollBtn": "重新擲骰",
+      "countLabel": "重複次數 (N)",
+      "meanLabel": "平均值",
+      "stdLabel": "標準差",
+      "kpiLabel": "平均等候時間 (分鐘)",
+      "friendlyHint": "注意看: N 越大，柱子的高低差越小!"
+    },
+    "ciExplorer": {
+      "nLabel": "重複次數 (N)",
+      "confLabel": "信心水準",
+      "ciLabel": "95% CI",
+      "narrowHint": "區間很窄，估計精確",
+      "wideHint": "區間太寬，需要更多重複",
+      "meanLabel": "平均值",
+      "lowerLabel": "下界",
+      "upperLabel": "上界",
+      "sensitivityTitle": "敏感度分析範例",
+      "xAxis": "店員數",
+      "yAxis": "平均等候 (分鐘)",
+      "friendlyHint": "拖拖看! N 加大，帶子就變窄了~"
+    }
+  }
 }

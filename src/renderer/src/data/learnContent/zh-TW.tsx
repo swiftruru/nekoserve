@@ -498,9 +498,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             <B>區間越窄</B>代表估計越精確；
             <B>區間很寬</B>代表重複次數不夠多，還需要更多 replication。
           </P>
-          <Formula>
-            <BlockMath formula={String.raw`\bar{X} \pm t_{\alpha/2,\, n-1} \cdot \frac{s}{\sqrt{n}}`} />
-          </Formula>
+          <BlockMath formula={String.raw`\bar{X} \pm t_{\alpha/2,\, n-1} \cdot \frac{s}{\sqrt{n}}`} />
           <P>
             其中 n 是重複次數、s 是標準差、t 是 t-distribution 的臨界值。
             樣本少的時候 t 會比 1.96 大（區間更寬更保守），

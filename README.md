@@ -76,7 +76,7 @@ First-launch tips for unsigned builds:
 | **📊 Statistics Results** | 4 themed sections with Hero Verdict, Bottleneck callout, count-up KPIs, 7+ visualizations, Kingman theory callout, 14-term glossary tooltips, **persistent history panel**, **batch CI display**, **sweep chart**, **What-If Explorer**, **print/PDF export**, and **scenario config diff** in comparison view |
 | **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter, localized keyword search, row highlight synced to the Playback cursor |
 | **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Characters walk through real aisles (no more ghosting through walls), ambient decorations react to time of day, and an optional side-by-side **Live Learning Mode** overlay shows four live DES concept cards (Event-driven clock, Queue length, Little's Law, Utilization) with a Beginner / Pro level toggle |
-| **🎬 How it Works** | Dedicated system-simulation walkthrough: event-driven clock, entity as process, queueing vs service, dynamic capacity, end-of-run aggregation (with KaTeX-rendered formulas and small SimPy code excerpts) |
+| **🎬 How it Works** | Interactive system-simulation walkthrough with 7 self-contained mini-demos (FEL stepper, resource queue, patience race, cat pool dynamics, accumulator, replication scatter, CI explorer), collapsible syntax-highlighted Python code blocks with copy button, and a floating 🐣 Beginner / 🎓 Expert toggle that switches between plain-language analogies and full DES terminology |
 | **ℹ️ About** | Course background, tech stack, architecture overview, experiment design principles, version & update check |
 
 ### UX Features
@@ -458,6 +458,23 @@ npm run dev
 
 > **Note:** In dev mode, if `simulator-python/dist/simulator/` does not exist, Electron automatically falls back to running `python3 -m simulator` directly. To use the packaged binary, run `npm run build:simulator` first.
 
+## Electron UI Tests
+
+Playwright drives the real Electron window in E2E mode, but swaps the Python simulator for a stable fixture so the UI flow stays deterministic.
+
+```bash
+# Build first, then run headless UI tests
+npm run test:ui
+
+# Same tests, but with the Electron window visible for demo
+npm run test:ui:headed
+
+# Open the HTML report after a run
+npm run test:ui:report
+```
+
+The first version covers app startup, a successful simulation run, Results rendering, Event Log interactions, and simulator error handling. Network-backed update checks and native save dialogs are intentionally excluded from the UI suite.
+
 ## Python Simulator (standalone)
 
 ```bash
@@ -619,6 +636,11 @@ nekoserve/
 - [x] Wait time percentiles P50/P95/P99 (v1.1.0)
 - [x] Event Log: column sorting, time range filter, customer journey tracking (v1.1.0)
 - [x] Simulation cancel button, parameter validation, ErrorBoundary (v1.1.0)
+- [x] Interactive How-It-Works page with 7 mini-demos and Beginner/Expert toggle (v1.2.0)
+- [x] Syntax-highlighted collapsible code blocks with copy button (v1.2.0)
+- [x] Interactive formula explainer: click any symbol to see plain-language explanation (v1.2.0)
+- [x] Floating Beginner/Expert toggle on Results and How-It-Works pages (v1.2.0)
+- [x] CI formula double-render fix in learning content (v1.2.0)
 - [ ] macOS / Windows code signing & notarization
 - [ ] Third UI language (Japanese?)
 

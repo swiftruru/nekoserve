@@ -20,7 +20,7 @@ import { useToast } from './hooks/useToast'
 import { useTheme } from './hooks/useTheme'
 import ShortcutHelp from './components/ShortcutHelp'
 import OnboardingOverlay from './components/OnboardingOverlay'
-import WhatsNewModal, { useWhatsNew } from './components/WhatsNewModal'
+
 import RouteAnnouncer from './components/RouteAnnouncer'
 import ErrorBoundary from './components/ErrorBoundary'
 import ChallengeDrawer from './components/ChallengeDrawer'
@@ -86,7 +86,7 @@ export default function App() {
   } = useSimulation()
   const update = useUpdateCheck()
   const { theme, toggle: toggleTheme } = useTheme()
-  const whatsNew = useWhatsNew()
+
   const [shortcutHelpVisible, setShortcutHelpVisible] = useState(false)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
@@ -139,7 +139,8 @@ export default function App() {
 
   function handleRunSimulation(cfg: SimulationConfig, label: string) {
     setConfig(cfg)
-    run(cfg, label).then(() => {
+    run(cfg, label).then((succeeded) => {
+      if (!succeeded) return
       setPlaybackTime(0)
       setPlaybackAutoStartPending(true)
       setPage('playback')
@@ -149,7 +150,8 @@ export default function App() {
   function handleRunBatch(cfg: SimulationConfig, replicationCount: number, label: string) {
     const start = Date.now()
     setConfig(cfg)
-    runBatch(cfg, replicationCount, label).then(() => {
+    runBatch(cfg, replicationCount, label).then((succeeded) => {
+      if (!succeeded) return
       const secs = ((Date.now() - start) / 1000).toFixed(1)
       toast(t('settings:batch.complete', { count: replicationCount, seconds: secs }))
       setPlaybackTime(0)
@@ -161,7 +163,8 @@ export default function App() {
   function handleRunSweep(cfg: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) {
     const start = Date.now()
     setConfig(cfg)
-    runSweep(cfg, paramKey, from, to, step, replications).then(() => {
+    runSweep(cfg, paramKey, from, to, step, replications).then((succeeded) => {
+      if (!succeeded) return
       const secs = ((Date.now() - start) / 1000).toFixed(1)
       toast(t('settings:sweep.complete', { seconds: secs }))
       setPage('results')
@@ -235,11 +238,7 @@ export default function App() {
         onClose={() => setShortcutHelpVisible(false)}
       />
       <OnboardingOverlay externalOpen={onboardingOpen} onClose={() => setOnboardingOpen(false)} />
-      <WhatsNewModal
-        visible={whatsNew.visible}
-        version={whatsNew.version}
-        onDismiss={whatsNew.dismiss}
-      />
+
       <ChallengeDrawer
         visible={challengeDrawerOpen}
         onClose={() => setChallengeDrawerOpen(false)}
@@ -353,6 +352,8 @@ export default function App() {
               key={item.id}
               role="tab"
               aria-selected={page === item.id}
+              aria-disabled={disabled}
+              data-testid={`nav-tab-${item.id}`}
               data-onboarding={item.id === 'playback' ? 'nav-playback' : item.id === 'results' ? 'nav-results' : undefined}
               onClick={() => {
                 if (disabled) {
