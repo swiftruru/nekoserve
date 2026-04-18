@@ -72,7 +72,7 @@ export default function DemoPatienceRace({ level }: Props) {
   const isFinished = state === 'seatWon' || state === 'patienceWon'
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="howitworks-patience-demo">
       {/* Sliders */}
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
@@ -86,6 +86,7 @@ export default function DemoPatienceRace({ level }: Props) {
             type="range" min={0} max={100} value={seatSpeed}
             onChange={(e) => setSeatSpeed(Number(e.target.value))}
             disabled={state === 'racing'}
+            data-testid="howitworks-patience-seat-speed"
             className="w-full accent-green-500"
           />
         </div>
@@ -100,6 +101,7 @@ export default function DemoPatienceRace({ level }: Props) {
             type="range" min={0} max={100} value={patience}
             onChange={(e) => setPatience(Number(e.target.value))}
             disabled={state === 'racing'}
+            data-testid="howitworks-patience-value"
             className="w-full accent-red-500"
           />
         </div>
@@ -149,20 +151,24 @@ export default function DemoPatienceRace({ level }: Props) {
 
       {/* Result */}
       {isFinished && (
-        <div className={`text-center font-bold py-1.5 rounded-lg ${
+        <div
+          data-testid="howitworks-patience-result"
+          data-state={state}
+          className={`text-center font-bold py-1.5 rounded-lg ${
           level === 'friendly' ? 'text-base' : 'text-sm'
         } ${
           state === 'seatWon'
             ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
             : 'text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
-        }`}>
+        }`}
+        >
           {state === 'seatWon'
             ? (level === 'friendly' ? '😊🪑 ' : '✅ ') + t('demo.patienceRace.seated')
             : (level === 'friendly' ? '😤💨 ' : '❌ ') + t('demo.patienceRace.abandoned')}
         </div>
       )}
       {state === 'racing' && (
-        <div className="text-center text-xs text-gray-400 dark:text-bark-500 animate-pulse">
+        <div className="text-center text-xs text-gray-400 dark:text-bark-500 animate-pulse" data-testid="howitworks-patience-racing">
           {t('demo.patienceRace.racing')}
         </div>
       )}
@@ -180,6 +186,7 @@ export default function DemoPatienceRace({ level }: Props) {
           type="button"
           onClick={startRace}
           disabled={state === 'racing'}
+          data-testid="howitworks-patience-start"
           className="px-3 py-1 text-xs font-semibold rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {t('demo.patienceRace.startBtn')}
@@ -187,6 +194,7 @@ export default function DemoPatienceRace({ level }: Props) {
         <button
           type="button"
           onClick={reset}
+          data-testid="howitworks-patience-reset"
           className="px-3 py-1 text-xs font-semibold rounded-lg border border-orange-200 dark:border-bark-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600 transition-colors"
         >
           {t('demo.patienceRace.resetBtn')}

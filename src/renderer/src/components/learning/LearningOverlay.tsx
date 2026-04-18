@@ -55,7 +55,7 @@ export default function LearningOverlay({
     : { gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }
 
   return (
-    <div className="card">
+    <div className="card" data-testid="playback-learning-overlay">
       <div className="flex items-center gap-2 mb-2">
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <span className={compact ? 'text-base' : 'text-lg'}>🎓</span>
@@ -74,6 +74,7 @@ export default function LearningOverlay({
           <button
             type="button"
             onClick={() => setLevel('friendly')}
+            data-testid="playback-learning-level-friendly"
             className={
               'px-2 py-0.5 text-[10px] font-semibold transition-colors ' +
               (level === 'friendly'
@@ -87,6 +88,7 @@ export default function LearningOverlay({
           <button
             type="button"
             onClick={() => setLevel('expert')}
+            data-testid="playback-learning-level-expert"
             className={
               'px-2 py-0.5 text-[10px] font-semibold transition-colors ' +
               (level === 'expert'
@@ -102,6 +104,7 @@ export default function LearningOverlay({
         <button
           type="button"
           onClick={onToggle}
+          data-testid="playback-learning-close"
           className="text-sm text-gray-400 dark:text-bark-400 hover:text-gray-600 dark:hover:text-bark-200 shrink-0 leading-none px-1"
           aria-label={t('collapse')}
         >

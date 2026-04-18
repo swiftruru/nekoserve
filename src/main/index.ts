@@ -5,6 +5,17 @@ import { registerSimulationHandler } from './simulator-bridge'
 import { setMainLocale, mainStrings, getMainLocale } from './i18n'
 import { registerUpdateHandlers, scheduleAutoCheck } from './updater/update-ipc'
 
+const IS_E2E = process.env.NEKOSERVE_E2E === '1'
+const E2E_REMOTE_DEBUGGING_PORT = process.env.NEKOSERVE_E2E_REMOTE_DEBUGGING_PORT
+
+if (IS_E2E && process.env.NEKOSERVE_E2E_USER_DATA_DIR) {
+  app.setPath('userData', process.env.NEKOSERVE_E2E_USER_DATA_DIR)
+}
+
+if (IS_E2E && E2E_REMOTE_DEBUGGING_PORT) {
+  app.commandLine.appendSwitch('remote-debugging-port', E2E_REMOTE_DEBUGGING_PORT)
+}
+
 // ──────────────────────────────────────────────────────────────
 // Window state persistence
 // ──────────────────────────────────────────────────────────────
@@ -16,11 +27,13 @@ interface WindowBounds {
   height: number
 }
 
-const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json')
+function getStateFile(): string {
+  return path.join(app.getPath('userData'), 'window-state.json')
+}
 
 function loadWindowState(): Partial<WindowBounds> {
   try {
-    const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) as WindowBounds
+    const data = JSON.parse(fs.readFileSync(getStateFile(), 'utf8')) as WindowBounds
     // Verify position is on a visible display
     const displays = screen.getAllDisplays()
     const onScreen = displays.some((d) => {
@@ -42,7 +55,7 @@ function loadWindowState(): Partial<WindowBounds> {
 function saveWindowState(win: BrowserWindow): void {
   try {
     const b = win.getBounds()
-    fs.writeFileSync(STATE_FILE, JSON.stringify(b), 'utf8')
+    fs.writeFileSync(getStateFile(), JSON.stringify(b), 'utf8')
   } catch {
     // best-effort; ignore errors
   }
@@ -355,7 +368,9 @@ app.whenReady().then(() => {
   registerSimulationHandler()
   registerUpdateHandlers()
   createWindow()
-  scheduleAutoCheck()
+  if (!IS_E2E) {
+    scheduleAutoCheck()
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

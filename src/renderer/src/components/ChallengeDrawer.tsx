@@ -69,8 +69,8 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/30" />
+    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose} data-testid="challenge-drawer">
+      <div className="absolute inset-0 bg-black/30" data-testid="challenge-drawer-backdrop" />
       <div
         className="relative w-96 max-w-full h-full bg-white dark:bg-bark-900 border-l border-orange-200 dark:border-bark-600 overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -81,12 +81,15 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
           </h2>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400 dark:text-bark-400">
+              <span data-testid="challenge-progress-count">
               {completed.size}/{CHALLENGES.length}
+              </span>
             </span>
             {completed.size > 0 && (
               <button
                 type="button"
                 onClick={() => setConfirmResetOpen(true)}
+                data-testid="challenge-reset-button"
                 className="flex items-center gap-1 text-[11px] font-medium text-gray-400 dark:text-bark-400 hover:text-red-500 dark:hover:text-red-400 px-2 py-0.5 rounded-md border border-transparent hover:border-red-200 dark:hover:border-red-800/50 transition-all duration-150"
               >
                 <span className="text-xs">↺</span>
@@ -96,6 +99,7 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
             <button
               type="button"
               onClick={onClose}
+              data-testid="challenge-drawer-close"
               className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-bark-200 text-lg leading-none"
               aria-label={t('common:button.close')}
             >
@@ -115,6 +119,8 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
             return (
               <div
                 key={challenge.id}
+                data-testid={`challenge-item-${challenge.id}`}
+                data-completed={isDone ? 'true' : 'false'}
                 className={`rounded-xl border p-3 transition-colors ${
                   isDone
                     ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20'
@@ -124,6 +130,7 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
                 <button
                   type="button"
                   onClick={() => setExpandedId(isExpanded ? null : challenge.id)}
+                  data-testid={`challenge-toggle-${challenge.id}`}
                   className="w-full flex items-center gap-2 text-left"
                 >
                   <span className="text-lg">{isDone ? '✅' : '📝'}</span>
@@ -141,7 +148,10 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
                   <div className="mt-2 space-y-2">
                     {/* No results hint */}
                     {!metrics && !isDone && (
-                      <div className="flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg px-3 py-2">
+                      <div
+                        className="flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg px-3 py-2"
+                        data-testid={`challenge-no-results-${challenge.id}`}
+                      >
                         <span className="text-base shrink-0">⚠️</span>
                         <span>{t('challenges:noResults')}</span>
                       </div>
@@ -166,6 +176,7 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
                       <button
                         type="button"
                         onClick={() => handleVerify(challenge.id)}
+                        data-testid={`challenge-verify-${challenge.id}`}
                         className={`w-full text-xs font-semibold py-1.5 rounded-lg transition-colors ${
                           isJustVerified && passed === true
                             ? 'bg-green-500 text-white'
@@ -184,7 +195,10 @@ export default function ChallengeDrawer({ visible, onClose, metrics }: Challenge
 
                     {/* Done explanation */}
                     {isDone && (
-                      <div className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded px-2 py-1.5">
+                      <div
+                        className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded px-2 py-1.5"
+                        data-testid={`challenge-explanation-${challenge.id}`}
+                      >
                         {t(`challenges:items.${challenge.id}.explanation` as const, { defaultValue: '' })}
                       </div>
                     )}

@@ -261,7 +261,7 @@ export default function PlaybackPage({
   }, [state.lastEvent, t])
 
   return (
-    <div className="page-container space-y-4">
+    <div className="page-container space-y-4" data-testid="playback-page">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="card">
         <div className="flex items-start gap-3">
@@ -273,6 +273,7 @@ export default function PlaybackPage({
             <button
               type="button"
               onClick={() => setLearningMode((v) => !v)}
+              data-testid="playback-learning-toggle"
               className={
                 'text-sm whitespace-nowrap px-3 py-1.5 rounded-lg border font-semibold transition-colors ' +
                 (learningMode
@@ -297,6 +298,7 @@ export default function PlaybackPage({
               <button
                 type="button"
                 onClick={onSkipToResults}
+                data-testid="playback-skip-results"
                 className="btn-secondary text-sm whitespace-nowrap"
               >
                 📊 {t('playback:skipToResults')}
@@ -310,7 +312,7 @@ export default function PlaybackPage({
               {t('playback:timeLabel')}
             </span>
             <span className="text-base font-bold tabular-nums text-orange-700 dark:text-orange-400">
-              {formatSimClock(simTime)}
+              <span data-testid="playback-sim-clock">{formatSimClock(simTime)}</span>
             </span>
             <span className="text-xs text-gray-400 dark:text-bark-400 ml-1">
               / {formatSimClock(config.simulationDuration)}
@@ -373,7 +375,10 @@ export default function PlaybackPage({
         <span className="text-xs font-semibold uppercase tracking-wide text-orange-600">
           ●
         </span>
-        <span className="text-sm text-gray-700 dark:text-bark-200 flex-1 truncate">
+        <span
+          className="text-sm text-gray-700 dark:text-bark-200 flex-1 truncate"
+          data-testid="playback-current-event"
+        >
           {currentEventText}
         </span>
       </div>

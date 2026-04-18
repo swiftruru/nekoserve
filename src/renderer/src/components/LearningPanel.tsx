@@ -35,7 +35,11 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-bark-800">
+    <div
+      className="flex flex-col h-full bg-white dark:bg-bark-800"
+      data-testid="learning-panel"
+      data-page={page}
+    >
       {/* ── Header ───────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 bg-orange-50 dark:bg-bark-800 border-b border-orange-100 dark:border-bark-600 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -45,6 +49,7 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
         <button
           type="button"
           onClick={onClose}
+          data-testid="learning-panel-close"
           className="flex h-7 w-7 items-center justify-center rounded-lg
                      text-orange-500 hover:bg-orange-100 hover:text-orange-700
                      active:bg-orange-200 transition-colors
@@ -71,7 +76,11 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
       </div>
 
       {/* ── Page context label ───────────────────────── */}
-      <div className="px-4 py-2 bg-orange-50/60 dark:bg-bark-800/60 border-b border-orange-100 dark:border-bark-600 flex-shrink-0">
+      <div
+        className="px-4 py-2 bg-orange-50/60 dark:bg-bark-800/60 border-b border-orange-100 dark:border-bark-600 flex-shrink-0"
+        data-testid="learning-panel-context"
+        data-page={page}
+      >
         <span className="text-xs text-orange-500 dark:text-orange-400 font-medium">
           {t('learn:contextLabel', { page: t(`nav:${page}` as const) })}
         </span>
@@ -91,6 +100,8 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
                   <button
                     type="button"
                     onClick={() => toggle(section.id)}
+                    data-testid={`learning-panel-section-${section.id}`}
+                    data-open={isOpen ? 'true' : 'false'}
                     className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors duration-150 ${
                       isOpen
                         ? 'bg-orange-50 dark:bg-bark-700 text-orange-700 dark:text-orange-400'
@@ -112,7 +123,10 @@ export default function LearningPanel({ page, onClose }: LearningPanelProps) {
 
                   {/* Accordion body */}
                   {isOpen && (
-                    <div className="px-4 pb-4 pt-1 bg-white dark:bg-bark-800">
+                    <div
+                      className="px-4 pb-4 pt-1 bg-white dark:bg-bark-800"
+                      data-testid={`learning-panel-body-${section.id}`}
+                    >
                       {section.content}
                     </div>
                   )}

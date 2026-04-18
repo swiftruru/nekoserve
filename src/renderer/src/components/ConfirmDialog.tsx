@@ -8,9 +8,17 @@ interface ConfirmDialogProps {
   message: string
   onConfirm: () => void
   onCancel: () => void
+  testIdPrefix?: string
 }
 
-export default function ConfirmDialog({ visible, icon = '🔄', message, onConfirm, onCancel }: ConfirmDialogProps) {
+export default function ConfirmDialog({
+  visible,
+  icon = '🔄',
+  message,
+  onConfirm,
+  onCancel,
+  testIdPrefix,
+}: ConfirmDialogProps) {
   const { t } = useTranslation('common')
   const dialogRef = useRef<HTMLDivElement>(null)
   useFocusTrap(dialogRef, visible)
@@ -30,6 +38,7 @@ export default function ConfirmDialog({ visible, icon = '🔄', message, onConfi
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
+      data-testid={testIdPrefix ? `${testIdPrefix}-dialog` : undefined}
       onClick={onCancel}
     >
       <div
@@ -46,6 +55,7 @@ export default function ConfirmDialog({ visible, icon = '🔄', message, onConfi
           <button
             type="button"
             onClick={onCancel}
+            data-testid={testIdPrefix ? `${testIdPrefix}-cancel` : undefined}
             className="btn-secondary text-xs px-4 py-1.5"
           >
             {t('button.cancel')}
@@ -53,6 +63,7 @@ export default function ConfirmDialog({ visible, icon = '🔄', message, onConfi
           <button
             type="button"
             onClick={onConfirm}
+            data-testid={testIdPrefix ? `${testIdPrefix}-confirm` : undefined}
             className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-semibold rounded-xl px-4 py-1.5 text-xs shadow-lg shadow-red-500/25 transition-all duration-150"
           >
             {t('button.confirm')}

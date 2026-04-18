@@ -469,11 +469,33 @@ npm run test:ui
 # Same tests, but with the Electron window visible for demo
 npm run test:ui:headed
 
+# Run the separate real-simulator smoke test
+npm run test:ui:real-smoke
+
 # Open the HTML report after a run
 npm run test:ui:report
 ```
 
-The first version covers app startup, a successful simulation run, Results rendering, Event Log interactions, and simulator error handling. Network-backed update checks and native save dialogs are intentionally excluded from the UI suite.
+`test:ui` and `test:ui:headed` run only deterministic mocked UI tests. `test:ui:real-smoke` is a separate smoke that exercises the real simulator bridge and requires an existing simulator binary in `simulator-python/dist/simulator/` (build it first with `npm run build:simulator` if needed). Internally it uses a plain Electron + CDP harness instead of the mocked `_electron.launch` path, so the real simulator can be verified without mixing it into the daily deterministic suite.
+
+The current suite contains:
+
+- `17` deterministic Playwright UI tests via `npm run test:ui`
+- `1` real simulator smoke test via `npm run test:ui:real-smoke`
+
+Coverage currently includes:
+
+- app startup and the main Settings flow
+- successful simulation runs plus error-state handling
+- batch mode and sensitivity analysis / sweep mode
+- Playback transport controls, timeline scrubbing, and Live Learning Mode overlay
+- Results rendering, history compare/load/delete/clear, and What-If Explorer interactions
+- Event Log filtering and jump-back-to-Playback flow
+- Challenge Drawer smoke/persistence
+- How It Works smoke tests
+- Learning Panel interactions across page changes
+
+Network-backed update checks and native save dialogs are intentionally excluded from the UI suite so local demos stay stable and repeatable.
 
 ## Python Simulator (standalone)
 

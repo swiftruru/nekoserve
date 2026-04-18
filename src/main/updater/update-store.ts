@@ -11,11 +11,13 @@ interface UpdatePrefs {
   skippedVersion?: string
 }
 
-const PREFS_FILE = path.join(app.getPath('userData'), 'update-prefs.json')
+function getPrefsFile(): string {
+  return path.join(app.getPath('userData'), 'update-prefs.json')
+}
 
 function readPrefs(): UpdatePrefs {
   try {
-    return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8')) as UpdatePrefs
+    return JSON.parse(fs.readFileSync(getPrefsFile(), 'utf8')) as UpdatePrefs
   } catch {
     return {}
   }
@@ -23,7 +25,7 @@ function readPrefs(): UpdatePrefs {
 
 function writePrefs(prefs: UpdatePrefs): void {
   try {
-    fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs), 'utf8')
+    fs.writeFileSync(getPrefsFile(), JSON.stringify(prefs), 'utf8')
   } catch {
     // best-effort
   }

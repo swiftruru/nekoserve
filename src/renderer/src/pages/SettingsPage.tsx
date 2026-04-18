@@ -489,6 +489,8 @@ export default function SettingsPage({
                 type="button"
                 onClick={() => { setBatchMode(!batchMode); if (!batchMode) setSweepMode(false) }}
                 disabled={isRunning}
+                data-testid="settings-mode-batch-toggle"
+                aria-pressed={batchMode}
                 className={[
                   'rounded-xl border-2 p-3 text-left transition-all duration-150',
                   batchMode
@@ -513,6 +515,8 @@ export default function SettingsPage({
                   type="button"
                   onClick={() => { setSweepMode(!sweepMode); if (!sweepMode) setBatchMode(false) }}
                   disabled={isRunning}
+                  data-testid="settings-mode-sweep-toggle"
+                  aria-pressed={sweepMode}
                   className={[
                     'rounded-xl border-2 p-3 text-left transition-all duration-150',
                     sweepMode
@@ -544,6 +548,7 @@ export default function SettingsPage({
                     value={replicationCount}
                     onChange={(e) => setReplicationCount(Number(e.target.value))}
                     disabled={isRunning}
+                    data-testid="settings-batch-replications"
                     className="flex-1 accent-orange-500 h-1.5"
                   />
                   <span className="text-sm font-bold text-orange-600 dark:text-orange-400 tabular-nums w-8 text-center">
@@ -565,14 +570,15 @@ export default function SettingsPage({
                       onChange={(v) => setSweepParam(v as SweepableParam)}
                       disabled={isRunning}
                       accent="purple"
+                      testId="settings-sweep-param"
                     />
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {([
-                      { label: t('settings:sweep.from'), value: sweepFrom, set: setSweepFrom, min: 0, step: 1 },
-                      { label: t('settings:sweep.to'), value: sweepTo, set: setSweepTo, min: 0, step: 1 },
-                      { label: t('settings:sweep.step'), value: sweepStep, set: (v: number) => setSweepStep(Math.max(0.1, v)), min: 0.1, step: 0.1 },
-                      { label: t('settings:sweep.repsEach'), value: sweepReplications, set: (v: number) => setSweepReplications(Math.max(1, Math.min(20, v))), min: 1, step: 1 },
+                      { label: t('settings:sweep.from'), value: sweepFrom, set: setSweepFrom, min: 0, step: 1, testId: 'settings-sweep-from' },
+                      { label: t('settings:sweep.to'), value: sweepTo, set: setSweepTo, min: 0, step: 1, testId: 'settings-sweep-to' },
+                      { label: t('settings:sweep.step'), value: sweepStep, set: (v: number) => setSweepStep(Math.max(0.1, v)), min: 0.1, step: 0.1, testId: 'settings-sweep-step' },
+                      { label: t('settings:sweep.repsEach'), value: sweepReplications, set: (v: number) => setSweepReplications(Math.max(1, Math.min(20, v))), min: 1, step: 1, testId: 'settings-sweep-replications' },
                     ] as const).map((field) => (
                       <div key={field.label}>
                         <label className="text-[10px] font-medium text-purple-500 dark:text-purple-400 block mb-0.5">
@@ -585,6 +591,7 @@ export default function SettingsPage({
                           min={field.min}
                           step={field.step}
                           disabled={isRunning}
+                          data-testid={field.testId}
                           className="w-full px-2 py-1 text-xs text-center rounded-lg border border-purple-200 dark:border-bark-500 bg-white dark:bg-bark-700 text-gray-700 dark:text-bark-200 tabular-nums"
                         />
                       </div>
@@ -599,7 +606,10 @@ export default function SettingsPage({
 
       {/* ── Error display ────────────────────────────── */}
       {error && (
-        <div className="mt-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-4">
+        <div
+          className="mt-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-4"
+          data-testid="settings-error-panel"
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2">
               <span className="text-lg">⚠️</span>
@@ -649,6 +659,7 @@ export default function SettingsPage({
           <div
             className="h-2.5 bg-orange-100 dark:bg-bark-700 rounded-full overflow-hidden"
             role="progressbar"
+            data-testid="settings-progressbar"
             aria-valuenow={Math.round(batchProgress ? (batchProgress.completed / batchProgress.total) * 100 : progressPct)}
             aria-valuemin={0}
             aria-valuemax={100}
@@ -728,6 +739,7 @@ export default function SettingsPage({
           <button
             type="button"
             data-onboarding="run-button"
+            data-testid="settings-run-button"
             onClick={handleRun}
             disabled={isRunning}
             className="btn-primary flex items-center gap-2"

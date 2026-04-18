@@ -26,6 +26,8 @@
     "test:ui": "playwright test",
     "pretest:ui:headed": "npm run ci:build",
     "test:ui:headed": "playwright test --headed",
+    "pretest:ui:real-smoke": "npm run ci:build && node scripts/verify-simulator.js",
+    "test:ui:real-smoke": "NEKOSERVE_UI_REAL_SMOKE=1 playwright test",
     "test:ui:report": "playwright show-report playwright-report",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",

@@ -383,6 +383,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setChallengeDrawerOpen(true)}
+            data-testid="challenge-drawer-toggle"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-white dark:bg-bark-700 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-bark-500 hover:bg-purple-50 dark:hover:bg-bark-600 transition-colors duration-150"
           >
             🏆 {t('common:challenges')}
@@ -390,6 +391,7 @@ export default function App() {
           <button
             type="button"
             onClick={togglePanel}
+            data-testid="learning-panel-toggle"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-150 ${
               panelOpen
                 ? 'bg-orange-500 text-white border-orange-500'

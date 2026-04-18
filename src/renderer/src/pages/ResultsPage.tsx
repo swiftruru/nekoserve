@@ -147,7 +147,10 @@ export default function ResultsPage({
 
       {/* ── Batch info banner ─────────────────────────────────── */}
       {batchResult && (
-        <div className="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/60 dark:bg-purple-900/20 px-4 py-2.5 flex items-center gap-2">
+        <div
+          className="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/60 dark:bg-purple-900/20 px-4 py-2.5 flex items-center gap-2"
+          data-testid="results-batch-banner"
+        >
           <span className="text-lg">🔬</span>
           <div className="flex-1 text-xs text-purple-700 dark:text-purple-300">
             <span className="font-semibold">
@@ -169,7 +172,7 @@ export default function ResultsPage({
 
       {/* ── Sweep chart ──────────────────────────────────────── */}
       {sweepResult && sweepResult.points.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="results-sweep-section">
           <SweepChart
             paramLabel={t(`results:configSummary.${
               sweepResult.paramKey === 'customerArrivalInterval' ? 'arrivalInterval' :
@@ -185,6 +188,7 @@ export default function ResultsPage({
             <button
               type="button"
               onClick={() => { exportSweepCSV(sweepResult); toast(t('common:toast.exportSuccess')) }}
+              data-testid="results-sweep-export"
               className="btn-secondary text-xs px-3 py-1.5"
             >
               {t('results:sweep.exportCsv')}
@@ -212,7 +216,7 @@ export default function ResultsPage({
                 : t('results:history.expand', { count: history.length })}
             </button>
             {historyOpen && (
-              <div className="mt-3">
+              <div className="mt-3" data-testid="results-history-panel">
                 {history.length >= 2 && (
                   <div className="text-[10px] text-gray-400 dark:text-bark-400 mb-2">
                     {t('results:history.selectHint')}
@@ -230,6 +234,8 @@ export default function ResultsPage({
                       <div
                         key={entry.id}
                         data-testid="results-history-entry"
+                        data-history-id={String(entry.id)}
+                        data-current={isCurrent ? 'true' : 'false'}
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all duration-150 ${
                           isCurrent
                             ? 'bg-orange-50 dark:bg-bark-700 border border-orange-300 dark:border-orange-600'
@@ -257,6 +263,7 @@ export default function ResultsPage({
                                 return next
                               })
                             }}
+                            data-testid="results-history-select"
                             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
                               isSelected
                                 ? 'bg-orange-500 border-orange-500 text-white'
@@ -297,6 +304,7 @@ export default function ResultsPage({
                             <button
                               type="button"
                               onClick={() => onLoadHistory(entry)}
+                              data-testid="results-history-load"
                               className="px-2 py-1 rounded-lg text-[10px] font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
                             >
                               {t('results:history.load')}
@@ -319,6 +327,7 @@ export default function ResultsPage({
                             <button
                               type="button"
                               onClick={() => setConfirmDeleteId({ id: entry.id, label: entry.label })}
+                              data-testid="results-history-delete"
                               className="w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-bark-600 transition-colors text-xs"
                               title={t('common:button.delete')}
                             >
@@ -355,6 +364,7 @@ export default function ResultsPage({
                     <button
                       type="button"
                       onClick={() => setConfirmClear(true)}
+                      data-testid="results-history-clear-all"
                       className="text-[10px] text-red-400 hover:text-red-500 transition-colors"
                     >
                       {t('results:history.clearAll')}
@@ -729,6 +739,7 @@ export default function ResultsPage({
         message={t('results:history.clearConfirm')}
         onConfirm={() => { onClearHistory?.(); setConfirmClear(false) }}
         onCancel={() => setConfirmClear(false)}
+        testIdPrefix="results-history-clear"
       />
       <ConfirmDialog
         visible={confirmDeleteId !== null}
@@ -736,6 +747,7 @@ export default function ResultsPage({
         message={confirmDeleteId ? t('results:history.deleteConfirm', { label: confirmDeleteId.label }) : ''}
         onConfirm={() => { if (confirmDeleteId) onDeleteHistory?.(confirmDeleteId.id); setConfirmDeleteId(null) }}
         onCancel={() => setConfirmDeleteId(null)}
+        testIdPrefix="results-history-delete"
       />
 
       {/* Floating level switcher (sticky bottom-right) */}

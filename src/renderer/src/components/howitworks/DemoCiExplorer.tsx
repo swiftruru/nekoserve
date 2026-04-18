@@ -99,7 +99,7 @@ export default function DemoCiExplorer({ level }: Props) {
   const toX = (v: number) => ((v - lineMin) / (lineMax - lineMin)) * lineW
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="howitworks-ci-demo">
       {/* Controls */}
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
@@ -109,6 +109,7 @@ export default function DemoCiExplorer({ level }: Props) {
           <input
             type="range" min={3} max={50} value={n}
             onChange={(e) => setN(Number(e.target.value))}
+            data-testid="howitworks-ci-sample-size"
             className="w-full accent-orange-500"
           />
         </div>
@@ -122,6 +123,8 @@ export default function DemoCiExplorer({ level }: Props) {
                 key={c}
                 type="button"
                 onClick={() => setConf(c)}
+                data-testid={`howitworks-ci-conf-${c}`}
+                aria-pressed={conf === c}
                 className={`flex-1 px-2 py-0.5 text-[10px] font-semibold transition-colors ${
                   conf === c
                     ? 'bg-orange-500 text-white'
@@ -164,23 +167,27 @@ export default function DemoCiExplorer({ level }: Props) {
       </div>
 
       {/* Stats row */}
-      <div className="flex flex-wrap gap-3 text-xs">
-        <div>
+      <div className="flex flex-wrap gap-3 text-xs" data-testid="howitworks-ci-stats">
+        <div data-testid="howitworks-ci-mean">
           <span className="text-gray-500 dark:text-bark-400">{t('demo.ciExplorer.meanLabel')}: </span>
           <span className="font-mono font-bold tabular-nums">{mean.toFixed(2)}</span>
         </div>
-        <div>
+        <div data-testid="howitworks-ci-lower">
           <span className="text-gray-500 dark:text-bark-400">{t('demo.ciExplorer.lowerLabel')}: </span>
           <span className="font-mono tabular-nums">{lower.toFixed(2)}</span>
         </div>
-        <div>
+        <div data-testid="howitworks-ci-upper">
           <span className="text-gray-500 dark:text-bark-400">{t('demo.ciExplorer.upperLabel')}: </span>
           <span className="font-mono tabular-nums">{upper.toFixed(2)}</span>
         </div>
       </div>
 
       {/* Narrow/wide hint */}
-      <div className={`text-[10px] font-medium ${isNarrow ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+      <div
+        data-testid="howitworks-ci-hint"
+        data-state={isNarrow ? 'narrow' : 'wide'}
+        className={`text-[10px] font-medium ${isNarrow ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}
+      >
         {isNarrow ? '✅ ' + t('demo.ciExplorer.narrowHint') : '⚠️ ' + t('demo.ciExplorer.wideHint')}
       </div>
 
@@ -198,7 +205,7 @@ export default function DemoCiExplorer({ level }: Props) {
 
       {/* Sensitivity analysis sub-demo */}
       {level === 'expert' && (
-        <div className="mt-4 pt-3 border-t border-orange-100 dark:border-bark-600">
+        <div className="mt-4 pt-3 border-t border-orange-100 dark:border-bark-600" data-testid="howitworks-ci-sensitivity">
           <div className="text-xs font-semibold text-gray-600 dark:text-bark-300 mb-2">
             {t('demo.ciExplorer.sensitivityTitle')}
           </div>

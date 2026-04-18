@@ -53,6 +53,7 @@ export default function OnboardingOverlay({ externalOpen, onClose }: OnboardingO
 
   // Auto-open on first launch
   useEffect(() => {
+    if (window.electronAPI.testEnv.isE2E) return
     try {
       if (localStorage.getItem(STORAGE_KEY) !== 'true') {
         const timer = setTimeout(() => setVisible(true), 500)

@@ -92,7 +92,7 @@ export default function DemoFelStepper({ level }: Props) {
   const EVENT_EMOJIS = ['🚶', '⏳', '🪑', '📝', '🍽️', '🍴', '😋', '👋']
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="howitworks-fel-demo">
       {/* Friendly: emoji step flow */}
       {level === 'friendly' && (
         <div className="flex items-center gap-1 text-lg">
@@ -117,7 +117,7 @@ export default function DemoFelStepper({ level }: Props) {
       )}
 
       {/* Clock readout */}
-      <div className="flex items-center gap-4 text-xs">
+      <div className="flex items-center gap-4 text-xs" data-testid="howitworks-fel-clock">
         <div className="flex items-center gap-1.5">
           <span className="text-gray-500 dark:text-bark-400">{t('demo.felStepper.clockLabel')}:</span>
           <span className="font-mono font-bold text-orange-600 dark:text-orange-400 text-sm tabular-nums">
@@ -245,7 +245,7 @@ export default function DemoFelStepper({ level }: Props) {
 
       {/* Expert mode: FEL list */}
       {level === 'expert' && (
-        <div className="text-[10px] text-gray-500 dark:text-bark-400">
+        <div className="text-[10px] text-gray-500 dark:text-bark-400" data-testid="howitworks-fel-list">
           <div className="font-semibold mb-1">{t('demo.felStepper.felLabel')}</div>
           {remaining.length > 0 ? (
             <div className="flex flex-wrap gap-1">
@@ -272,6 +272,7 @@ export default function DemoFelStepper({ level }: Props) {
           type="button"
           onClick={() => setStep((s) => Math.min(s + 1, EVENTS.length - 1))}
           disabled={step >= EVENTS.length - 1}
+          data-testid="howitworks-fel-next"
           className="px-3 py-1 text-xs font-semibold rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {t('demo.felStepper.nextBtn')}
@@ -279,6 +280,7 @@ export default function DemoFelStepper({ level }: Props) {
         <button
           type="button"
           onClick={() => setStep(-1)}
+          data-testid="howitworks-fel-reset"
           className="px-3 py-1 text-xs font-semibold rounded-lg border border-orange-200 dark:border-bark-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-bark-600 transition-colors"
         >
           {t('demo.felStepper.resetBtn')}

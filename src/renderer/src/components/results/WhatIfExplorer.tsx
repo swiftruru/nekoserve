@@ -76,6 +76,7 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
       <button
         type="button"
         onClick={() => setOpen(true)}
+        data-testid="results-whatif-toggle"
         className="card flex items-center gap-2 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-bark-700 transition-colors cursor-pointer"
       >
         <span className="text-lg">🔮</span>
@@ -85,7 +86,7 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
   }
 
   return (
-    <div className="card border-purple-200 dark:border-purple-800/50">
+    <div className="card border-purple-200 dark:border-purple-800/50" data-testid="results-whatif-panel">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">🔮</span>
@@ -93,12 +94,16 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
             {t('results:whatIf.title')}
           </span>
           {loading && (
-            <span className="inline-block w-3 h-3 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+            <span
+              className="inline-block w-3 h-3 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"
+              data-testid="results-whatif-loading"
+            />
           )}
         </div>
         <button
           type="button"
           onClick={() => { setOpen(false); setTweakConfig(baseConfig); setWhatIfMetrics(null) }}
+          data-testid="results-whatif-collapse"
           className="text-xs text-gray-400 hover:text-gray-600"
         >
           {t('results:whatIf.collapse')}
@@ -122,6 +127,7 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
                   step={step}
                   value={tweakConfig[key] as number}
                   onChange={(e) => handleChange(key, Number(e.target.value))}
+                  data-testid={`results-whatif-slider-${key}`}
                   className="flex-1 accent-purple-500 h-1.5"
                 />
                 <span className={`text-xs font-mono w-8 text-center ${changed ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-gray-500 dark:text-bark-300'}`}>
@@ -135,7 +141,10 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
 
       {/* Comparison table */}
       {hasChanges && whatIfMetrics && (
-        <div className="rounded-lg border border-purple-100 dark:border-purple-800/30 overflow-hidden">
+        <div
+          className="rounded-lg border border-purple-100 dark:border-purple-800/30 overflow-hidden"
+          data-testid="results-whatif-comparison"
+        >
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-purple-50/50 dark:bg-purple-900/20">

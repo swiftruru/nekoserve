@@ -1,0 +1,201 @@
+{
+  "config": {
+    "seatCount": 10,
+    "staffCount": 2,
+    "catCount": 3,
+    "customerArrivalInterval": 8,
+    "orderTime": 3,
+    "preparationTime": 8,
+    "diningTime": 15,
+    "catInteractionTime": 10,
+    "catIdleInterval": 4,
+    "catRestProbability": 0.2,
+    "catRestDuration": 10,
+    "maxWaitTime": 25,
+    "simulationDuration": 120,
+    "randomSeed": 42,
+    "warmUpDuration": 0
+  },
+  "metrics": {
+    "avgWaitForSeat": 0,
+    "avgWaitForOrder": 8,
+    "avgTotalStayTime": 39,
+    "catInteractionRate": 0.5,
+    "avgCatVisitsPerCustomer": 0.5,
+    "noCatVisitRate": 0.5,
+    "seatUtilization": 0.32,
+    "staffUtilization": 0.46,
+    "catUtilization": 0.11,
+    "totalCustomersServed": 2,
+    "totalCustomersArrived": 3,
+    "abandonRate": 0.3333,
+    "waitForSeatP50": 0,
+    "waitForSeatP95": 0,
+    "waitForSeatP99": 0,
+    "waitForOrderP50": 8,
+    "waitForOrderP95": 8,
+    "waitForOrderP99": 8
+  },
+  "eventLog": [
+    {
+      "timestamp": 1,
+      "eventType": "CUSTOMER_ARRIVE",
+      "customerId": 1,
+      "description": "Customer 1 arrives."
+    },
+    {
+      "timestamp": 1,
+      "eventType": "CUSTOMER_WAIT_SEAT",
+      "customerId": 1,
+      "description": "Customer 1 waits for a seat."
+    },
+    {
+      "timestamp": 1,
+      "eventType": "CUSTOMER_SEATED",
+      "customerId": 1,
+      "resourceId": "seat-1",
+      "description": "Customer 1 sits at seat 1."
+    },
+    {
+      "timestamp": 1.2,
+      "eventType": "CUSTOMER_ORDER",
+      "customerId": 1,
+      "description": "Customer 1 places an order."
+    },
+    {
+      "timestamp": 3,
+      "eventType": "ORDER_START_PREPARE",
+      "customerId": 1,
+      "resourceId": "staff-1",
+      "description": "Staff 1 starts preparing order 1."
+    },
+    {
+      "timestamp": 4.5,
+      "eventType": "CAT_VISIT_SEAT",
+      "customerId": 1,
+      "resourceId": "cat-1",
+      "description": "Cat 1 visits customer 1."
+    },
+    {
+      "timestamp": 9,
+      "eventType": "ORDER_READY",
+      "customerId": 1,
+      "resourceId": "staff-1",
+      "description": "Customer 1's order is ready."
+    },
+    {
+      "timestamp": 9,
+      "eventType": "CUSTOMER_START_DINING",
+      "customerId": 1,
+      "description": "Customer 1 starts dining."
+    },
+    {
+      "timestamp": 14.5,
+      "eventType": "CAT_LEAVE_SEAT",
+      "customerId": 1,
+      "resourceId": "cat-1",
+      "description": "Cat 1 leaves customer 1."
+    },
+    {
+      "timestamp": 15,
+      "eventType": "CAT_START_REST",
+      "customerId": 1,
+      "resourceId": "cat-1",
+      "description": "Cat 1 starts resting."
+    },
+    {
+      "timestamp": 18,
+      "eventType": "CAT_END_REST",
+      "customerId": 1,
+      "resourceId": "cat-1",
+      "description": "Cat 1 wakes up."
+    },
+    {
+      "timestamp": 20,
+      "eventType": "CUSTOMER_ARRIVE",
+      "customerId": 2,
+      "description": "Customer 2 arrives."
+    },
+    {
+      "timestamp": 20,
+      "eventType": "CUSTOMER_WAIT_SEAT",
+      "customerId": 2,
+      "description": "Customer 2 waits for a seat."
+    },
+    {
+      "timestamp": 20,
+      "eventType": "CUSTOMER_SEATED",
+      "customerId": 2,
+      "resourceId": "seat-2",
+      "description": "Customer 2 sits at seat 2."
+    },
+    {
+      "timestamp": 20.4,
+      "eventType": "CUSTOMER_ORDER",
+      "customerId": 2,
+      "description": "Customer 2 places an order."
+    },
+    {
+      "timestamp": 22,
+      "eventType": "ORDER_START_PREPARE",
+      "customerId": 2,
+      "resourceId": "staff-1",
+      "description": "Staff 1 starts preparing order 2."
+    },
+    {
+      "timestamp": 28,
+      "eventType": "ORDER_READY",
+      "customerId": 2,
+      "resourceId": "staff-1",
+      "description": "Customer 2's order is ready."
+    },
+    {
+      "timestamp": 28,
+      "eventType": "CUSTOMER_START_DINING",
+      "customerId": 2,
+      "description": "Customer 2 starts dining."
+    },
+    {
+      "timestamp": 30,
+      "eventType": "CUSTOMER_ARRIVE",
+      "customerId": 3,
+      "description": "Customer 3 arrives."
+    },
+    {
+      "timestamp": 30,
+      "eventType": "CUSTOMER_WAIT_SEAT",
+      "customerId": 3,
+      "description": "Customer 3 waits for a seat."
+    },
+    {
+      "timestamp": 42,
+      "eventType": "CUSTOMER_ABANDON",
+      "customerId": 3,
+      "description": "Customer 3 gives up and leaves."
+    },
+    {
+      "timestamp": 46,
+      "eventType": "CUSTOMER_FINISH_DINING",
+      "customerId": 1,
+      "description": "Customer 1 finishes dining."
+    },
+    {
+      "timestamp": 46.2,
+      "eventType": "CUSTOMER_LEAVE",
+      "customerId": 1,
+      "description": "Customer 1 leaves the cafe."
+    },
+    {
+      "timestamp": 50,
+      "eventType": "CUSTOMER_FINISH_DINING",
+      "customerId": 2,
+      "description": "Customer 2 finishes dining."
+    },
+    {
+      "timestamp": 50.1,
+      "eventType": "CUSTOMER_LEAVE",
+      "customerId": 2,
+      "description": "Customer 2 leaves the cafe."
+    }
+  ]
+}

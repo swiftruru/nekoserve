@@ -43,9 +43,9 @@ interface SimulationState {
 }
 
 interface UseSimulationReturn extends SimulationState {
-  run: (config: SimulationConfig, label?: string) => Promise<void>
-  runBatch: (config: SimulationConfig, replicationCount: number, label?: string) => Promise<void>
-  runSweep: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => Promise<void>
+  run: (config: SimulationConfig, label?: string) => Promise<boolean>
+  runBatch: (config: SimulationConfig, replicationCount: number, label?: string) => Promise<boolean>
+  runSweep: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => Promise<boolean>
   cancel: () => void
   reset: () => void
   clearHistory: () => void
@@ -151,6 +151,7 @@ export function useSimulation(): UseSimulationReturn {
           history: [...prev.history, newEntry],
         }
       })
+      return true
     } catch (err) {
       if (timerRef.current) clearInterval(timerRef.current)
       timerRef.current = null
@@ -165,6 +166,7 @@ export function useSimulation(): UseSimulationReturn {
         error: simulatorError,
         elapsed: 0,
       }))
+      return false
     }
   }, [])
 
@@ -226,7 +228,7 @@ export function useSimulation(): UseSimulationReturn {
         elapsed: 0,
         batchProgress: null,
       }))
-      return
+      return false
     }
 
     const summary = buildBatchSummary(runs)
@@ -267,6 +269,7 @@ export function useSimulation(): UseSimulationReturn {
         batchProgress: null,
       }
     })
+    return true
   }, [])
 
   const runSweep = useCallback(async (
@@ -354,7 +357,7 @@ export function useSimulation(): UseSimulationReturn {
         elapsed: 0,
         batchProgress: null,
       }))
-      return
+      return false
     }
 
     const sweepResult: SweepResult = { config, paramKey, points }
@@ -369,6 +372,7 @@ export function useSimulation(): UseSimulationReturn {
       sweepResult,
       batchProgress: null,
     }))
+    return true
   }, [])
 
   const cancel = useCallback(() => {

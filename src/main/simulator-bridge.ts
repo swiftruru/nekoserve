@@ -16,6 +16,56 @@ import fs from 'fs'
 import type { SimulationConfig, SimulationResult, SimulatorError } from '../../shared/contracts/types'
 
 const SIMULATOR_TIMEOUT_MS = 30_000
+const IS_E2E = process.env.NEKOSERVE_E2E === '1'
+const E2E_SIMULATION_MODE = process.env.NEKOSERVE_E2E_SIMULATION_MODE ?? 'mock'
+let e2eSimulationMode: 'mock' | 'real' = E2E_SIMULATION_MODE === 'real' ? 'real' : 'mock'
+
+function readDelay(): number {
+  const raw = Number(process.env.NEKOSERVE_E2E_SIMULATION_DELAY_MS ?? '0')
+  return Number.isFinite(raw) && raw > 0 ? raw : 0
+}
+
+function delay(ms: number): Promise<void> {
+  return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve()
+}
+
+async function runMockSimulator(config: SimulationConfig): Promise<SimulationResult> {
+  const delayMs = readDelay()
+  const mockError = process.env.NEKOSERVE_E2E_SIMULATION_ERROR as SimulatorError['type'] | undefined
+  if (mockError) {
+    await delay(delayMs)
+    throw {
+      error: `Mocked simulator failure: ${mockError}`,
+      type: mockError,
+    } satisfies SimulatorError
+  }
+
+  const fixturePath = process.env.NEKOSERVE_E2E_SIMULATION_FIXTURE
+  if (!fixturePath) {
+    throw {
+      error: 'NEKOSERVE_E2E_SIMULATION_FIXTURE is not set',
+      type: 'BINARY_NOT_FOUND',
+    } satisfies SimulatorError
+  }
+
+  await delay(delayMs)
+
+  try {
+    const result = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as SimulationResult
+    return {
+      ...result,
+      config: {
+        ...result.config,
+        ...config,
+      },
+    }
+  } catch (err) {
+    throw {
+      error: err instanceof Error ? err.message : 'Failed to load E2E fixture',
+      type: 'PARSE_ERROR',
+    } satisfies SimulatorError
+  }
+}
 
 // ──────────────────────────────────────────────────────────────
 // Path resolution
@@ -77,6 +127,9 @@ function resolveSpawnTarget(): SpawnTarget {
 // ──────────────────────────────────────────────────────────────
 
 export function runSimulator(config: SimulationConfig): Promise<SimulationResult> {
+  if (IS_E2E && e2eSimulationMode !== 'real') {
+    return runMockSimulator(config)
+  }
   return new Promise((resolve, reject) => {
     const target = resolveSpawnTarget()
 
@@ -169,6 +222,14 @@ export function registerSimulationHandler(): void {
     } catch (err) {
       return { success: false, error: err }
     }
+  })
+
+  ipcMain.handle('set-e2e-simulation-mode', async (_event, mode: 'mock' | 'real') => {
+    if (!IS_E2E || (mode !== 'mock' && mode !== 'real')) {
+      return { success: false }
+    }
+    e2eSimulationMode = mode
+    return { success: true }
   })
 
   ipcMain.handle('get-app-version', () => {

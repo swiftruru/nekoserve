@@ -12,6 +12,7 @@ interface KpiCardProps {
   description?: string
   /** Confidence interval range (shown as +/- below the main value) */
   ci?: { lower: number; upper: number; n: number } | null
+  testId?: string
 }
 
 const HIGHLIGHT_STYLES = {
@@ -39,9 +40,11 @@ export default function KpiCard({
   highlight = 'normal',
   description,
   ci,
+  testId,
 }: KpiCardProps) {
   return (
     <div
+      data-testid={testId}
       className={`rounded-2xl border p-4 shadow-sm flex flex-col gap-1 ${HIGHLIGHT_STYLES[highlight]}`}
     >
       <div className="flex items-center justify-between">

@@ -125,6 +125,8 @@ interface CodeToggleProps {
   code: string
   /** Translated note shown below the code block. */
   note: string
+  /** Optional stable selector prefix for UI tests. */
+  testIdPrefix?: string
 }
 
 /**
@@ -132,7 +134,7 @@ interface CodeToggleProps {
  * a copy-to-clipboard button. Collapsed by default so the
  * interactive demo stays front-and-center.
  */
-export default function CodeToggle({ code, note }: CodeToggleProps) {
+export default function CodeToggle({ code, note, testIdPrefix }: CodeToggleProps) {
   const { t } = useTranslation('howItWorks')
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -152,6 +154,7 @@ export default function CodeToggle({ code, note }: CodeToggleProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        data-testid={testIdPrefix ? `${testIdPrefix}-toggle` : undefined}
         className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 flex items-center gap-1"
       >
         <span className="text-[10px] transition-transform duration-150" style={{ transform: open ? 'rotate(90deg)' : undefined }}>
@@ -161,7 +164,7 @@ export default function CodeToggle({ code, note }: CodeToggleProps) {
       </button>
 
       {open && (
-        <div className="mt-2 space-y-1.5">
+        <div className="mt-2 space-y-1.5" data-testid={testIdPrefix ? `${testIdPrefix}-panel` : undefined}>
           <div className="relative group">
             {/* Copy button */}
             <button

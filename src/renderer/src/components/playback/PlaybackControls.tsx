@@ -38,6 +38,7 @@ export default function PlaybackControls({
       <button
         type="button"
         onClick={onReset}
+        data-testid="playback-reset"
         className="btn-secondary min-w-[90px]"
         title={t('playback:controls.reset')}
       >
@@ -48,6 +49,7 @@ export default function PlaybackControls({
         <button
           type="button"
           onClick={onStepPrev}
+          data-testid="playback-step-prev"
           className="btn-secondary px-3"
           title={t('playback:controls.stepPrev')}
           aria-label={t('playback:controls.stepPrev')}
@@ -57,6 +59,7 @@ export default function PlaybackControls({
         <button
           type="button"
           onClick={onTogglePlay}
+          data-testid="playback-play-toggle"
           className="btn-primary min-w-[120px]"
         >
           {playing
@@ -66,6 +69,7 @@ export default function PlaybackControls({
         <button
           type="button"
           onClick={onStepNext}
+          data-testid="playback-step-next"
           className="btn-secondary px-3"
           title={t('playback:controls.stepNext')}
           aria-label={t('playback:controls.stepNext')}
@@ -86,6 +90,8 @@ export default function PlaybackControls({
                 key={s}
                 type="button"
                 onClick={() => onSpeedChange(s)}
+                data-testid={`playback-speed-${String(s).replace('.', '-')}`}
+                aria-pressed={active}
                 className={`btn-scenario ${
                   active ? 'btn-scenario-active' : 'btn-scenario-inactive'
                 }`}

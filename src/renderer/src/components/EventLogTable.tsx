@@ -261,6 +261,7 @@ export default function EventLogTable({
               onChange={(e) => setSearch(e.target.value)}
               className="input-field"
               data-selectable
+              data-testid="eventlog-search"
               aria-label={t('eventLog:searchLabel')}
             />
           </div>
@@ -294,6 +295,7 @@ export default function EventLogTable({
               key={type}
               type="button"
               onClick={() => toggleType(type)}
+              data-testid={`eventlog-filter-${type.toLowerCase()}`}
               aria-pressed={selectedTypes.has(type)}
               className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
                 selectedTypes.has(type)
@@ -415,7 +417,7 @@ export default function EventLogTable({
           className="event-log-scroll overflow-y-auto"
           style={{ maxHeight: '55vh' }}
         >
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" data-testid="eventlog-table">
             <thead className="bg-orange-50 dark:bg-bark-800 sticky top-0 z-10">
               <tr>
                 <SortableHeader col="timestamp" label={t('eventLog:column.time')} className="px-4 py-2.5 text-left w-20" />
@@ -438,6 +440,7 @@ export default function EventLogTable({
                 return (
                   <tr
                     key={i}
+                    data-testid={`eventlog-row-${i}`}
                     data-cursor={onRowClick ? 'pointer' : undefined}
                     className={`transition-colors ${baseClass}`}
                     ref={(node) => {

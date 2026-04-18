@@ -80,6 +80,7 @@ export default function ScenarioButtons({
             key={s.id}
             type="button"
             disabled={disabled}
+            data-testid={`scenario-button-${s.id}`}
             onClick={() => onSelect(s.config, s.id)}
             title={builtInDescription(s)}
             className={`btn-scenario ${

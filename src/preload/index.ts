@@ -130,6 +130,13 @@ const electronAPI = {
   /** Capture a region of the page as PNG and save via dialog. */
   captureScreenshot: (rect: { x: number; y: number; width: number; height: number }): Promise<boolean> =>
     ipcRenderer.invoke('capture-screenshot', rect),
+
+  /** Read-only test environment flags for stable E2E execution. */
+  testEnv: {
+    isE2E: process.env.NEKOSERVE_E2E === '1',
+    setSimulationMode: (mode: 'mock' | 'real'): Promise<void> =>
+      ipcRenderer.invoke('set-e2e-simulation-mode', mode).then(() => {}),
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

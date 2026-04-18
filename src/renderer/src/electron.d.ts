@@ -31,6 +31,10 @@ declare global {
 
       // Screenshot
       captureScreenshot: (rect: { x: number; y: number; width: number; height: number }) => Promise<boolean>
+      testEnv: {
+        isE2E: boolean
+        setSimulationMode: (mode: 'mock' | 'real') => Promise<void>
+      }
     }
   }
 }

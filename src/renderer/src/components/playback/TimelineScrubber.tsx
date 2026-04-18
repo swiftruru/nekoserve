@@ -94,6 +94,7 @@ export default function TimelineScrubber({
         step={0.01}
         value={simTime}
         onChange={(e) => onSeek(parseFloat(e.target.value))}
+        data-testid="playback-scrubber"
         aria-label={t('playback:timeline.ariaLabel')}
         className="w-full accent-orange-500 cursor-pointer"
       />

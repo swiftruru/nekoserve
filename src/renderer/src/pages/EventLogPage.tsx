@@ -19,7 +19,7 @@ export default function EventLogPage({
 }: EventLogPageProps) {
   const { t } = useTranslation('results')
   return (
-    <div className="page-container">
+    <div className="page-container" data-testid="eventlog-page">
       <div className="mb-4">
         <h2 className="text-lg font-bold text-orange-700 dark:text-orange-400">{t('results:eventLog.title')}</h2>
         <p className="text-sm text-gray-500 dark:text-bark-300 mt-0.5">

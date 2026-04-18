@@ -15,6 +15,7 @@ export function useWhatsNew() {
   const [version, setVersion] = useState('')
 
   useEffect(() => {
+    if (window.electronAPI.testEnv.isE2E) return
     window.electronAPI.getAppVersion().then((v) => {
       setVersion(v)
       try {

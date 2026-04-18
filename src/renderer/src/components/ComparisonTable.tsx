@@ -85,11 +85,14 @@ export default function ComparisonTable({ history }: ComparisonTableProps) {
   }
 
   return (
-    <div className="card overflow-x-auto">
+    <div className="card overflow-x-auto" data-testid="results-comparison-table">
       <div className="card-title mb-3">{t('results:comparison.title')}</div>
 
       {/* ── Config Diff ────────────────────────────────────── */}
-      <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-3 py-2">
+      <div
+        className="mb-4 rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-3 py-2"
+        data-testid="results-comparison-config-diff"
+      >
         <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1.5">
           {t('results:comparison.configDiff.title')}
         </div>

@@ -6,9 +6,10 @@ interface ThemedSelectProps {
   onChange: (value: string) => void
   disabled?: boolean
   accent?: 'orange' | 'purple'
+  testId?: string
 }
 
-export default function ThemedSelect({ value, options, onChange, disabled, accent = 'orange' }: ThemedSelectProps) {
+export default function ThemedSelect({ value, options, onChange, disabled, accent = 'orange', testId }: ThemedSelectProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -42,6 +43,7 @@ export default function ThemedSelect({ value, options, onChange, disabled, accen
         type="button"
         onClick={() => { if (!disabled) setOpen((v) => !v) }}
         disabled={disabled}
+        data-testid={testId}
         className={`w-full flex items-center justify-between gap-2 rounded-lg border ${borderCls} bg-white dark:bg-bark-700 dark:hover:border-bark-400 px-2.5 py-1.5 text-xs text-gray-700 dark:text-bark-200 transition-colors`}
       >
         <span className="truncate">{selectedLabel}</span>
@@ -58,6 +60,7 @@ export default function ThemedSelect({ value, options, onChange, disabled, accen
                 key={opt.value}
                 type="button"
                 onClick={() => { onChange(opt.value); setOpen(false) }}
+                data-testid={testId ? `${testId}-option-${opt.value}` : undefined}
                 className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
                   isSelected
                     ? selectedCls

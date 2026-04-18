@@ -19,7 +19,7 @@ export default function HowItWorksPage() {
   const isFriendly = level === 'friendly'
 
   return (
-    <div className="page-container max-w-3xl">
+    <div className="page-container max-w-3xl" data-testid="howitworks-page">
 
       {/* ── Page header ────────────────────────────────── */}
       <div className="mb-5">
@@ -36,6 +36,7 @@ export default function HowItWorksPage() {
         <button
           type="button"
           onClick={() => setLevel('friendly')}
+          data-testid="howitworks-level-friendly"
           className={
             'px-3 py-1.5 text-xs font-semibold transition-colors ' +
             (isFriendly
@@ -49,6 +50,7 @@ export default function HowItWorksPage() {
         <button
           type="button"
           onClick={() => setLevel('expert')}
+          data-testid="howitworks-level-expert"
           className={
             'px-3 py-1.5 text-xs font-semibold transition-colors ' +
             (!isFriendly
@@ -84,6 +86,7 @@ export default function HowItWorksPage() {
 env.process(customer(env, cid=1))
 env.run(until=240)   # advances by events, not ticks`}
             note={t('section1CodeNote')}
+            testIdPrefix="howitworks-section1-code"
           />
         }
       />

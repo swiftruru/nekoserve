@@ -8,6 +8,8 @@
 import { app, net } from 'electron'
 import { API_LATEST_RELEASE, RELEASES_URL, FETCH_TIMEOUT_MS } from './update-config'
 
+const IS_E2E = process.env.NEKOSERVE_E2E === '1'
+
 // ── Types ──────────────────────────────────────────────────────
 
 export interface UpdateInfo {
@@ -64,6 +66,19 @@ interface GitHubRelease {
 
 export async function checkForUpdate(): Promise<UpdateCheckOutcome> {
   const currentVersion = app.getVersion()
+
+  if (IS_E2E) {
+    return {
+      success: true,
+      data: {
+        hasUpdate: false,
+        currentVersion,
+        latestVersion: currentVersion,
+        releaseUrl: RELEASES_URL,
+        releaseNotes: '',
+      },
+    }
+  }
 
   try {
     const controller = new AbortController()
