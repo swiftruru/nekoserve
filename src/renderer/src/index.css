@@ -9,57 +9,18 @@
 
   html {
     @apply antialiased;
-    /* Hide the native OS cursor; CustomCursor renders its own sprite on
-       top of the viewport. Input-like elements below override this back
-       to their native cursors so text selection and drag still work. */
-    cursor: none;
   }
 
   body {
     @apply bg-cream-100 text-gray-800 font-sans dark:bg-bark-950 dark:text-bark-100;
     user-select: none;
     -webkit-user-select: none;
-    cursor: none;
   }
 
   /* Allow text selection in inputs and event log */
   input, textarea, select, [data-selectable] {
     user-select: text;
     -webkit-user-select: text;
-  }
-
-  /* ── Cursor exceptions ──────────────────────────────────────
-     Keep the native cursor on elements where precise affordance
-     matters more than theming: text inputs show the I-beam, disabled
-     controls keep the native "no-entry" glyph, and the macOS drag
-     region stays interactive for window dragging. CustomCursor
-     detects these same regions and hides its sprite over them so
-     only one cursor is visible at a time. */
-  input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
-  textarea,
-  select,
-  [contenteditable="true"],
-  [data-selectable] {
-    cursor: text;
-  }
-
-  /* Tailwind's preflight explicitly sets `cursor: pointer` on buttons and
-     role="button" elements, which overrides the inherited `cursor: none`
-     from html/body and makes the native finger pointer show up alongside
-     our custom cursor on interactive elements. Force it back to none so
-     only CustomCursor is visible. */
-  button,
-  a,
-  [role="button"],
-  [data-cursor="pointer"],
-  summary {
-    cursor: none;
-  }
-
-  [disabled],
-  button[disabled],
-  .cursor-not-allowed {
-    cursor: none;
   }
 
   .drag-region {

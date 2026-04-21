@@ -51,6 +51,10 @@ npm-debug.log*
 playwright-report/
 test-results/
 
+# Auto-captured screenshots for slide decks
+docs/screenshots/
+docs/screenshots-v2/
+
 # Python virtual envs
 .venv/
 venv/

@@ -1,6 +1,6 @@
 {
   "name": "nekoserve",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "🐱 Cat café queuing & service simulation desktop app — Electron + React + SimPy",
   "main": "out/main/index.js",
   "author": "NekoServe",
@@ -29,6 +29,8 @@
     "pretest:ui:real-smoke": "npm run ci:build && node scripts/verify-simulator.js",
     "test:ui:real-smoke": "NEKOSERVE_UI_REAL_SMOKE=1 playwright test",
     "test:ui:report": "playwright show-report playwright-report",
+    "prescreenshots": "npm run ci:build",
+    "screenshots": "playwright test --config=playwright.screenshots.config.ts",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
     "postinstall": "electron-builder install-app-deps && node scripts/rename-electron-app.js"

@@ -138,15 +138,19 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
       stdio: ['pipe', 'pipe', 'pipe'],
     })
 
-    let stdout = ''
-    let stderr = ''
+    // Accumulate as Buffers and decode once at the end. Decoding each chunk
+    // individually corrupts multi-byte UTF-8 characters (e.g. Chinese) when a
+    // character straddles a chunk boundary — this is how Windows pipes fail
+    // while macOS, with its larger default pipe buffer, often does not.
+    const stdoutChunks: Buffer[] = []
+    const stderrChunks: Buffer[] = []
 
     child.stdout.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString('utf8')
+      stdoutChunks.push(chunk)
     })
 
     child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString('utf8')
+      stderrChunks.push(chunk)
     })
 
     const timer = setTimeout(() => {
@@ -160,6 +164,9 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
 
     child.on('close', (code) => {
       clearTimeout(timer)
+
+      const stdout = Buffer.concat(stdoutChunks).toString('utf8')
+      const stderr = Buffer.concat(stderrChunks).toString('utf8')
 
       if (code === 0) {
         try {

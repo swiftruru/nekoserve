@@ -23,6 +23,13 @@ import argparse
 import json
 import sys
 
+# Force UTF-8 on stdio so Chinese strings survive on Windows where the default
+# console codepage (cp950/cp936) would otherwise mangle or fail to encode them.
+for _stream in (sys.stdout, sys.stderr, sys.stdin):
+    reconfigure = getattr(_stream, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8")
+
 try:
     from .core import run_simulation
     from .models import DEFAULT_CONFIG
