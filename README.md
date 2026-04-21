@@ -2,6 +2,9 @@
 
 # 🐱 NekoServe
 
+[![English](https://img.shields.io/badge/lang-English-ff69b4?style=for-the-badge)](README.md)
+[![繁體中文](https://img.shields.io/badge/lang-繁體中文-lightgrey?style=for-the-badge)](README.zh-TW.md)
+
 **Cat Café Seat & Service Simulation System**
 
 A desktop application for simulating cat café operations using Discrete Event Simulation (DES). Built with Electron, React, and Python SimPy, designed for classroom demonstration and service system analysis.
