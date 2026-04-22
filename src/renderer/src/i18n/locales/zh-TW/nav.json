@@ -5,6 +5,7 @@
   "playback": "模擬回放",
   "howitworks": "運作原理",
   "citations": "文獻依據",
+  "validation": "驗證模式",
   "about": "關於",
   "needsRunHint": "請先到「模擬設定」按下開始模擬"
 }

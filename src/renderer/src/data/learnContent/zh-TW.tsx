@@ -1085,6 +1085,8 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
 
   citations: [],
 
+  validation: [],
+
   about: [
     {
       id: 'queueing-theory',

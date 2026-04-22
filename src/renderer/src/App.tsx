@@ -10,7 +10,9 @@ import EventLogPage from './pages/EventLogPage'
 import PlaybackPage, { PlaybackPageEmpty } from './pages/PlaybackPage'
 import HowItWorksPage from './pages/HowItWorksPage'
 import CitationsPage from './pages/CitationsPage'
+import ValidationPage from './pages/ValidationPage'
 import AboutPage from './pages/AboutPage'
+import { useSimulationStore } from './store/simulationStore'
 import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import PageTransition from './components/PageTransition'
@@ -55,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'eventlog',   icon: '📋' },
   { id: 'howitworks', icon: '🎬' },
   { id: 'citations',  icon: '📚' },
+  { id: 'validation', icon: '✅' },
   { id: 'about',      icon: 'ℹ️' },
 ]
 
@@ -89,6 +92,22 @@ export default function App() {
     run, runBatch, runSweep, cancel, reset, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
   } = useSimulation()
   const update = useUpdateCheck()
+
+  // v2.0 Sprint 1 follow-up: mirror simulation status/result/error into
+  // the Zustand simulationStore so pages that weren't passed the result
+  // as a prop (ValidationPage, future research tools) can read it.
+  const setStoreStatus = useSimulationStore((s) => s.setStatus)
+  const setStoreResult = useSimulationStore((s) => s.setResult)
+  const setStoreError = useSimulationStore((s) => s.setError)
+  useEffect(() => {
+    setStoreStatus(status)
+  }, [status, setStoreStatus])
+  useEffect(() => {
+    setStoreResult(result)
+  }, [result, setStoreResult])
+  useEffect(() => {
+    setStoreError(error)
+  }, [error, setStoreError])
   const { theme, toggle: toggleTheme } = useTheme()
 
   const [shortcutHelpVisible, setShortcutHelpVisible] = useState(false)
@@ -467,6 +486,7 @@ export default function App() {
               ))}
             {page === 'howitworks' && <HowItWorksPage />}
             {page === 'citations' && <CitationsPage />}
+            {page === 'validation' && <ValidationPage />}
             {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} updateChecking={update.status === 'checking'} />}
           </PageTransition>
           </ErrorBoundary>

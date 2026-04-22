@@ -1123,6 +1123,8 @@ export const LEARN_CONTENT_EN: LearnContent = {
 
   citations: [],
 
+  validation: [],
+
   about: [
     {
       id: 'queueing-theory',

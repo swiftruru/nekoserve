@@ -1,0 +1,79 @@
+{
+  "pageTitle": "✅ Validation mode",
+  "intro": "After a simulation run, this page compares the observed cat-behavior distribution against Hirsch et al. (2025)'s 227 hours of direct observation. A composite score of 80 or higher means the scenario closely matches the empirical baseline.",
+  "needsRun": "No simulation has run yet. Go to Settings and press Run first.",
+  "benchmark": "Benchmark",
+  "method": "Method",
+  "runValidation": "Run validation",
+  "passed": "✅ Passed (score ≥ 80)",
+  "failed": "⚠ Did not pass (score < 80)",
+  "compositeScore": "Composite score",
+  "subScoreChi": "Chi-square fit",
+  "subScoreKs": "KS cumulative gap",
+  "subScoreKl": "KL divergence",
+  "rawStat": "Raw statistic",
+  "issues": "Significant deviations",
+  "noIssues": "No significant deviations; the distribution shape matches the empirical observation.",
+  "expected": "Empirical",
+  "observed": "Simulation",
+  "warnings": "Other warnings",
+  "downloadJson": "📥 Download validation report (JSON)",
+  "suggestionHint": "Suggested tweak:",
+  "rightColumnTitle": "Distribution comparison",
+  "behaviorCompare": "Nine-state behavior distribution (Hirsch Figure 3 vs simulation)",
+  "verticalCompare": "Vertical-level distribution (Hirsch Figure 4)",
+  "suggest": {
+    "behavior": {
+      "out_of_lounge": {
+        "too_high": "Cats hide in the cat room too often. Lower per-cat customer load or add more in-lounge perches.",
+        "too_low": "Cats almost never retreat to the cat room. Confirm the cat-only room is available as a private space."
+      },
+      "resting": {
+        "too_high": "Too much resting. Try raising arrival rate or lowering catRestProbability.",
+        "too_low": "Cats barely rest; unrealistic for house cats. Raise catRestProbability or extend catRestDuration."
+      },
+      "socializing": {
+        "too_high": "Socializing exceeds Hirsch's 12.8%. Reduce customer-initiated interaction probability or widen personality variance.",
+        "too_low": "Not enough socializing; customer experience may suffer. Raise density or extend catInteractionTime."
+      },
+      "hidden": {
+        "too_high": "Hiding is excessive: cats are stressed. Reduce customer count or add more perch / cat-room space.",
+        "too_low": "Cats barely hide (Hirsch reports ~10.7%); check ALERT and shelf-preference logic."
+      },
+      "alert": {
+        "too_high": "Alert share is high; crowding is distressing the cats. Reduce density or speed up exits.",
+        "too_low": "Alert share is too low; simulation isn't capturing stress signals. Confirm occupancy modifiers apply."
+      },
+      "grooming": {
+        "too_high": "Grooming exceeds Hirsch's 4.5%; GROOMING dwell time may be too long.",
+        "too_low": "Grooming is suppressed, a stress signal. Try lowering customer density."
+      },
+      "moving": {
+        "too_high": "Moving share too high; dwell time may be too short.",
+        "too_low": "Cats barely move; check activity_level distribution."
+      },
+      "exploring": {
+        "too_high": "Exploring exceeds the 0.8% baseline; cats are too restless.",
+        "too_low": "Exploring is suppressed, indicating a stressful environment. Lower occupancy or enrich the space."
+      },
+      "playing": {
+        "too_high": "Playing exceeds Hirsch's 0.3%; this is rare, check personality vectors.",
+        "too_low": "Playing is near zero, which matches Hirsch, but a strict zero may mean the PLAYING branch never fires."
+      }
+    },
+    "vertical": {
+      "floor": {
+        "too_high": "Floor share is high; usually means there aren't enough perches or furniture spots.",
+        "too_low": "Cats almost never on the floor; you may have overestimated occupancy."
+      },
+      "furniture": {
+        "too_high": "Furniture share is high.",
+        "too_low": "Furniture is ignored; review furniture spot placement."
+      },
+      "shelf": {
+        "too_high": "Shelf share is high, reflecting stress under crowding (Hirsch 2025 Figure 4b).",
+        "too_low": "Shelf share is low; space enrichment may be inadequate."
+      }
+    }
+  }
+}

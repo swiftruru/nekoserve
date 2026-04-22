@@ -17,6 +17,7 @@ import zhTW_learnMode from './locales/zh-TW/learnMode.json'
 import zhTW_update from './locales/zh-TW/update.json'
 import zhTW_challenges from './locales/zh-TW/challenges.json'
 import zhTW_citations from './locales/zh-TW/citations.json'
+import zhTW_validation from './locales/zh-TW/validation.json'
 
 import en_common from './locales/en/common.json'
 import en_nav from './locales/en/nav.json'
@@ -34,6 +35,7 @@ import en_learnMode from './locales/en/learnMode.json'
 import en_update from './locales/en/update.json'
 import en_challenges from './locales/en/challenges.json'
 import en_citations from './locales/en/citations.json'
+import en_validation from './locales/en/validation.json'
 
 import { registerFormatters } from './formatters'
 
@@ -60,6 +62,7 @@ export const namespaces = [
   'update',
   'challenges',
   'citations',
+  'validation',
 ] as const
 
 export const resources = {
@@ -80,6 +83,7 @@ export const resources = {
     update: zhTW_update,
     challenges: zhTW_challenges,
     citations: zhTW_citations,
+    validation: zhTW_validation,
   },
   en: {
     common: en_common,
@@ -98,6 +102,7 @@ export const resources = {
     update: en_update,
     challenges: en_challenges,
     citations: en_citations,
+    validation: en_validation,
   },
 } as const
 

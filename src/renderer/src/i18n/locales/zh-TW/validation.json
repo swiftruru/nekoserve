@@ -1,0 +1,79 @@
+{
+  "pageTitle": "✅ 驗證模式",
+  "intro": "跑完模擬後，這頁會把貓咪行為分布拿去跟 Hirsch 等 (2025) 的 227 小時觀察資料對照。合成分數 80 分以上算通過，代表這次模擬情境足夠貼近文獻實證。",
+  "needsRun": "還沒跑過模擬。請先到「模擬設定」按下開始模擬。",
+  "benchmark": "比對基準",
+  "method": "研究方法",
+  "runValidation": "執行驗證",
+  "passed": "✅ 通過（分數 ≥ 80）",
+  "failed": "⚠ 未通過（分數 < 80）",
+  "compositeScore": "合成分數",
+  "subScoreChi": "卡方適合度",
+  "subScoreKs": "KS 累積分布差距",
+  "subScoreKl": "KL 相對熵",
+  "rawStat": "統計量",
+  "issues": "顯著偏差",
+  "noIssues": "沒有顯著偏差，分布形狀和實證觀察吻合。",
+  "expected": "實證",
+  "observed": "模擬",
+  "warnings": "其他警示",
+  "downloadJson": "📥 下載驗證報告（JSON）",
+  "suggestionHint": "建議調整方向：",
+  "rightColumnTitle": "分布對照",
+  "behaviorCompare": "行為九類分布（Hirsch Figure 3 vs 模擬）",
+  "verticalCompare": "垂直層級分布（Hirsch Figure 4）",
+  "suggest": {
+    "behavior": {
+      "out_of_lounge": {
+        "too_high": "貓咪太常躲進貓室，顧客看不到。考慮降低單位顧客數、或給予店內更多制高點。",
+        "too_low": "貓咪鮮少進貓室，可能是沒有給夠隱私空間。確認貓室可用。"
+      },
+      "resting": {
+        "too_high": "休息比例過高，互動不夠豐富。嘗試拉高 catIdleInterval 的倒數、或降低 catRestProbability。",
+        "too_low": "貓咪幾乎不休息，精力不符合家貓生理常態。提高 catRestProbability 或延長 catRestDuration。"
+      },
+      "socializing": {
+        "too_high": "社交比例偏高，和 Hirsch 12.8% 有落差。可能是顧客太過積極；降低顧客主動互動機率、或放大個性差異。",
+        "too_low": "社交比例太低，顧客體驗可能不足。提高顧客密度或延長 catInteractionTime。"
+      },
+      "hidden": {
+        "too_high": "躲藏比例過高，貓咪壓力大。減少顧客數或增加高處／貓室空間。",
+        "too_low": "貓咪幾乎不躲，但 Hirsch 實證約 10.7%；檢查 ALERT / 高處偏好邏輯。"
+      },
+      "alert": {
+        "too_high": "警戒比例過高，壅擠情境讓貓咪焦慮。降低顧客量或加快貓咪離場機制。",
+        "too_low": "警戒比例偏低，模擬未捕捉到壓力訊號；確認占用率調整係數有套用。"
+      },
+      "grooming": {
+        "too_high": "清理時間超過 Hirsch 4.5%；可能是 GROOMING 的 dwell time 被拉太長。",
+        "too_low": "清理行為被抑制。這是高壅擠壓力訊號，嘗試降低顧客量。"
+      },
+      "moving": {
+        "too_high": "移動比例偏高，可能是 state dwell time 太短。",
+        "too_low": "貓咪幾乎不動，檢查 activity_level 分布。"
+      },
+      "exploring": {
+        "too_high": "探索比例超過 0.8%，貓咪過度活潑。",
+        "too_low": "探索比例太低，情境壓抑了自然行為。降低占用率或擴充空間。"
+      },
+      "playing": {
+        "too_high": "玩耍比例超過 Hirsch 實證 0.3%——這通常不合理，檢查個性向量。",
+        "too_low": "玩耍比例接近 0 是合理的，但若為 0 表示完全沒有觸發，檢查 PLAYING 路徑。"
+      }
+    },
+    "vertical": {
+      "floor": {
+        "too_high": "地板使用率偏高。通常代表沒給夠高處或家具點。",
+        "too_low": "地板使用率偏低，貓咪幾乎都在高處。占用率可能估高了。"
+      },
+      "furniture": {
+        "too_high": "家具使用率偏高。",
+        "too_low": "家具被忽略，可能是家具點位置設計問題。"
+      },
+      "shelf": {
+        "too_high": "架子使用率偏高，反映貓咪壓力大（Hirsch 2025 Figure 4b）。",
+        "too_low": "架子使用率偏低，可能是空間豐富度不足。"
+      }
+    }
+  }
+}
