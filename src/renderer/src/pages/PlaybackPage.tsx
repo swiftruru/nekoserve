@@ -254,6 +254,16 @@ export default function PlaybackPage({
   const currentEventText = useMemo(() => {
     const e = state.lastEvent
     if (!e) return t('playback:noCurrentEvent')
+    // v2.0: CAT_STATE_CHANGE events don't go through the generic
+    // customerId/resourceId template; they look up a full sentence
+    // keyed by (initial|transition, toState) under events:catSentence.
+    if (e.eventType === 'CAT_STATE_CHANGE' && e.toState) {
+      const kind = e.fromState ? 'transition' : 'initial'
+      return t(`events:catSentence.${kind}.${e.toState}` as never, {
+        resourceId: e.resourceId ?? '',
+        defaultValue: e.description ?? '',
+      })
+    }
     return t(`events:${e.eventType}` as const, {
       customerId: e.customerId,
       resourceId: e.resourceId ?? '',
