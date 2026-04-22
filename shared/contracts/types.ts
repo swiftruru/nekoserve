@@ -115,6 +115,36 @@ export type EventType =
   | 'CAT_LEAVE_SEAT'
   | 'CAT_START_REST'
   | 'CAT_END_REST'
+  // v2.0 Epic B: 9-state ethogram transitions based on Hirsch et al. 2025.
+  // Emitted whenever a cat's behavior state changes (entering / leaving
+  // any of the nine states). `resourceId` is the cat label; `description`
+  // carries "from → to" for readability.
+  | 'CAT_STATE_CHANGE'
+
+/**
+ * v2.0 Epic B: the nine-state cat ethogram derived from
+ * Hirsch et al. (2025), Figure 3, using Stanton et al. (2015) Felidae
+ * taxonomy. Base probabilities live in
+ * simulator-python/simulator/constants/hirsch2025.py and are mirrored
+ * in src/renderer/src/data/hirsch2025.ts for UI display.
+ */
+export type CatBehaviorState =
+  | 'OUT_OF_LOUNGE'  // in cat room, not visible to customers (31.6%)
+  | 'RESTING'         // idle / dozing, not interacting (31.7%)
+  | 'SOCIALIZING'     // actively engaging with customer or cat (12.8%)
+  | 'HIDDEN'          // out of sight, avoiding attention (10.7%)
+  | 'ALERT'           // watching / anxious / fearful (4.9%)
+  | 'GROOMING'        // self-maintenance (4.5%)
+  | 'MOVING'          // transitioning between spots (2.7%)
+  | 'EXPLORING'       // investigating environment (0.8%)
+  | 'PLAYING'         // active play (0.3%)
+
+/**
+ * v2.0 Epic C: the four customer types from Hirsch 2025 Figure 6.
+ * Default generator uses the weights in CUSTOMER_TYPE_DEFAULT_MIX
+ * (see constants/hirsch2025). Users can override via UI.
+ */
+export type CustomerType = 'WOMAN' | 'MAN' | 'GIRL' | 'BOY'
 
 export interface EventLogItem {
   /** 模擬時間（分鐘，保留 2 位小數） */
@@ -126,6 +156,11 @@ export interface EventLogItem {
   resourceId?: string
   /** 人類可讀的事件描述（繁體中文） */
   description: string
+  /** v2.0: the from / to state pair for CAT_STATE_CHANGE events. */
+  fromState?: CatBehaviorState
+  toState?: CatBehaviorState
+  /** v2.0: the customer's archetype (for CUSTOMER_ARRIVE / interaction events). */
+  customerType?: CustomerType
 }
 
 export interface SimulationResult {

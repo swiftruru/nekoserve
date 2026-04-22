@@ -13,6 +13,7 @@
   "CAT_LEAVE_SEAT": "{{resourceId}} left customer #{{customerId}}",
   "CAT_START_REST": "{{resourceId}} started resting",
   "CAT_END_REST": "{{resourceId}} finished resting",
+  "CAT_STATE_CHANGE": "{{resourceId}} state change: {{fromState}} → {{toState}}",
   "label": {
     "CUSTOMER_ARRIVE": "Arrive",
     "CUSTOMER_WAIT_SEAT": "Wait seat",
@@ -27,7 +28,8 @@
     "CAT_VISIT_SEAT": "Cat visit",
     "CAT_LEAVE_SEAT": "Cat leave",
     "CAT_START_REST": "Cat rest",
-    "CAT_END_REST": "Rest end"
+    "CAT_END_REST": "Rest end",
+    "CAT_STATE_CHANGE": "Cat state change"
   },
   "resource": {
     "cat": "Cat #{{n}}",

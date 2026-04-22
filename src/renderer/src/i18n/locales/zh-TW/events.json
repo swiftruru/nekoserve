@@ -13,6 +13,7 @@
   "CAT_LEAVE_SEAT": "{{resourceId}} 離開顧客 #{{customerId}} 的座位",
   "CAT_START_REST": "{{resourceId}} 進入休息",
   "CAT_END_REST": "{{resourceId}} 結束休息",
+  "CAT_STATE_CHANGE": "{{resourceId}} 狀態轉變：{{fromState}} → {{toState}}",
   "label": {
     "CUSTOMER_ARRIVE": "顧客到達",
     "CUSTOMER_WAIT_SEAT": "等待座位",
@@ -27,7 +28,8 @@
     "CAT_VISIT_SEAT": "貓咪拜訪",
     "CAT_LEAVE_SEAT": "貓咪離開",
     "CAT_START_REST": "貓咪休息",
-    "CAT_END_REST": "休息結束"
+    "CAT_END_REST": "休息結束",
+    "CAT_STATE_CHANGE": "貓咪狀態變化"
   },
   "resource": {
     "cat": "貓 #{{n}}",

@@ -26,6 +26,7 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   CAT_LEAVE_SEAT:               'bg-pink-100 text-pink-700',
   CAT_START_REST:               'bg-indigo-100 text-indigo-700',
   CAT_END_REST:                 'bg-indigo-100 text-indigo-600',
+  CAT_STATE_CHANGE:             'bg-amber-100 text-amber-700',
 }
 
 const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_COLORS) as EventType[]

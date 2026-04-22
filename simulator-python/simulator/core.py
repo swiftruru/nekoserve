@@ -22,6 +22,12 @@ import simpy
 from typing import Any
 
 from .models import SimulationConfig
+from .agents.cat_agent import CatAgent, sample_personality
+from .constants.hirsch2025 import (
+    CatBehaviorState,
+    CustomerType,
+    CUSTOMER_TYPE_DEFAULT_MIX,
+)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -101,8 +107,14 @@ def run_simulation(config_dict: dict) -> dict:
     seated: dict[int, dict[str, Any]] = {}
 
     # ── Log helper ─────────────────────────────────────────
-    def log(timestamp: float, event_type: str, customer_id: int,
-            description: str, resource_id: str | None = None) -> None:
+    def log(
+        timestamp: float,
+        event_type: str,
+        customer_id: int,
+        description: str,
+        resource_id: str | None = None,
+        extra: dict[str, Any] | None = None,
+    ) -> None:
         entry: dict[str, Any] = {
             "timestamp": round(timestamp, 2),
             "eventType": event_type,
@@ -111,7 +123,21 @@ def run_simulation(config_dict: dict) -> dict:
         }
         if resource_id is not None:
             entry["resourceId"] = resource_id
+        if extra:
+            entry.update(extra)
         event_log.append(entry)
+
+    def sample_customer_type() -> CustomerType:
+        """Weighted draw from CUSTOMER_TYPE_DEFAULT_MIX using the shared rng."""
+        mix = CUSTOMER_TYPE_DEFAULT_MIX
+        total = sum(mix.values())
+        threshold = rng.random() * total
+        running = 0.0
+        for ctype, weight in mix.items():
+            running += weight
+            if running >= threshold:
+                return ctype
+        return CustomerType.WOMAN
 
     # ── Customer process ───────────────────────────────────
     def customer(cid: int):
@@ -121,10 +147,13 @@ def run_simulation(config_dict: dict) -> dict:
 
         total_arrived += 1
         arrive_time = env.now
+        ctype = sample_customer_type()
         log(arrive_time, "CUSTOMER_ARRIVE", cid,
-            f"顧客 {cid} 抵達貓咪咖啡廳")
+            f"顧客 {cid} 抵達貓咪咖啡廳",
+            extra={"customerType": ctype.value})
         log(arrive_time, "CUSTOMER_WAIT_SEAT", cid,
-            f"顧客 {cid} 等候座位中")
+            f"顧客 {cid} 等候座位中",
+            extra={"customerType": ctype.value})
 
         # Phase 1: Wait for seat, with abandonment timeout
         seat_req = seats.request()
@@ -154,6 +183,7 @@ def run_simulation(config_dict: dict) -> dict:
             "visitors": set(),
             "visit_count": 0,
             "leaving": False,
+            "customerType": ctype.value,
         }
         seated[cid] = record
 
@@ -212,55 +242,107 @@ def run_simulation(config_dict: dict) -> dict:
             f"顧客 {cid} 離開咖啡廳（總停留 {total_stay:.1f} 分鐘，"
             f"被 {record['visit_count']} 隻貓拜訪）")
 
-    # ── Cat process ────────────────────────────────────────
-    def cat(cat_id: int):
+    # ── Cat process (v2.0 Epic B: 9-state FSM) ─────────────
+    #
+    # Each cat follows the Hirsch et al. (2025) nine-state ethogram,
+    # perturbed by an individual personality vector. Core loop:
+    #   1. Sample next state weighted by base rate × occupancy × personality
+    #   2. Emit CAT_STATE_CHANGE event
+    #   3. If state is SOCIALIZING / EXPLORING / PLAYING → visit a seated
+    #      customer (legacy CAT_VISIT_SEAT / CAT_LEAVE_SEAT events preserved
+    #      for UI animation compatibility).
+    #   4. If state is RESTING → also emit CAT_START_REST / CAT_END_REST
+    #      so the existing playback UI continues to show nap animations.
+    #   5. Yield the sampled dwell duration for the state.
+    def cat(cat_id: int, agent: CatAgent):
         nonlocal total_cat_busy
-        # Locale-neutral resource id; the renderer formats it as
-        # "Cat #N" / "貓 #N" via i18n based on the active language.
-        cat_label = f"cat-{cat_id}"
+        cat_label = agent.label
+
+        # Emit an opening CAT_STATE_CHANGE so the timeline has a clear
+        # starting point for this cat's behavior track.
+        log(
+            env.now, "CAT_STATE_CHANGE", cat_id,
+            f"{cat_label} 初始狀態：{agent.state.value}",
+            cat_label,
+            extra={"fromState": None, "toState": agent.state.value},
+        )
 
         while True:
-            # Wander around / idle, then look for someone to visit.
-            idle_dur = rng.expovariate(1.0 / config.catIdleInterval)
-            yield env.timeout(idle_dur)
+            seated_count = len(seated)
+            prev_state = agent.state
+            next_state = agent.pick_next_state(
+                rng, seated_count, previous_state=prev_state,
+            )
+            duration = agent.sample_state_duration(rng, next_state)
 
-            # Pick a target uniformly from currently-seated, non-leaving
-            # customers. If nobody is available we just go back to idle.
-            candidates = [rec for rec in seated.values() if not rec["leaving"]]
-            if not candidates:
-                continue
-            target = rng.choice(candidates)
-            target_id = target["id"]
+            # Emit the state-change event on every transition (skip if
+            # identical; the self-loop penalty makes this rare).
+            if next_state != prev_state:
+                log(
+                    env.now, "CAT_STATE_CHANGE", cat_id,
+                    f"{cat_label} 從 {prev_state.value} 轉為 {next_state.value}",
+                    cat_label,
+                    extra={
+                        "fromState": prev_state.value,
+                        "toState": next_state.value,
+                    },
+                )
+            agent.state = next_state
 
-            target["visitors"].add(cat_id)
-            target["visit_count"] += 1
+            # Interactable states: attempt a visit. If no seated customer
+            # is available, fall through and just dwell for `duration`.
+            if agent.is_available_to_interact():
+                candidates = [rec for rec in seated.values() if not rec["leaving"]]
+                if candidates:
+                    # Weight candidates by their customer type's
+                    # attractiveness (Hirsch 2025 Figure 6).
+                    from .constants.hirsch2025 import CUSTOMER_BEHAVIOR_PROFILE
+                    weights = [
+                        CUSTOMER_BEHAVIOR_PROFILE[CustomerType(rec["customerType"])][
+                            "attractiveness"
+                        ]
+                        for rec in candidates
+                    ]
+                    total_w = sum(weights)
+                    threshold = rng.random() * total_w
+                    running = 0.0
+                    target = candidates[0]
+                    for rec, w in zip(candidates, weights):
+                        running += w
+                        if running >= threshold:
+                            target = rec
+                            break
+                    target_id = target["id"]
+                    target["visitors"].add(cat_id)
+                    target["visit_count"] += 1
 
-            visit_dur = _normal(rng, config.catInteractionTime)
-            log(env.now, "CAT_VISIT_SEAT", target_id,
-                f"{cat_label} 走到顧客 {target_id} 的座位",
-                cat_label)
-            total_cat_busy += visit_dur
-            yield env.timeout(visit_dur)
-            log(env.now, "CAT_LEAVE_SEAT", target_id,
-                f"{cat_label} 離開顧客 {target_id} 的座位",
-                cat_label)
+                    visit_dur = min(duration, _normal(rng, config.catInteractionTime))
+                    log(env.now, "CAT_VISIT_SEAT", target_id,
+                        f"{cat_label} 走到顧客 {target_id} 的座位（狀態：{next_state.value}）",
+                        cat_label)
+                    total_cat_busy += visit_dur
+                    yield env.timeout(visit_dur)
+                    log(env.now, "CAT_LEAVE_SEAT", target_id,
+                        f"{cat_label} 離開顧客 {target_id} 的座位",
+                        cat_label)
+                    if target_id in seated:
+                        seated[target_id]["visitors"].discard(cat_id)
+                    continue
 
-            # Detach from whoever we were visiting (the customer may have
-            # already been cleaned up if they were waiting on other cats).
-            if target_id in seated:
-                seated[target_id]["visitors"].discard(cat_id)
-
-            # Possibly nap for a while.
-            if rng.random() < config.catRestProbability:
-                rest_dur = _normal(rng, config.catRestDuration)
+            # Non-interactable states, or interactable with no target:
+            # just dwell for the sampled duration. Rest states also emit
+            # the legacy nap events so playback's nap animation still runs.
+            if next_state == CatBehaviorState.RESTING:
                 log(env.now, "CAT_START_REST", cat_id,
-                    f"{cat_label} 開始休息（預計 {rest_dur:.1f} 分鐘）",
+                    f"{cat_label} 開始休息（預計 {duration:.1f} 分鐘）",
                     cat_label)
-                total_cat_busy += rest_dur
-                yield env.timeout(rest_dur)
+                total_cat_busy += duration
+                yield env.timeout(duration)
                 log(env.now, "CAT_END_REST", cat_id,
                     f"{cat_label} 休息結束，恢復活動",
                     cat_label)
+            else:
+                yield env.timeout(duration)
 
     # ── Customer generator ─────────────────────────────────
     def generator():
@@ -298,9 +380,15 @@ def run_simulation(config_dict: dict) -> dict:
 
     total_duration = config.simulationDuration + warm_up
 
-    # Boot cat processes, warm-up reset, then start the customer generator.
+    # Boot cat processes with per-cat personality + FSM, warm-up reset,
+    # then start the customer generator.
     for i in range(1, config.catCount + 1):
-        env.process(cat(i))
+        agent = CatAgent(
+            cat_id=i,
+            label=f"cat-{i}",
+            personality=sample_personality(rng),
+        )
+        env.process(cat(i, agent))
     if warm_up > 0:
         env.process(warm_up_reset())
     env.process(generator())
