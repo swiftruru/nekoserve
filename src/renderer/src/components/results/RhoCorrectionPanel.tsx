@@ -40,7 +40,9 @@ export default function RhoCorrectionPanel({ metrics, level = 'expert' }: Props)
   return (
     <div className="rounded-lg border border-orange-200 dark:border-bark-500 bg-white/70 dark:bg-bark-700/70 p-3">
       <div className="mb-2">
-        <div className="text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">
+        {/* No uppercase here: the title contains a literal Greek ρ, and
+            text-transform:uppercase would mis-case it to Latin "P". */}
+        <div className="text-xs font-bold tracking-wide text-orange-700 dark:text-orange-400">
           {t('rhoCorrection.title')}
         </div>
         <p className="mt-1 text-xs text-gray-600 dark:text-bark-300 leading-snug">
