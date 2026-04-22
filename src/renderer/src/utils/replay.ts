@@ -99,6 +99,25 @@ export interface CatSlot {
    * back to idle).
    */
   lastVisitSeatSlot?: number
+  /**
+   * v2.1: richer behavior state from the nine-state FSM
+   * (CAT_STATE_CHANGE event's toState). Optional because legacy
+   * simulator builds may not emit it.
+   */
+  behaviorState?:
+    | 'OUT_OF_LOUNGE'
+    | 'RESTING'
+    | 'SOCIALIZING'
+    | 'HIDDEN'
+    | 'ALERT'
+    | 'GROOMING'
+    | 'MOVING'
+    | 'EXPLORING'
+    | 'PLAYING'
+  /** v2.1: current café area (AREA_1 / AREA_2 / CAT_ROOM). */
+  area?: 'AREA_1' | 'AREA_2' | 'CAT_ROOM'
+  /** v2.1: current vertical level (FLOOR / FURNITURE / SHELF). */
+  verticalLevel?: 'FLOOR' | 'FURNITURE' | 'SHELF'
 }
 
 export interface CafeState {
@@ -525,6 +544,31 @@ export function applyEvent(
       if (catSlot.state === 'resting') {
         transitionCatState(catSlot, 'idle', draft, event.timestamp)
         catSlot.visitingCustomerId = null
+      }
+      break
+    }
+
+    case 'CAT_STATE_CHANGE': {
+      // v2.1: nine-state ethogram transition. Updates the cat's
+      // behaviorState + area + verticalLevel so CafeScene can route
+      // the sprite to the correct anchor (shelf / furniture / cat room).
+      // We do NOT flip the legacy state ('idle' / 'visiting' / 'resting')
+      // here — those stay driven by CAT_VISIT_SEAT / CAT_START_REST so
+      // existing animation paths keep working.
+      const catIdx = parseCatSlotIdx(event.resourceId)
+      if (catIdx === null || catIdx >= draft.cats.length) break
+      const catSlot = draft.cats[catIdx]
+      const toState = (event as { toState?: string }).toState
+      const area = (event as { area?: string }).area
+      const level = (event as { level?: string }).level
+      if (toState) {
+        catSlot.behaviorState = toState as NonNullable<CatSlot['behaviorState']>
+      }
+      if (area) {
+        catSlot.area = area as NonNullable<CatSlot['area']>
+      }
+      if (level) {
+        catSlot.verticalLevel = level as NonNullable<CatSlot['verticalLevel']>
       }
       break
     }
