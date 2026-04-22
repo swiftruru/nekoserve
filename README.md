@@ -154,6 +154,32 @@ The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/rendere
 
 **Ambient scene decorations** (v0.5.0) — the background now has time-of-day-aware atmosphere: 14 🌸 cherry blossom petals drift diagonally across the whole scene (always on), 9 🧶 yarn balls hang from the ceiling with a gentle sway (always on), 3 🦋 butterflies flutter in a figure-8 during the first ~45% of sim time, and 7 ✨ fireflies twinkle with a yellow glow during the final ~40%. All pure CSS keyframes, zero React re-render cost, disabled by `prefers-reduced-motion`.
 
+### Literature review, ρ_R correction, and interactive formula teaching (v1.3.0)
+
+v1.3.0 is a major academic-rigor release that responds to advisor feedback about the 14 parameters being "observational assumptions" rather than "literature-backed curve fits". The underlying simulator shape did not change; the framing and teaching around it did.
+
+**📚 Literature review module (2.1 to 2.5)** — five new cards in the Learning Notes sidebar cover the academic lineage end-to-end:
+
+- 2.1 Discrete-event simulation & queueing theory foundations (Ancker & Gafarian 1963 I, II; Little 1961)
+- 2.2 Empirical service-system studies in F&B (Hasugian 2020 Weibull-arrivals / Normal-service vs Dbeis 2024 Poisson-arrivals / Log-Normal-service)
+- 2.3 Why cat cafés need their own model (Hirsch et al. 2025 227-hour Stockholm observation; Li et al. 2025 PLS-SEM showing pet interactivity dominates coffee quality; Ropski et al. 2023 welfare study)
+- 2.4 Research gap & positioning (three identified gaps + the "bottleneck-dominance effect" observation)
+- 2.5 Math correction: Dbeis 2024 ρ_R formula, including the RCRF = -2.056S + 1.37·eˢ - 1.173 nonlinear regression
+
+Every card has per-section APA-style citations with DOI links and is written in Ruru's first-person voice.
+
+**🧮 Corrected utilization ρ_R** — the engine now emits six new metrics (`arrivalRate`, `renegingRate`, `serviceRate`, `meanServiceTime`, `rhoClassical`, `rhoCorrected`). A new `RhoCorrectionPanel` on the Results page shows the classical `ρ = λ/(c·μ)` next to the Dbeis 2024 corrected `ρ_R = (λ − RR)/(c·μ)`. When classical ρ ≥ 1 but ρ_R < 1 the panel raises a "traditional formula misreads as collapse" warning — the misreading that Dbeis 2024 flagged, live in the UI. The original time-based utilization (`seatUtilization`, `staffUtilization`, `catUtilization`) is preserved as the engine's measured truth.
+
+**🔗 Parameter-to-literature tooltips** — every core parameter's "📘 Design rationale" panel now cites its empirical source as the first reference, ahead of the theoretical-framework references that were already there. Mapping: seat/staff/cat counts, idle interval, rest probability, rest duration, visit duration → Hirsch et al. 2025; order / prep / dining times → Dbeis 2024; arrival interval → Dbeis 2024 + Hasugian 2020; max wait → Ancker 1963a + Dbeis 2024. DOIs open in the default browser.
+
+**🔍 Interactive formula teaching** — every formula in the app now teaches itself:
+
+1. **Clickable symbol chips** (`InteractiveFormula`): 11 parameters with formulas render each symbol (T, λ, μ, σ, p, X, Exp, N, Bernoulli, c, T_run) as a clickable chip. Clicking pops a card with label + plain-language description + unit + example. The existing Results-page component was generalized with `i18nNs` / `i18nBasePath` props so it can read from either the `results` or `settings` namespace. A 13-entry shared symbol dictionary lives under `settings:formulaParts.*`.
+2. **🔍 one-line plain-language hint** next to every formula (11 formulaHint strings per locale): e.g. `T ~ Exp(λ), λ = 1/8` gets "interarrival time T follows Exponential with rate λ = 1/8 — one customer every 8 minutes on average."
+3. **`FormulaExplain` deep-dive component**: BlockMath + 🔍 hint + optional "更多說明 ▼" expander, used in the 2.1 and 2.5 literature cards for Little's Law, classical ρ, Dbeis ρ_R, and the RCRF regression.
+
+**📖 Glossary expansion** — 12 new bilingual terms join the shared `TermTooltip` glossary: `reneging`, `balking`, `Log-Normal`, `Weibull`, `RCRF`, `ρ_R`, `Normal distribution`, `curve fitting`, `M/M/1`, `PLS-SEM`, `chi-square`, `agent-based`. The glossary is now also wired into the Design rationale panels (auto-wrap via `renderWithTerms`) and the literature review cards (explicit `<Term k="...">` wraps), in addition to the Results page where it originated.
+
 ### Live Learning Mode (v0.5.0)
 
 A dedicated **🎓 Live learning mode** overlay lives in the Playback page and turns the simulation into an actual teaching tool. Toggling it on splits the page into a 60/40 grid — scene on the left, four live concept cards on the right that update as the simulation plays.

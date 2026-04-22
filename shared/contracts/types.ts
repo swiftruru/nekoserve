@@ -70,6 +70,18 @@ export interface MetricSummary {
   totalCustomersArrived: number
   /** 放棄等待比例 (0–1) */
   abandonRate: number
+  /** 到達率 λ（人/分鐘），古典排隊論用 */
+  arrivalRate: number
+  /** Reneging rate RR（人/分鐘），依 Dbeis & Al-Sahili (2024) 定義 */
+  renegingRate: number
+  /** 單服務台服務率 μ（人/分鐘），來自 1/(orderTime+preparationTime) */
+  serviceRate: number
+  /** 平均服務時間（分鐘），orderTime + preparationTime */
+  meanServiceTime: number
+  /** 古典 M/M/c 利用率 ρ = λ/(c·μ)，c = staffCount */
+  rhoClassical: number
+  /** Dbeis 2024 修正利用率 ρ_R = (λ−RR)/(c·μ) */
+  rhoCorrected: number
   /** 等待座位 P50 (分鐘) */
   waitForSeatP50: number
   /** 等待座位 P95 (分鐘) */

@@ -1,6 +1,6 @@
 {
   "name": "nekoserve",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "🐱 Cat café queuing & service simulation desktop app — Electron + React + SimPy",
   "main": "out/main/index.js",
   "author": "NekoServe",

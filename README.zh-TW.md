@@ -154,6 +154,32 @@ hook 會偵測焦點是否在 `<input>` / `<textarea>` / `contenteditable`，所
 
 **環境裝飾**（v0.5.0）— 背景現在有時間感的氛圍：14 朵 🌸 櫻花瓣斜飄過整個場景（永遠開著）、9 顆 🧶 毛線球從天花板微晃（永遠開著）、3 隻 🦋 蝴蝶在前 ~45% 時間做八字飛舞、7 隻 ✨ 螢火蟲在後 ~40% 閃黃光。全部純 CSS keyframes，零 React rerender，`prefers-reduced-motion` 時停用。
 
+### 文獻探討、ρ_R 修正與互動式公式教學（v1.3.0）
+
+v1.3.0 是學術嚴謹度的大版本更新，回應指導教授「14 個參數是觀察假設、不是 curve fitting」的意見。模擬器本體沒變，變的是整套框架與教學的呈現方式。
+
+**📚 文獻探討模組（2.1 到 2.5）** — 學習筆記側欄新增五張卡片，把學術脈絡從頭到尾串一次：
+
+- 2.1 離散事件模擬與排隊理論基礎（Ancker & Gafarian 1963 I, II；Little 1961）
+- 2.2 咖啡廳與餐飲業服務系統實證（Hasugian 2020 的 Weibull 到達 / Normal 服務 vs Dbeis 2024 的 Poisson 到達 / Log-Normal 服務）
+- 2.3 貓咖的獨特性（Hirsch 等 2025 227 小時斯德哥爾摩觀察；Li 等 2025 PLS-SEM 證明寵物互動性壓過咖啡品質；Ropski 等 2023 動物福祉研究）
+- 2.4 研究缺口與本研究定位（三個缺口 + 瓶頸主導效應觀察）
+- 2.5 數學修正：Dbeis 2024 的 ρ_R 公式，含 RCRF = -2.056S + 1.37·eˢ - 1.173 非線性回歸模型
+
+每張卡都有各節內的 APA 行內引用 + DOI 超連結，用昱如自己的第一人稱口吻寫。
+
+**🧮 修正利用率 ρ_R** — 引擎現在多輸出六個 metric（`arrivalRate`、`renegingRate`、`serviceRate`、`meanServiceTime`、`rhoClassical`、`rhoCorrected`）。Results 頁新增 `RhoCorrectionPanel`，把古典 `ρ = λ/(c·μ)` 和 Dbeis 2024 修正後的 `ρ_R = (λ − RR)/(c·μ)` 並排給你看。古典 ρ ≥ 1 但 ρ_R < 1 時會跳「傳統公式誤判為崩潰」警示，就是 Dbeis 2024 指出的那個誤讀，直接在 UI 可見。原本的時間型利用率（`seatUtilization`、`staffUtilization`、`catUtilization`）保留當引擎實測真值。
+
+**🔗 參數對應文獻 tooltip** — 每個核心參數的「📘 設計依據」面板，現在最上面那一筆引用就是實證來源，再下去才是原本就有的理論框架引用。對應關係：座位、店員、貓咪數，空閒間隔，休息機率，休息時間，拜訪時間 → Hirsch 等 2025；點餐 / 製餐 / 用餐時間 → Dbeis 2024；到達間隔 → Dbeis 2024 + Hasugian 2020；最大等待 → Ancker 1963a + Dbeis 2024。DOI 會直接在預設瀏覽器開啟。
+
+**🔍 互動式公式教學** — app 裡每個公式都會自己教自己：
+
+1. **可點擊的符號 chip**（`InteractiveFormula`）：11 個有公式的參數把每個符號（T、λ、μ、σ、p、X、Exp、N、Bernoulli、c、T_run）渲染成可點的圓角 chip。點下去會彈出說明卡（符號名稱 + 白話描述 + 單位 + 具體例子）。原本 Results 頁的元件被一般化，加上 `i18nNs` / `i18nBasePath` 兩個 prop，現在兩邊共用同一套。共用的符號字典有 13 條，放在 `settings:formulaParts.*`。
+2. **🔍 一行白話翻譯** 永遠顯示在公式下方（11 個 formulaHint 字串 × 兩個語系）：例如 `T ~ Exp(λ), λ = 1/8` 會寫「到達間隔 T 服從 Exponential 分佈，率參數 λ = 1/8，平均每 8 分鐘來一位客人」。
+3. **`FormulaExplain` 深度說明元件**：BlockMath + 🔍 hint + 可選的「更多說明 ▼」展開，用在 2.1、2.5 文獻卡的 Little's Law、古典 ρ、Dbeis ρ_R、RCRF 這幾個公式。
+
+**📖 詞彙字典擴充** — `TermTooltip` 共用詞彙字典新增 12 條雙語詞條：`reneging`、`balking`、`Log-Normal`、`Weibull`、`RCRF`、`ρ_R`、`Normal distribution`、`curve fitting`、`M/M/1`、`PLS-SEM`、`chi-square`、`agent-based`。字典現在除了 Results 頁以外，也接進：模擬設定頁的「設計依據」面板（透過 `renderWithTerms` 自動包）、以及文獻探討五張卡片（用新匯出的 `<Term k="...">` JSX helper 顯式包）。
+
 ### Live Learning Mode（v0.5.0）
 
 專屬的 **🎓 Live learning mode** 疊層位於回放頁，把模擬變成實際的教學工具。打開後頁面切成 60/40 格線，左側場景，右側四張隨模擬播放即時更新的概念卡。

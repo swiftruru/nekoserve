@@ -208,6 +208,54 @@
       "bottleneck": {
         "label": "Bottleneck",
         "def": "The resource with the highest utilization; it caps overall system throughput. Expanding the bottleneck directly increases capacity; expanding any other resource does nothing. In NekoServe this could be seats, staff, or cats."
+      },
+      "reneging": {
+        "label": "Reneging (early abandonment)",
+        "def": "A customer who joined the queue but gives up before being served. Ancker & Gafarian (1963) classically assume patience time is Exponential. NekoServe's maxWaitTime is the reneging threshold. Note: different from balking, which is refusing to join in the first place."
+      },
+      "balking": {
+        "label": "Balking (refusing to join)",
+        "def": "A customer who sees the queue, decides it's too long, and walks away without even joining. Classical assumption: P_balk = n/N (n = current queue length, N = capacity cap). In NekoServe this happens when seats are full."
+      },
+      "logNormal": {
+        "label": "Log-Normal distribution",
+        "def": "A distribution whose logarithm is Normal. Widely used for service times: it naturally excludes negative values yet allows rare long tail events. Dbeis 2024 empirically fit drive-thru service times to Log-Normal (mean 2.01 min, σ=0.9 min)."
+      },
+      "weibull": {
+        "label": "Weibull distribution",
+        "def": "A continuous distribution with a tunable shape parameter, often used for failure times or skewed interarrival intervals. Hasugian 2020 curve-fit Indonesian fast-food arrivals to Weibull (mean 67.5 s), which differs from Dbeis 2024's Poisson result — evidence that fit depends on context."
+      },
+      "rcrf": {
+        "label": "RCRF (Reneging Customers Relative Frequency)",
+        "def": "A nonlinear regression proposed by Dbeis 2024 (R²=0.945): RCRF = -2.056S + 1.37·eˢ - 1.173, where S ∈ [0,1] is peak-hour sensitivity (closer to peak = bigger S). Models how reneging density scales with peak pressure."
+      },
+      "rhoCorrected": {
+        "label": "ρ_R (Dbeis 2024 corrected utilization)",
+        "def": "Dbeis 2024 corrected utilization: ρ_R = (λ − RR) / μ. Subtract reneging rate RR from λ before dividing by μ, since early-leavers never actually consumed server time. Avoids the 'ρ > 1 apparent collapse' mistake under heavy reneging."
+      },
+      "normalDist": {
+        "label": "Normal / Gaussian distribution",
+        "def": "The classical bell curve, determined by mean and standard deviation. NekoServe uses Normal (σ = 0.2μ, floored at 1 min) for order/prep/dining times. Hasugian 2020's curve fit also landed on Normal for fast-food service times."
+      },
+      "curveFit": {
+        "label": "Curve fitting",
+        "def": "The process of selecting the best-fitting distribution and parameters from observed data, using tools like EasyFit. This is what my advisor meant by 'every shop is different' — you have to curve fit a target shop's own data to get its distributions."
+      },
+      "mm1": {
+        "label": "M/M/1 model",
+        "def": "The simplest Kendall-notation queueing system: Poisson arrivals, Exponential service, one server. Dbeis 2024's drive-thru study is M/M/1 because the ordering window is a single staff station."
+      },
+      "plsSem": {
+        "label": "PLS-SEM (Partial Least Squares SEM)",
+        "def": "A statistical method for latent-variable causal models, well-suited to small samples and nonlinear relationships. Li et al. (2025) used PLS-SEM on 423 Chinese pet-café customers and found pet interactivity, cuteness, and cleanliness dominate; coffee quality is insignificant."
+      },
+      "chiSquare": {
+        "label": "Chi-square test",
+        "def": "A statistical test of whether observed data fits an assumed distribution. Higher p-values mean better fit. Dbeis 2024 ran chi-square on all three distributions (arrivals, service, reneging) with p-values 0.414, 0.634, 0.669 — all passing, which is why they could confidently claim Poisson / Log-Normal / Exponential."
+      },
+      "agentBased": {
+        "label": "Agent-based modeling",
+        "def": "Modeling each individual (customer, cat) as an autonomous agent whose interactions produce system behavior. NekoServe's cats are agents: each cat is its own SimPy process that decides when to visit customers and when to rest — not a passive queue resource."
       }
     }
   },
@@ -514,5 +562,21 @@
       "unit": "min",
       "example": "Set to 15 min: the cat sleeps about 15 minutes before waking up and finding the next customer."
     }
+  },
+  "rhoCorrection": {
+    "title": "Classical ρ vs Dbeis 2024 corrected ρ_R",
+    "summary": "The three time-based utilizations above stay as the engine's measured truth. Here I put classical M/M/c ρ next to Dbeis & Al-Sahili's corrected ρ_R so you can line it up with the literature.",
+    "classicalLabel": "Classical",
+    "correctedLabel": "Corrected",
+    "classicalHint": "Arrival rate ÷ (staff × per-server service rate). Values near 1 mean staff are slammed.",
+    "correctedHint": "Strip out customers who walked away before being served — that's what staff actually carry.",
+    "friendlyExplain": "The idea: some customers gave up and left before being served, so they never really tied up staff time. Strip them out first, and ρ tells you whether the system is actually overloaded.",
+    "lambda": "λ (cust/min)",
+    "renegingRate": "RR (cust/min)",
+    "meanService": "E[S] (min)",
+    "staffC": "c (staff)",
+    "warningTitle": "⚠ Classical formula reads as a collapse",
+    "warningText": "Classical ρ > 1 looks like the system is crashing, but after subtracting customers who walked away early, ρ_R sits below 1, meaning the system is actually coping. This is exactly the mismatch Dbeis 2024 flagged.",
+    "citationText": "Formula source: Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674"
   }
 }

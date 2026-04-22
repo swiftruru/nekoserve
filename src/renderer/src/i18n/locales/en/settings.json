@@ -21,6 +21,86 @@
     },
     "noReferences": "The numerical value here is a scenario assumption without literature support. Only the modeling framework (SimPy agent-based) can be referenced: Borshchev & Filippov (2004)."
   },
+  "formulaParts": {
+    "T": {
+      "label": "Random time variable",
+      "desc": "T stands for 'how long this event takes' — each draw gives a different number. Capital T is the queueing-theory convention, stressing that it's a random variable and not a fixed value.",
+      "unit": "minutes",
+      "example": "T ~ N(3, 0.6²) means one order might take 2.8 min, the next 3.3 min, clustering around 3."
+    },
+    "X": {
+      "label": "Discrete outcome",
+      "desc": "X is a single yes/no draw, either 0 or 1. Used for binary decisions like 'does the cat go rest now.'",
+      "unit": "0 or 1",
+      "example": "X = 1 → goes to rest; X = 0 → keeps finding the next customer."
+    },
+    "Exp": {
+      "label": "Exponential distribution Exp(λ)",
+      "desc": "The distribution of spacing between random events. Its defining feature is memorylessness: no matter how long you've waited, the probability of the next event stays the same.",
+      "unit": "(distribution symbol)",
+      "example": "T ~ Exp(1/8) means one customer every 8 minutes on average, but actual gaps could be 30 s or 25 min."
+    },
+    "Normal": {
+      "label": "Normal distribution N(μ, σ²)",
+      "desc": "The classic bell curve. Samples cluster around mean μ and thin out further away. Service times use it because they have a natural floor and rarely wander long.",
+      "unit": "(distribution symbol)",
+      "example": "T ~ N(8, 1.6²) means most prep times land between 6 and 10 min; very few exceed 11."
+    },
+    "Bernoulli": {
+      "label": "Bernoulli distribution",
+      "desc": "A single probabilistic draw — like flipping one biased coin. p is the chance of 1, and 1-p is the chance of 0.",
+      "unit": "(unitless)",
+      "example": "Bernoulli(0.2) → 20% chance to rest, 80% chance to find the next customer."
+    },
+    "lambda": {
+      "label": "Rate parameter λ",
+      "desc": "The intensity of the Exponential: how many events happen per unit time on average. Higher λ = more frequent events, with mean spacing = 1/λ.",
+      "unit": "events/min or customers/min",
+      "example": "λ = 1/8 means 0.125 events per minute on average, equivalent to one every 8 minutes."
+    },
+    "mu": {
+      "label": "Mean μ",
+      "desc": "The center of a Normal distribution — where most samples cluster, and also the value the sample average converges to.",
+      "unit": "minutes",
+      "example": "μ = 3 means this activity takes 3 min on average."
+    },
+    "sigma": {
+      "label": "Standard deviation σ",
+      "desc": "How spread out the samples are. Smaller σ = more concentrated; larger σ = more dispersed. NekoServe fixes σ = 0.2μ to keep service times stable.",
+      "unit": "minutes",
+      "example": "σ = 0.6 means about 68% of samples land within μ ± 0.6."
+    },
+    "p": {
+      "label": "Success probability p",
+      "desc": "The probability of drawing 1 in a Bernoulli trial. Always between 0 and 1.",
+      "unit": "0 to 1",
+      "example": "p = 0.2 means on average 1 rest out of every 5 attempts."
+    },
+    "cseat": {
+      "label": "Seat capacity c",
+      "desc": "Number of servers in the M/M/c sense, but here seats act as passively-occupied servers. More seats = fewer customers get blocked out.",
+      "unit": "count",
+      "example": "c = 10 means at most 10 customers can be seated simultaneously."
+    },
+    "cstaff": {
+      "label": "Staff resource c",
+      "desc": "Number of servers in the second M/M/c — the staff pool that handles ordering and prep. One of the main bottlenecks in the shop.",
+      "unit": "count",
+      "example": "c = 2 is typical small-shop staffing: one takes orders, one preps."
+    },
+    "arrInterval": {
+      "label": "arrivalInterval",
+      "desc": "The 'average interarrival time' from the settings panel. Its reciprocal is λ and gets fed into the Exponential.",
+      "unit": "minutes",
+      "example": "arrivalInterval = 8 min corresponds to λ = 1/8 customers/min."
+    },
+    "Trun": {
+      "label": "Simulation horizon T_run",
+      "desc": "How long the whole simulation runs. Longer runs give more stable stats, but execution time scales proportionally.",
+      "unit": "minutes",
+      "example": "T_run = 240 is roughly one lunch shift — long enough to see the arc from open → peak → tail."
+    }
+  },
   "parameters": {
     "seatCount": {
       "label": "Seats",
@@ -31,7 +111,12 @@
         "theory": "Corresponds to the number of service stations c in an M/G/c multi-server queueing system.",
         "defaultBasis": "Small independent cafés typically have 6–15 seats. 10 is taken as the midpoint for a weekday scenario.",
         "formula": "c_{seat} = 10",
+        "formulaHint": "c is the number of servers in queueing notation. Here I treat seats as passively-occupied servers; default 10.",
+        "formulaParts": [
+          { "symbol": "c_{seat}", "partKey": "cseat" }
+        ],
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — empirical cap of 14 customers", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Gross, Shortle, Thompson & Harris (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
         ]
@@ -46,7 +131,12 @@
         "theory": "Second M/G/c queue. Ordering and preparation share one staff resource pool.",
         "defaultBasis": "Smallest common staffing in a small café: one front-of-house, one back-of-house.",
         "formula": "c_{staff} = 2",
+        "formulaHint": "Same M/M/c 'c', but for staff pool size. Ordering and prep share this pool; default 2.",
+        "formulaParts": [
+          { "symbol": "c_{staff}", "partKey": "cstaff" }
+        ],
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — observed staffing: 2 weekday / 3 weekend", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Gross et al. (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
         ]
@@ -62,6 +152,7 @@
         "defaultBasis": "Commercial cat cafés typically have 3–5 visible cats. 3 is the scenario low-end.",
         "formula": "",
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — 8–9 cats observed per site", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Borshchev & Filippov (2004), From System Dynamics and Discrete Event to Practical Agent-Based Modeling", "url": "https://scholar.google.com/scholar?q=Borshchev+Filippov+2004+System+Dynamics+Agent+Based+Modeling" },
           { "text": "Macal & North (2010), Tutorial on Agent-Based Modelling and Simulation, J. Simulation 4(3)", "url": "https://scholar.google.com/scholar?q=Macal+North+2010+Tutorial+Agent+Based+Modeling+Simulation" }
         ]
@@ -76,7 +167,15 @@
         "theory": "Poisson process: interarrival times follow an exponential distribution and are memoryless.",
         "defaultBasis": "8 min ≈ λ = 0.125 cust/min (~7.5/hour), between peak (λ≈0.2) and off-peak (λ≈0.05).",
         "formula": "T \\sim \\text{Exp}(\\lambda),\\ \\lambda = \\tfrac{1}{8}",
+        "formulaHint": "Read as: interarrival time T follows an Exponential distribution with rate λ = 1/8 (0.125 customers per minute). One customer every 8 minutes on average.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\text{Exp}(\\lambda)", "partKey": "Exp" },
+          { "symbol": "\\lambda", "partKey": "lambda" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674 — empirical Poisson arrivals (22 cust/hr)", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
+          { "text": "Hasugian, Vandrick & Dewi (2020), Queuing Models of Fast Food Restaurant, IOP Conf. Ser. MSE 851:012028 — alt. Weibull arrival empirics", "url": "https://doi.org/10.1088/1757-899X/851/1/012028" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
         ]
@@ -92,6 +191,8 @@
         "defaultBasis": "Service-industry research places the abandonment threshold at 15–30 min. 25 is the scenario midpoint.",
         "formula": "",
         "references": [
+          { "text": "Ancker Jr. & Gafarian (1963), Some Queuing Problems with Balking and Reneging I, Operations Research 11(1):88–100 — classical reneging model (Exp patience)", "url": "https://doi.org/10.1287/opre.11.1.88" },
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674 — empirical reneging-rate analysis", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Maister (1985), The Psychology of Waiting Lines, in: The Service Encounter, Lexington Books", "url": "https://scholar.google.com/scholar?q=Maister+1985+Psychology+of+Waiting+Lines" },
           { "text": "Larson (1987), Perspectives on Queues: Social Justice and the Psychology of Queueing, Operations Research 35(6)", "url": "https://doi.org/10.1287/opre.35.6.895" },
           { "text": "Haight (1959), Queueing with reneging, Metrika 2(1)", "url": "https://scholar.google.com/scholar?q=Haight+1959+Queueing+with+reneging+Metrika" }
@@ -107,7 +208,15 @@
         "theory": "Normal N(μ, σ²) with σ = 0.2μ, truncated via max(1, sample). Service times have a natural floor.",
         "defaultBasis": "Menu-and-checkout median is around 2–4 min. 3 min taken as midpoint.",
         "formula": "T \\sim \\mathcal{N}(3,\\ 0.6^2)",
+        "formulaHint": "Order time T follows a Normal distribution with mean 3 min and standard deviation 0.6 min (= 20% of the mean). max(1, sample) floors weird negatives.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674 — empirical service-time (Log-Normal, μ=2.01 min)", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6 (input distribution selection)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
           { "text": "Law (2010), Statistical Analysis of Simulation Output Data: The Practical State of the Art, Proc. 2010 Winter Simulation Conference, 65–74", "url": "https://dl.acm.org/doi/10.5555/2433508.2433519" }
         ]
@@ -122,7 +231,15 @@
         "theory": "Same Normal(μ, σ²), σ = 0.2μ.",
         "defaultBasis": "Hand-brewed or espresso-based drink with light meal: 6–10 min median. 8 taken as midpoint.",
         "formula": "T \\sim \\mathcal{N}(8,\\ 1.6^2)",
+        "formulaHint": "Prep time Normal, mean 8 min and standard deviation 1.6 min. The σ = 0.2μ rule is a service-time heuristic: stay concentrated, occasionally stretch.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674 — empirical service-time Log-Normal fit", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -136,7 +253,15 @@
         "theory": "Normal distribution, same structure as other service times.",
         "defaultBasis": "Scenario is \"one drink + short stay\" (not a full meal). Scale up manually (e.g., 45 min) for a lunch scenario.",
         "formula": "T \\sim \\mathcal{N}(15,\\ 3^2)",
+        "formulaHint": "Dining time Normal, mean 15 min and standard deviation 3 min. Drives seat turnover — longer dining means seats saturate faster.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674 — empirical service-time Log-Normal fit", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -150,7 +275,15 @@
         "theory": "Normal(μ, σ²), σ = 0.2μ, same logic as service times.",
         "defaultBasis": "A typical friendly house cat stays a few to ten-plus minutes per visit. 10 min taken as midpoint.",
         "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "formulaHint": "Single cat visit duration Normal, mean 10 min and standard deviation 2 min. The customer is 'stuck' at their seat during this stretch.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — cat-human contact interactions = 23.2% of observed time", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -164,7 +297,14 @@
         "theory": "Exponential distribution, same family as customer arrivals (Poisson-style events).",
         "defaultBasis": "Scenario is \"curious, friendly café cat\", so 4 min. Try 1 min (very clingy) or 20 min (aloof) for teaching contrast.",
         "formula": "T \\sim \\text{Exp}(1/4)",
+        "formulaHint": "Idle time between visits follows Exponential with rate 1/4 (mean 4 min). Smaller value = clingier cat.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\text{Exp}(\\lambda)", "partKey": "Exp" },
+          { "symbol": "\\lambda", "partKey": "lambda" }
+        ],
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — cat-cat interaction rate 0.58/cat/hr; cat-human no-interaction 44.4%", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
         ]
@@ -179,7 +319,14 @@
         "theory": "Bernoulli trial, sampled independently after each visit.",
         "defaultBasis": "0.2 means roughly one rest every 5 visits. Scenario value, not empirical.",
         "formula": "X \\sim \\text{Bernoulli}(0.2)",
+        "formulaHint": "Bernoulli = single coin flip. After each visit, flip once: 20% chance the cat naps, 80% chance it finds the next customer.",
+        "formulaParts": [
+          { "symbol": "X", "partKey": "X" },
+          { "symbol": "\\text{Bernoulli}(p)", "partKey": "Bernoulli" },
+          { "symbol": "p", "partKey": "p" }
+        ],
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — resting = 31.7%, out-of-sight = 10.7% of observed time", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 4 (discrete random variables)", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
         ]
       }
@@ -193,7 +340,15 @@
         "theory": "Normal(μ, σ²), σ = 0.2μ.",
         "defaultBasis": "House-cat short naps are typically 5–15 min. 10 min taken as midpoint.",
         "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "formulaHint": "Rest duration Normal, mean 10 min and standard deviation 2 min. Cats on nap leave the available pool entirely during this window.",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Hirsch, Navarro Rivero & Andersson (2025), Cats in a Cat Café, Animals 15(22):3233 — overall cat resting share 31.7%", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -207,6 +362,10 @@
         "theory": "DES rule of thumb: run length ≥ 10× longest service time to approach steady state.",
         "defaultBasis": "240 min ≈ one shift (e.g., 11:00–15:00 lunch block), enough to see full peak and cool-down.",
         "formula": "T_{run} = 240 \\text{ min}",
+        "formulaHint": "Total simulated business time. 240 min ≈ one lunch shift. Too short → unstable stats; too long → slow runs.",
+        "formulaParts": [
+          { "symbol": "T_{run}", "partKey": "Trun" }
+        ],
         "references": [
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 9 (Output Analysis for Terminating Simulations)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
           { "text": "Banks, Carson, Nelson & Nicol (2010), Discrete-Event System Simulation, 5/e, Ch 11", "url": "https://scholar.google.com/scholar?q=Banks+Carson+Nelson+Nicol+Discrete+Event+System+Simulation+5th+edition" }

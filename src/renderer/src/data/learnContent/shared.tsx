@@ -1,4 +1,5 @@
 import type { Page } from '../../types'
+import { TermTooltip, renderWithTerms } from '../../components/results/TermTooltip'
 
 // ── Small style components shared across locale variants ──
 
@@ -40,6 +41,24 @@ export function UL({ children }: { children: React.ReactNode }) {
 
 export function LI({ children }: { children: React.ReactNode }) {
   return <li className="list-disc">{children}</li>
+}
+
+/**
+ * Inline term wrapper: marks a keyword in learn-note prose so the
+ * TermTooltip (shared with Results) pops up a definition on hover.
+ * `k` maps to results:glossary.terms.<k>.{label,def}.
+ */
+export function Term({ k, children }: { k: string; children: React.ReactNode }) {
+  return <TermTooltip termKey={k}>{children}</TermTooltip>
+}
+
+/**
+ * Auto-wrap every known glossary keyword in a string with TermTooltip.
+ * Handy when paragraph text contains multiple terms and we don't want
+ * to manually wrap each one.
+ */
+export function TermText({ children }: { children: string }) {
+  return <>{renderWithTerms(children)}</>
 }
 
 /**

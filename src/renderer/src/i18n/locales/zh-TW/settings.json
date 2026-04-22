@@ -21,6 +21,86 @@
     },
     "noReferences": "此參數的具體數值屬情境假設，無對應文獻；僅理論框架（SimPy agent-based 建模）可參考 Borshchev & Filippov (2004)。"
   },
+  "formulaParts": {
+    "T": {
+      "label": "隨機時間變數",
+      "desc": "T 代表「每一次事件要花多少時間」，每次抽樣都會得到一個不同的數。用大寫 T 是排隊論的慣例，強調它是隨機變數而不是固定值。",
+      "unit": "分鐘",
+      "example": "例如 T ~ N(3, 0.6²) 表示這次點餐可能 2.8 分鐘、下次可能 3.3 分鐘，平均落在 3 分鐘附近。"
+    },
+    "X": {
+      "label": "離散抽樣結果",
+      "desc": "X 是一次「是 / 否」抽樣的結果，只能是 0 或 1。用在像「貓咪這次要不要去休息」這種二選一的決策。",
+      "unit": "0 或 1",
+      "example": "X = 1 代表去休息、X = 0 代表繼續找下一位顧客。"
+    },
+    "Exp": {
+      "label": "指數分佈 Exp(λ)",
+      "desc": "專門描述「隨機事件之間的間隔時間」的分佈。最大特色是「無記憶性」：不管已經等了多久，下一次事件到來的機率都一樣。",
+      "unit": "無單位（是分佈符號）",
+      "example": "T ~ Exp(1/8) 表示平均 8 分鐘來一位客人，但實際間隔可能 30 秒也可能 25 分鐘。"
+    },
+    "Normal": {
+      "label": "常態分佈 N(μ, σ²)",
+      "desc": "就是鐘形曲線。大部分樣本集中在均值 μ 附近，越遠離均值越少。服務時間適合用它描述，因為有自然下限、偶爾才長尾。",
+      "unit": "無單位（是分佈符號）",
+      "example": "T ~ N(8, 1.6²) 表示大多數製餐時間在 6 到 10 分之間，很少超過 11 分。"
+    },
+    "Bernoulli": {
+      "label": "Bernoulli 分佈",
+      "desc": "一次性機率抽樣，相當於「擲一次不對稱硬幣」。p 代表出現 1 的機率，1-p 是出現 0 的機率。",
+      "unit": "無單位",
+      "example": "Bernoulli(0.2) 表示每次結束拜訪後，有 20% 機率休息、80% 機率繼續找顧客。"
+    },
+    "lambda": {
+      "label": "率參數 λ",
+      "desc": "指數分佈的「強度」：每單位時間平均發生幾次事件。λ 越大事件越頻繁，平均間隔 = 1/λ。",
+      "unit": "次/分鐘 或 人/分鐘",
+      "example": "λ = 1/8 表示每分鐘平均 0.125 次事件，換算就是平均每 8 分鐘一次。"
+    },
+    "mu": {
+      "label": "均值 μ",
+      "desc": "常態分佈中樣本最集中的中心位置。也是抽樣平均會收斂到的值。",
+      "unit": "分鐘",
+      "example": "μ = 3 表示這個活動平均需要 3 分鐘。"
+    },
+    "sigma": {
+      "label": "標準差 σ",
+      "desc": "描述樣本散開的程度。σ 越小越集中、越大越分散。NekoServe 固定 σ = 0.2μ，讓服務時間保持穩定。",
+      "unit": "分鐘",
+      "example": "σ = 0.6 表示大約 68% 的樣本會落在 μ ± 0.6 這個範圍內。"
+    },
+    "p": {
+      "label": "成功機率 p",
+      "desc": "Bernoulli 分佈中「抽到 1」的機率，值介於 0 和 1 之間。",
+      "unit": "0 到 1 之間",
+      "example": "p = 0.2 代表每 5 次平均有 1 次抽到 1（去休息）。"
+    },
+    "cseat": {
+      "label": "座位容量 c",
+      "desc": "排隊論中 M/M/c 模型的「服務台數量」，但這裡把座位當成被動佔用的服務台。座位越多，排隊被擠出的機會越小。",
+      "unit": "個",
+      "example": "c = 10 表示同時最多可以有 10 位顧客在用餐。"
+    },
+    "cstaff": {
+      "label": "店員資源 c",
+      "desc": "第二組 M/M/c 的服務台數量，指同時能處理點餐與製餐的店員人數。是店面的實際服務瓶頸之一。",
+      "unit": "個",
+      "example": "c = 2 表示一人點餐、一人製餐，典型小店人力。"
+    },
+    "arrInterval": {
+      "label": "arrivalInterval",
+      "desc": "參數設定中的「顧客平均到達間隔」。把它的倒數當作 λ 餵進指數分佈。",
+      "unit": "分鐘",
+      "example": "arrivalInterval = 8 分鐘，對應 λ = 1/8 人/分鐘。"
+    },
+    "Trun": {
+      "label": "模擬總時長 T_run",
+      "desc": "一整場模擬跑多久。跑越久統計越穩定，但執行時間會成正比增加。",
+      "unit": "分鐘",
+      "example": "T_run = 240 大約等於一個午餐班次，夠看到從開店到尖峰再退潮的完整曲線。"
+    }
+  },
   "parameters": {
     "seatCount": {
       "label": "座位數量",
@@ -31,7 +111,12 @@
         "theory": "對應排隊論多服務台系統 M/G/c 中的服務台數量 c，只是這裡的「服務台」是指被動佔用的座位。",
         "defaultBasis": "小型獨立咖啡廳實地觀察常見座位數約 6 至 15 席，取中值 10 作為情境模板。",
         "formula": "c_{seat} = 10",
+        "formulaHint": "c 在排隊論裡代表服務台數量。這裡把座位當作「被動佔用」的 c，預設 10 席。",
+        "formulaParts": [
+          { "symbol": "c_{seat}", "partKey": "cseat" }
+        ],
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，實測客容量上限 14 人", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Gross, Shortle, Thompson & Harris (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
         ]
@@ -46,7 +131,12 @@
         "theory": "第二組 M/G/c 排隊系統的服務台數量，本模擬將點餐與製餐合併成一個共用的員工資源池。",
         "defaultBasis": "小型咖啡廳最常見的最小人力配置：一人主外場點餐、一人主內場製作，共 2 人。",
         "formula": "c_{staff} = 2",
+        "formulaHint": "同樣是 M/M/c 的 c，但這裡指店員資源池大小。點餐與製餐共用，預設 2 人。",
+        "formulaParts": [
+          { "symbol": "c_{staff}", "partKey": "cstaff" }
+        ],
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，實測人力：平日 2、週末 3", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 3", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Gross et al. (2008), Fundamentals of Queueing Theory, 4/e", "url": "https://scholar.google.com/scholar?q=Gross+Shortle+Fundamentals+of+Queueing+Theory+4th+edition" }
         ]
@@ -62,6 +152,7 @@
         "defaultBasis": "商業貓咪咖啡廳實務上可見貓隻常介於 3 至 5 隻之間（其餘在後場輪休），取下界 3 作為平日情境。",
         "formula": "",
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，實測貓隻數 8 至 9 隻", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Borshchev & Filippov (2004), From System Dynamics and Discrete Event to Practical Agent-Based Modeling", "url": "https://scholar.google.com/scholar?q=Borshchev+Filippov+2004+System+Dynamics+Agent+Based+Modeling" },
           { "text": "Macal & North (2010), Tutorial on Agent-Based Modelling and Simulation, J. Simulation 4(3)", "url": "https://scholar.google.com/scholar?q=Macal+North+2010+Tutorial+Agent+Based+Modeling+Simulation" }
         ]
@@ -76,7 +167,15 @@
         "theory": "Poisson process 的到達間隔服從指數分佈，具「無記憶性」：不論已經等多久，下一位顧客到來的機率分佈都相同。",
         "defaultBasis": "8 分鐘相當於 λ ≈ 0.125 人/分（約 7.5 人/小時），介於尖峰 λ≈0.2 與離峰 λ≈0.05 之間，屬平日中度流量情境。",
         "formula": "T \\sim \\text{Exp}(\\lambda),\\ \\lambda = \\tfrac{1}{8}",
+        "formulaHint": "讀作：顧客到達間隔 T 服從 Exponential 分佈，率參數 λ = 1/8（每分鐘平均來 0.125 人）。換算就是平均每 8 分鐘來一位客人。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\text{Exp}(\\lambda)", "partKey": "Exp" },
+          { "symbol": "\\lambda", "partKey": "lambda" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674，實證 Poisson 到達（22 人/小時）", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
+          { "text": "Hasugian 等 (2020), Queuing Models of Fast Food Restaurant, IOP Conf. Ser. MSE 851:012028，另一實證為 Weibull 到達", "url": "https://doi.org/10.1088/1757-899X/851/1/012028" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
         ]
@@ -92,6 +191,8 @@
         "defaultBasis": "服務業消費者等待心理學研究（如 Larson 關於排隊體感時間的討論）多將 15 至 30 分鐘視為放棄門檻區間，取中值 25 分為情境設定。",
         "formula": "",
         "references": [
+          { "text": "Ancker Jr. & Gafarian (1963), Some Queuing Problems with Balking and Reneging I, Operations Research 11(1):88–100，古典 reneging 模型（耐心時間指數分佈）", "url": "https://doi.org/10.1287/opre.11.1.88" },
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674，實證 reneging 行為分析", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Maister (1985), The Psychology of Waiting Lines, in: The Service Encounter, Lexington Books", "url": "https://scholar.google.com/scholar?q=Maister+1985+Psychology+of+Waiting+Lines" },
           { "text": "Larson (1987), Perspectives on Queues: Social Justice and the Psychology of Queueing, Operations Research 35(6)", "url": "https://doi.org/10.1287/opre.35.6.895" },
           { "text": "Haight (1959), Queueing with reneging, Metrika 2(1)", "url": "https://scholar.google.com/scholar?q=Haight+1959+Queueing+with+reneging+Metrika" }
@@ -107,7 +208,15 @@
         "theory": "採常態分佈 N(μ, σ²)，固定 σ = 0.2μ，並以 max(1, sample) 截斷負值。服務時間有自然下限，因此不適合長尾的指數分佈。",
         "defaultBasis": "看菜單加點餐結帳合理中位數約 2 至 4 分，取 3 分。",
         "formula": "T \\sim \\mathcal{N}(3,\\ 0.6^2)",
+        "formulaHint": "點餐時間 T 服從常態分佈，均值 3 分鐘、標準差 0.6 分鐘（= 均值的 20%）。實作時用 max(1, sample) 截掉 1 分鐘以下的怪值。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674，實證服務時間為 Log-Normal（μ=2.01 min）", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6 (輸入機率分佈的選擇)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
           { "text": "Law (2010), Statistical Analysis of Simulation Output Data: The Practical State of the Art, Proc. 2010 Winter Simulation Conference, 65–74", "url": "https://dl.acm.org/doi/10.5555/2433508.2433519" }
         ]
@@ -122,7 +231,15 @@
         "theory": "同點餐時間，採常態分佈 N(μ, σ²)，σ = 0.2μ。",
         "defaultBasis": "手沖咖啡或義式調製搭配簡餐的合理中位數約 6 至 10 分，取中值 8 分。",
         "formula": "T \\sim \\mathcal{N}(8,\\ 1.6^2)",
+        "formulaHint": "製餐時間常態分佈，均值 8 分鐘、標準差 1.6 分鐘。σ = 0.2μ 是服務時間的經驗慣例，保持集中、偶爾拉長。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674，實證服務時間 Log-Normal 適配", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -136,7 +253,15 @@
         "theory": "同樣採常態分佈 N(μ, σ²)，σ = 0.2μ。",
         "defaultBasis": "以「一杯飲品加短暫停留」為情境（非正餐），取 15 分。若改為午餐情境需手動放大（例如 45 分）。",
         "formula": "T \\sim \\mathcal{N}(15,\\ 3^2)",
+        "formulaHint": "用餐時間常態分佈，均值 15 分鐘、標準差 3 分鐘。決定座位週轉率——用餐越久，座位越快被佔滿。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674，實證服務時間 Log-Normal 適配", "url": "https://doi.org/10.1080/23270012.2024.2408528" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -150,7 +275,15 @@
         "theory": "常態分佈 N(μ, σ²)，σ = 0.2μ，邏輯與服務時間相同（有自然下限、集中於均值附近）。",
         "defaultBasis": "一般家貓主動親近人類的單次停留時間約數分鐘到十餘分鐘，取中位數 10 分作為情境值。",
         "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "formulaHint": "單次貓咪拜訪時間常態分佈，均值 10 分鐘、標準差 2 分鐘。這段時間顧客會被「卡」在座位上。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，實測貓對人接觸互動佔觀察時間 23.2%", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6 (Normal 分佈於服務時間的適用性)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -164,7 +297,14 @@
         "theory": "取指數分佈模擬「隨機時刻出現」的行為，與顧客到達過程同為 Poisson 近似。",
         "defaultBasis": "情境假設為「好奇愛黏人的館內貓」，取 4 分。改為 1 分可示範極度黏人的貓，改為 20 分可示範冷淡的貓，做為教學對比用。",
         "formula": "T \\sim \\text{Exp}(1/4)",
+        "formulaHint": "兩次拜訪之間的閒晃時間服從指數分佈，率參數 1/4（平均 4 分鐘），數值越小貓越黏人。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\text{Exp}(\\lambda)", "partKey": "Exp" },
+          { "symbol": "\\lambda", "partKey": "lambda" }
+        ],
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，貓對貓互動率 0.58 次/貓/小時；貓對人無互動 44.4%", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Kleinrock (1975), Queueing Systems Vol 1: Theory, Ch 2 (Poisson 過程)", "url": "https://scholar.google.com/scholar?q=Kleinrock+Queueing+Systems+Volume+1+Theory+1975" },
           { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 5", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
         ]
@@ -179,7 +319,14 @@
         "theory": "Bernoulli trial：每次拜訪結束後獨立抽樣一個成功率為 p 的二項事件。",
         "defaultBasis": "0.2 代表「每 5 次拜訪後約有 1 次進入休息」，為教學用情境值，無實證依據；可調整以觀察休息率對互動頻率的影響。",
         "formula": "X \\sim \\text{Bernoulli}(0.2)",
+        "formulaHint": "Bernoulli 是「擲一次硬幣」型的機率。每次拜訪結束抽一次，以 0.2 的機率去休息、0.8 的機率繼續找下一位顧客。",
+        "formulaParts": [
+          { "symbol": "X", "partKey": "X" },
+          { "symbol": "\\text{Bernoulli}(p)", "partKey": "Bernoulli" },
+          { "symbol": "p", "partKey": "p" }
+        ],
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，貓整體行為：休息 31.7%、離開視線 10.7%", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Ross (2019), Introduction to Probability Models, 12/e, Ch 4 (離散隨機變數與 Bernoulli 分佈)", "url": "https://scholar.google.com/scholar?q=Ross+Introduction+to+Probability+Models+12th+edition" }
         ]
       }
@@ -193,7 +340,15 @@
         "theory": "常態分佈 N(μ, σ²)，σ = 0.2μ。",
         "defaultBasis": "家貓的短眠（非深睡）常見長度約 5 至 15 分鐘，取中值 10 分作為情境值。",
         "formula": "T \\sim \\mathcal{N}(10,\\ 2^2)",
+        "formulaHint": "休息時間常態分佈，均值 10 分鐘、標準差 2 分鐘。休息中的貓完全不算在可用池裡。",
+        "formulaParts": [
+          { "symbol": "T", "partKey": "T" },
+          { "symbol": "\\mathcal{N}(\\mu, \\sigma^2)", "partKey": "Normal" },
+          { "symbol": "\\mu", "partKey": "mu" },
+          { "symbol": "\\sigma", "partKey": "sigma" }
+        ],
         "references": [
+          { "text": "Hirsch 等 (2025), Cats in a Cat Café, Animals 15(22):3233，貓整體休息時間比 31.7%", "url": "https://doi.org/10.3390/ani15223233" },
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 6", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" }
         ]
       }
@@ -207,6 +362,10 @@
         "theory": "DES 教學常用的經驗法則：run length ≥ 10 倍最長服務時間，以達接近 steady state 的穩態觀測。",
         "defaultBasis": "240 分約等於一個營業班（例如 11:00 到 15:00 的午餐班），可觀察完整的尖峰與退潮。",
         "formula": "T_{run} = 240 \\text{ min}",
+        "formulaHint": "整場模擬的營業時長。240 分 ≈ 一個午餐班。太短統計會不穩，太長跑起來會慢。",
+        "formulaParts": [
+          { "symbol": "T_{run}", "partKey": "Trun" }
+        ],
         "references": [
           { "text": "Law & Kelton (2015), Simulation Modeling and Analysis, 5/e, Ch 9 (Output Analysis for Terminating Simulations)", "url": "https://scholar.google.com/scholar?q=Law+Kelton+Simulation+Modeling+and+Analysis+5th+edition" },
           { "text": "Banks, Carson, Nelson & Nicol (2010), Discrete-Event System Simulation, 5/e, Ch 11", "url": "https://scholar.google.com/scholar?q=Banks+Carson+Nelson+Nicol+Discrete+Event+System+Simulation+5th+edition" }

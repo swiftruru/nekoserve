@@ -19,6 +19,7 @@ import QueueTimeSeries from '../components/results/QueueTimeSeries'
 import WaitHistogram from '../components/results/WaitHistogram'
 import KeyMomentsTimeline from '../components/results/KeyMomentsTimeline'
 import KingmanPrediction from '../components/results/KingmanPrediction'
+import RhoCorrectionPanel from '../components/results/RhoCorrectionPanel'
 import UtilizationTimeSeries from '../components/results/UtilizationTimeSeries'
 import StayDistribution from '../components/results/StayDistribution'
 import type { LearningLevel } from '../components/learning/types'
@@ -637,6 +638,9 @@ export default function ResultsPage({
                 totalDuration={config.simulationDuration}
               />
               <KingmanPrediction config={config} metrics={metrics} />
+            </div>
+            <div className="mt-3">
+              <RhoCorrectionPanel metrics={metrics} level={level} />
             </div>
           </ResultsSection>
 

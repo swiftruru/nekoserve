@@ -3,8 +3,9 @@
  * Classroom-notebook style: formulas, examples, and "why this design" reasoning.
  */
 
-import { Formula, Example, Note, P, B, UL, LI, Ref, type LearnContent } from './shared'
+import { Formula, Example, Note, P, B, UL, LI, Ref, Term, type LearnContent } from './shared'
 import { BlockMath } from '../../components/Math'
+import FormulaExplain from '../../components/FormulaExplain'
 
 export const LEARN_CONTENT_ZH_TW: LearnContent = {
 
@@ -215,6 +216,242 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             <LI>
               <B>不適合</B>：真實投資決策、政府報告的量化預測、需要誤差保證的科學論文。
               這些都需要實地資料校準，不是情境假設能承擔的。
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-1-queueing-foundation',
+      icon: '📘',
+      title: '2.1 離散事件模擬與排隊理論基礎',
+      content: (
+        <div>
+          <P>
+            NekoServe 的方法學脈絡，我從 1909 年 Erlang 處理電話交換台流量的研究一路接到現在。
+            排隊論的核心是把「到達」「服務」「排隊」三件事拆開用機率描述，這套符號後來被
+            Kendall 整理成 <Term k="mmc">M/M/c</Term> 這種速記：第一個 M 代表到達是馬可夫（<Term k="poisson">Poisson</Term>），第二個 M 代表服務時間是指數，c 是服務台數量。
+          </P>
+          <P>
+            我的模擬要算三件事：平均到達率 <Term k="lambdaRate">λ</Term>、平均服務率 μ、系統中的人數 L。<Term k="littlesLaw">Little's Law</Term> 告訴我這三者永遠串在一起：
+          </P>
+          <FormulaExplain
+            formula={String.raw`L = \lambda W, \qquad \rho = \frac{\lambda}{c\,\mu}`}
+            hint={<>左式：平均系統人數 = 到達率 × 平均停留時間。右式：<Term k="utilization">利用率 ρ</Term> = 到達率 ÷（服務台數 × 每台服務率）。</>}
+            more={<>Little's Law 神奇的地方是它不管分佈長什麼樣都成立，只要系統是穩態。右式的 ρ 要小於 1 系統才穩定，ρ 逼近 1 時排隊長度會爆炸成長（這就是為什麼沒人把店員排到 100%）。</>}
+          />
+          <P>
+            <Term k="balking">Balking</Term> 與 <Term k="reneging">reneging</Term> 這兩個行為早在 1963 年就被 Ancker &amp; Gafarian 做成可解析的模型：顧客看到人太多會直接放棄（balk），進了隊伍又等太久也會離開（renege）。他們假設耐心時間是<Term k="exponential">指數分佈</Term>，這個假設到今天還是一般排隊教科書的預設起點。
+          </P>
+          <P>
+            我選擇<Term k="des">離散事件模擬（DES）</Term>而不是純解析解，是因為貓咖的隨機資源（貓）讓封閉解變複雜。DES 讓我直接觀察每個事件、做敏感度分析、看尖峰尾端行為，這些都不是 M/M/c 閉式解能給我的。
+          </P>
+          <P><B>引用</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.11.1.88">
+                Ancker Jr., C. J., &amp; Gafarian, A. V. (1963). Some Queuing Problems with Balking and Reneging. I. <i>Operations Research</i>, 11(1), 88–100.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.11.6.928">
+                Ancker Jr., C. J., &amp; Gafarian, A. V. (1963). Some Queuing Problems with Balking and Reneging. II. <i>Operations Research</i>, 11(6), 928–937.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.9.3.383">
+                Little, J. D. C. (1961). A Proof for the Queuing Formula: L = λW. <i>Operations Research</i>, 9(3), 383–387.
+              </Ref>
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-2-service-empirical',
+      icon: '☕',
+      title: '2.2 咖啡廳與餐飲業服務系統實證',
+      content: (
+        <div>
+          <P>
+            教授講的那句「每家店不一樣」，我在文獻裡看到了實證版。
+            Hasugian 等 (2020) 用 EasyFit 對印尼一家 XYZ 快餐的營運資料做 <Term k="curveFit">curve fitting</Term>，結論是：顧客到達間隔服從 <Term k="weibull"><B>Weibull 分佈</B></Term>（均值 67.5 秒），服務時間服從 <Term k="normalDist"><B>常態分佈</B></Term>（均值 125.1 秒）。這是我目前看到最直接的「curve fitting 實例」。
+          </P>
+          <P>
+            可是 Dbeis &amp; Al-Sahili (2024) 在巴勒斯坦 Al-Bireh 一家 drive-thru（<Term k="mm1">M/M/1</Term> 結構）做了 123 小時直接觀察，2,713 位顧客，<Term k="chiSquare">卡方檢定</Term>結果卻是：顧客到達是 <Term k="poisson"><B>Poisson</B></Term>（22 人/小時, p=0.414），服務時間是 <Term k="logNormal"><B>Log-Normal</B></Term>（均值 2.01 分, σ=0.9 分, p=0.634），<Term k="reneging">reneging</Term> 事件間隔是 <Term k="exponential"><B>指數分佈</B></Term>（λ=0.23, p=0.669）。
+          </P>
+          <P>
+            兩篇文獻都有嚴謹方法論，卻得到不同的到達分佈（Weibull vs Poisson）。這不是誰錯，而是反映店家情境真的會影響分佈。我從這兩篇學到兩件事：第一，NekoServe 的預設應該要能換分佈；第二，如果未來要對某家特定店家校準，curve fitting 這套流程就是範本。
+          </P>
+          <P>
+            Dbeis 還發現一件關鍵事：reneging <i>事件間隔</i>是 Poisson-like，但 reneging <i>rate 本身</i>跟時段高度相關（顛峰時期 reneging 暴增，接近顛峰敏感度 S ∈ [0,1] 呈非線性）。他們拿這個觀察推出一個修正公式（<Term k="rcrf">RCRF</Term> 模型），留給我的 2.5 節處理。
+          </P>
+          <P><B>引用</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1088/1757-899X/851/1/012028">
+                Hasugian, I. A., Vandrick, N., &amp; Dewi, E. (2020). Analysis of Queuing Models of Fast Food Restaurant with Simulation Approach. <i>IOP Conf. Ser. Mater. Sci. Eng.</i>, 851, 012028.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1080/23270012.2024.2408528">
+                Dbeis, A., &amp; Al-Sahili, K. (2024). Enhancing Queuing Theory Realism: Analysis of Reneging Behavior Impact on M/M/1 Drive-Thru Service System. <i>Journal of Management Analytics</i>, 11(4), 659–674.
+              </Ref>
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-3-cat-cafe-uniqueness',
+      icon: '🐾',
+      title: '2.3 貓咖的獨特性',
+      content: (
+        <div>
+          <P>
+            貓咖起源於台灣、在日本發揚光大，之後擴散到歐美。但一路到 2025 年之前，幾乎沒有把貓咖當排隊系統來研究的文獻。我找到的三篇最接近的是：
+          </P>
+          <P>
+            Hirsch, Navarro Rivero &amp; Andersson (2025) 在瑞典斯德哥爾摩一家貓咖做了 <B>227 小時直接觀察</B>、70 天、27 隻貓。關鍵實證：
+          </P>
+          <UL>
+            <LI>來客中位數 59 人/天（平日 34、週末 84.5，max 134）</LI>
+            <LI>顧客容量上限 14 人，店員平日 2、週末 3，貓 8–9 隻</LI>
+            <LI>貓咪行為分布：休息 31.7%、社交 12.8%、離開視線 10.7%</LI>
+            <LI>
+              <B>貓-人互動佔比只有 55.6%</B>（非接觸 29.0% + 接觸 23.2% + 其他 3.4%）；
+              反過來說，<B>貓-人 44.4% 的時間完全沒在互動</B>
+            </LI>
+            <LI>貓-貓互動率 0.58 次/貓/小時</LI>
+            <LI>貓咪明顯偏好高處（49.3% 時間在高處）</LI>
+          </UL>
+          <P>
+            這推翻了我原本的直覺：我以為「貓咪陪伴 = 顧客愛爆」，但實際上近一半時間貓根本在做自己的事。NekoServe 如果模擬成「每隻貓都在跟客人互動」會高估顧客滿意度。
+          </P>
+          <P>
+            Li et al. (2025) 針對 423 位中國寵物咖啡廳顧客做 <Term k="plsSem">PLS-SEM</Term> 結構方程模型，結論：
+            <B>咖啡品質對滿意度沒有顯著影響</B>，但<B>寵物互動性</B>、<B>寵物可愛度</B>、<B>清潔度</B>是核心因子。
+            所以 NekoServe 不模擬咖啡品質這件事，剛好跟這個發現對得上。
+          </P>
+          <P>
+            Ropski, Pike &amp; Ramezani (2023) 則從動物福祉角度比較寄養家庭 vs 貓咖的 797 隻貓：貓咖平均停留 23.06 天（中位數 16 天），疾病率顯著較高（p=0.03）。這提供制度性背景，但對排隊模型幫助有限。
+          </P>
+          <P><B>引用</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.3390/ani15223233">
+                Hirsch, E. N., Navarro Rivero, B., &amp; Andersson, M. (2025). Cats in a Cat Café: Individual Cat Behavior and Interactions with Humans. <i>Animals</i>, 15(22), 3233.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1177/21582440251378834">
+                Li, J., Wong, J. W. C., Fong, L. H. N., &amp; Zhou, Y. (2025). Attributes Influencing Pet Café Satisfaction and Social Media Sharing Intentions. <i>SAGE Open</i>.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1016/j.jveb.2023.02.005">
+                Ropski, M. K., Pike, A. L., &amp; Ramezani, N. (2023). Analysis of illness and length of stay for cats in a foster-based rescue organization compared with cats housed in a cat café. <i>Journal of Veterinary Behavior</i>.
+              </Ref>
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-4-gap-and-positioning',
+      icon: '🎯',
+      title: '2.4 研究缺口與本研究定位',
+      content: (
+        <div>
+          <P>
+            把前面三類文獻對齊看，會看到三個清楚的空白區：
+          </P>
+          <P><B>缺口 A：貓咖實證研究沒被接上排隊系統</B></P>
+          <P>
+            Hirsch 2025、Li 2025、Ropski 2023 把貓的行為、顧客心理、動物福祉講得很細，但沒有人把這些參數餵給一個服務系統模型去看尖峰會怎樣、放棄率會怎樣。
+          </P>
+          <P><B>缺口 B：餐飲排隊模擬沒處理「隨機資源」</B></P>
+          <P>
+            Hasugian 2020、Dbeis 2024 都只有固定服務台（店員），沒有人模擬「服務的一部分來自一個會自己亂跑、有時候就趴下去睡的貓」。貓在我的模型裡是 <Term k="agentBased">agent-based</Term> 的非固定資源，這跟傳統 <Term k="mmc">M/M/c</Term> 的 c 完全不一樣。
+          </P>
+          <P><B>缺口 C：<Term k="balking">Balking</Term> / <Term k="reneging">reneging</Term> 沒在「動物陪伴情境」被驗證</B></P>
+          <P>
+            Ancker 1963 的經典模型假設耐心是<Term k="exponential">指數分佈</Term>，但那是在沒有貓的場景。當現場有貓時，顧客的耐心是否會延長？短期受阻於貓咪互動的顧客，是否會提前 renege？目前沒有文獻處理這個交互作用。
+          </P>
+          <P><B>NekoServe 的定位</B></P>
+          <UL>
+            <LI>
+              整合 A + B + C 三領域，是我看到第一個把貓咖行為資料直接接到排隊模擬的開源工具。
+            </LI>
+            <LI>
+              目標讀者是研究者和業者，不是單一店家的決策依據。它是「設計思考工具」，不是預測器。
+            </LI>
+            <LI>
+              我在跑了一堆情境後發現一個有趣現象：只要店員滿載，貓咪的所有影響都被系統性稀釋。我把它叫做<B>瓶頸主導效應</B>，會寫進結果章節。
+            </LI>
+          </UL>
+          <Note>
+            💡 研究限制：14 個參數目前都是情境假設，不是針對特定店家 curve fitting 的結果。我下一步想做的，就是跟實際店家合作把 Hasugian 2020 那套流程搬過來。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-5-math-rho-correction',
+      icon: '🧮',
+      title: '2.5 數學修正：Dbeis 2024 的 ρ_R 公式',
+      content: (
+        <div>
+          <P>
+            這節是 2.2 的延伸。Dbeis &amp; Al-Sahili (2024) 最大的貢獻之一，就是指出傳統<Term k="utilization">利用率</Term>公式在有 <Term k="reneging">reneging</Term> 的系統裡會壞掉。
+          </P>
+          <P>傳統公式：</P>
+          <FormulaExplain
+            formula={String.raw`\rho = \frac{\lambda}{\mu}`}
+            hint={<>單服務台的利用率：到達率 λ 除以服務率 μ。值越接近 1 代表越忙。</>}
+            more={<>λ 是每分鐘平均進來幾位客人，μ 是每台服務台每分鐘平均能完成幾位客人。ρ 若大於 1 傳統上被當成「系統崩潰」，因為進來的速度超過處理的速度，隊伍會無限累積。下面的修正版會說明這個判斷在有 reneging 時會誤判。</>}
+          />
+          <P>
+            修正公式（Dbeis 2024, Eq. 7）：
+          </P>
+          <FormulaExplain
+            formula={String.raw`\rho_R = \frac{\lambda - RR}{\mu}`}
+            hint={<>從 λ 扣掉 reneging rate RR，再除以服務率 μ，才是真正壓在店員身上的負擔。</>}
+            more={<>RR 是每分鐘有幾個客人「排了但最後放棄」。他們根本沒被店員服務過，所以不該算進分子裡。把他們扣掉後的 <Term k="rhoCorrected">ρ_R</Term> 才反映實際資源使用率。Dbeis 的實測顯示：同一組資料在顛峰時段，傳統 ρ 會算出 1.14（看起來崩潰），但 ρ_R 只有 0.94（實際運作正常）。</>}
+          />
+          <P>
+            其中 RR 是 reneging rate（人/單位時間）。概念上很直覺：提早離開的人根本沒真的佔用店員，把他們扣掉才是「真實負擔」。Dbeis 用實測資料驗證：
+          </P>
+          <UL>
+            <LI>整體全時段：傳統 ρ = 0.74，修正 ρ_R = 0.69</LI>
+            <LI>早晨顛峰：傳統 ρ = 0.97，修正 ρ_R = 0.90</LI>
+            <LI>
+              Reneging 被偵測 + 全時段：傳統 ρ = <B>1.02（崩潰）</B>，但修正 ρ_R = <B>0.82（合理）</B>
+            </LI>
+            <LI>
+              Reneging 被偵測 + 早晨顛峰：傳統 ρ = <B>1.14（崩潰）</B>，但修正 ρ_R = <B>0.94（合理）</B>
+            </LI>
+          </UL>
+          <P>
+            這是一個方法論上的警訊：如果我在 NekoServe 只報傳統 ρ，當情境跑出 ρ &gt; 1 時使用者會以為系統崩潰，但實際上系統在跑、只是一堆人提早放棄。所以 NekoServe 的 Results 頁現在會把時間型 ρ（引擎實測）、古典 λ/(cμ) 與 <Term k="rhoCorrected">ρ_R</Term> 三個一起列出來，並在古典公式誤判為崩潰時加一條警示。
+          </P>
+          <P>
+            Dbeis 還給了一個非線性回歸模型，描述 reneging 密度如何隨顛峰敏感度 S ∈ [0,1] 變化（R² = 0.945）：
+          </P>
+          <FormulaExplain
+            formula={String.raw`\text{RCRF} = -2.056\,S + 1.37\,e^{S} - 1.173`}
+            hint={<>RCRF 描述「<Term k="reneging">reneging</Term> 客人佔比」隨尖峰程度 S 變化，S=0（離峰）RCRF 約 0，S=1（滿尖峰）RCRF 衝到 0.5 以上。</>}
+            more={<>這個模型的 R² = 0.945 表示對 Dbeis 的觀測資料解釋力很強。拆開看：-2.056S 是線性下壓項，1.37·eˢ 是指數膨脹項，兩項加起來形成「離峰幾乎沒人 renege，但一接近尖峰就指數爆炸」的形狀。常數 -1.173 是基準線校正。之後若要實作，只要把 S 當作「目前時段相對於當日最忙時段的比例」就可以直接餵進去。</>}
+          />
+          <P>
+            這個 <Term k="rcrf">RCRF</Term> 模型我暫時先不實作，等 Priority 1 一起處理。
+          </P>
+          <P><B>引用</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1080/23270012.2024.2408528">
+                Dbeis, A., &amp; Al-Sahili, K. (2024). Enhancing Queuing Theory Realism: Analysis of Reneging Behavior Impact on M/M/1 Drive-Thru Service System. <i>Journal of Management Analytics</i>, 11(4), 659–674.
+              </Ref>
             </LI>
           </UL>
         </div>

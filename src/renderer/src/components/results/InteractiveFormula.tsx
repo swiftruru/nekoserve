@@ -14,6 +14,10 @@ interface InteractiveFormulaProps {
   formula: string
   /** Clickable symbol parts with explanations. */
   parts: FormulaPart[]
+  /** i18n namespace for part lookups. Default: 'results'. */
+  i18nNs?: string
+  /** Base i18n path under the namespace. Default: 'formulaParts'. */
+  i18nBasePath?: string
 }
 
 /**
@@ -21,18 +25,28 @@ interface InteractiveFormulaProps {
  * Tapping a chip expands an explanation card with the symbol's
  * name, plain-language description, and unit. Designed to make
  * formulas approachable for students who are afraid of math.
+ *
+ * By default the chip explanations come from
+ * `results:formulaParts.<partKey>.{label,desc,unit,example}`. Pass
+ * `i18nNs` / `i18nBasePath` to point at a different dictionary
+ * (e.g. a shared library under `settings:formulaParts.*`).
  */
-export default function InteractiveFormula({ formula, parts }: InteractiveFormulaProps) {
-  const { t } = useTranslation('results')
+export default function InteractiveFormula({
+  formula,
+  parts,
+  i18nNs = 'results',
+  i18nBasePath = 'formulaParts',
+}: InteractiveFormulaProps) {
+  const { t } = useTranslation(i18nNs)
   const [openKey, setOpenKey] = useState<string | null>(null)
 
   const toggle = (key: string) => setOpenKey((prev) => (prev === key ? null : key))
 
   const activePart = openKey ? parts.find((p) => p.partKey === openKey) : null
-  const activeLabel = activePart ? t(`formulaParts.${activePart.partKey}.label`, { defaultValue: '' }) : ''
-  const activeDesc = activePart ? t(`formulaParts.${activePart.partKey}.desc`, { defaultValue: '' }) : ''
-  const activeUnit = activePart ? t(`formulaParts.${activePart.partKey}.unit`, { defaultValue: '' }) : ''
-  const activeExample = activePart ? t(`formulaParts.${activePart.partKey}.example`, { defaultValue: '' }) : ''
+  const activeLabel = activePart ? t(`${i18nBasePath}.${activePart.partKey}.label`, { defaultValue: '' }) : ''
+  const activeDesc = activePart ? t(`${i18nBasePath}.${activePart.partKey}.desc`, { defaultValue: '' }) : ''
+  const activeUnit = activePart ? t(`${i18nBasePath}.${activePart.partKey}.unit`, { defaultValue: '' }) : ''
+  const activeExample = activePart ? t(`${i18nBasePath}.${activePart.partKey}.example`, { defaultValue: '' }) : ''
 
   return (
     <div className="space-y-2">
@@ -46,7 +60,7 @@ export default function InteractiveFormula({ formula, parts }: InteractiveFormul
         </span>
         {parts.map((part) => {
           const isActive = openKey === part.partKey
-          const label = t(`formulaParts.${part.partKey}.label`, { defaultValue: part.partKey })
+          const label = t(`${i18nBasePath}.${part.partKey}.label`, { defaultValue: part.partKey })
           return (
             <button
               key={part.partKey}

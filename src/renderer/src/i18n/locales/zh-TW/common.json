@@ -17,6 +17,10 @@
   },
   "learningPanel": "學習筆記",
   "challenges": "挑戰",
+  "formulaExplain": {
+    "more": "更多說明 ▼",
+    "collapse": "收起 ▲"
+  },
   "toast": {
     "exportSuccess": "已匯出",
     "scenarioSaved": "情境已儲存",

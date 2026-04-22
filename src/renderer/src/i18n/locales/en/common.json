@@ -17,6 +17,10 @@
   },
   "learningPanel": "Learning notes",
   "challenges": "Challenges",
+  "formulaExplain": {
+    "more": "More ▼",
+    "collapse": "Hide ▲"
+  },
   "toast": {
     "exportSuccess": "Exported successfully",
     "scenarioSaved": "Scenario saved",

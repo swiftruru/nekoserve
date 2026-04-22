@@ -333,6 +333,27 @@ def run_simulation(config_dict: dict) -> dict:
         if total_arrived > 0 else 0.0
     )
 
+    # Classical-queueing λ, RR, μ and the paired ρ / ρ_R shown alongside the
+    # time-based utilizations above. The modified-utilization formula is
+    # ρ_R = (λ − RR) / μ from Dbeis & Al-Sahili (2024),
+    # "Enhancing Queuing Theory Realism", J. Management Analytics 11(4),
+    # DOI: 10.1080/23270012.2024.2408528. For the multi-server cafe here
+    # we normalize by staff count, giving the standard M/M/c form
+    # ρ = λ / (c · μ).
+    arrival_rate = total_arrived / sim_dur if sim_dur > 0 else 0.0
+    reneging_rate = total_abandoned / sim_dur if sim_dur > 0 else 0.0
+    mean_service_time = config.orderTime + config.preparationTime
+    service_rate = 1.0 / mean_service_time if mean_service_time > 0 else 0.0
+    staff_c = max(1, config.staffCount)
+    rho_classical = (
+        arrival_rate * mean_service_time / staff_c
+        if mean_service_time > 0 else 0.0
+    )
+    rho_corrected = (
+        (arrival_rate - reneging_rate) * mean_service_time / staff_c
+        if mean_service_time > 0 else 0.0
+    )
+
     result: dict[str, Any] = {
         "config": config.to_dict(),
         "metrics": {
@@ -348,6 +369,12 @@ def run_simulation(config_dict: dict) -> dict:
             "totalCustomersServed": total_served,
             "totalCustomersArrived": total_arrived,
             "abandonRate": abandon_rate,
+            "arrivalRate": round(arrival_rate, 6),
+            "renegingRate": round(reneging_rate, 6),
+            "serviceRate": round(service_rate, 6),
+            "meanServiceTime": round(mean_service_time, 4),
+            "rhoClassical": round(rho_classical, 4),
+            "rhoCorrected": round(rho_corrected, 4),
             "waitForSeatP50": _percentile(wait_seat_times, 50),
             "waitForSeatP95": _percentile(wait_seat_times, 95),
             "waitForSeatP99": _percentile(wait_seat_times, 99),

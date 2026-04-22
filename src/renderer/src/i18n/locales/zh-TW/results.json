@@ -208,6 +208,54 @@
       "bottleneck": {
         "label": "瓶頸（Bottleneck）",
         "def": "系統中利用率最高的資源，決定整體吞吐量的上限。擴充瓶頸能直接提升產能，擴充非瓶頸則完全沒有效果。在 NekoServe 裡可能是座位、店員、或貓咪。"
+      },
+      "reneging": {
+        "label": "Reneging（反悔 / 提早離開）",
+        "def": "顧客「已經在排隊了，但等太久放棄離開」的行為。Ancker & Gafarian (1963) 的古典模型假設耐心時間是指數分佈。NekoServe 的 `maxWaitTime` 就是 reneging 門檻。注意：跟 balking（一看到排隊就不加入）不一樣。"
+      },
+      "balking": {
+        "label": "Balking（猶豫 / 不加入）",
+        "def": "顧客「看到隊伍太長就直接不加入」的行為，還沒排上就走。經典假設 balking 機率 = n/N（n = 目前人數，N = 容量上限）。NekoServe 的座位數被佔滿時就會發生 balking。"
+      },
+      "logNormal": {
+        "label": "Log-Normal（對數常態分佈）",
+        "def": "變數取對數之後呈常態分佈的機率分佈。服務時間常用它來描述，因為它天然排除負值、又允許偶爾出現很長的服務。Dbeis 2024 實證 drive-thru 服務時間是 Log-Normal（均值 2.01 分、σ=0.9 分）。"
+      },
+      "weibull": {
+        "label": "Weibull 分佈",
+        "def": "形狀參數可調的連續分佈，常用來描述「失效時間」或帶有形狀偏斜的間隔時間。Hasugian 2020 對印尼快餐的到達間隔做 curve fitting 得到 Weibull（均值 67.5 秒），跟 Dbeis 2024 的 Poisson 結果不同，顯示情境依賴。"
+      },
+      "rcrf": {
+        "label": "RCRF（Reneging Customers Relative Frequency）",
+        "def": "Dbeis 2024 提出的非線性回歸模型（R²=0.945）：RCRF = -2.056S + 1.37·eˢ - 1.173，其中 S ∈ [0,1] 是顛峰敏感度（越接近顛峰 S 越大）。用來描述 reneging 密度如何隨尖峰程度變化。"
+      },
+      "rhoCorrected": {
+        "label": "ρ_R（Dbeis 2024 修正利用率）",
+        "def": "Dbeis 2024 的修正利用率公式：ρ_R = (λ − RR) / μ。把 reneging rate RR 從 λ 扣掉再除以服務率 μ，因為提早離開的客人沒真的用到服務台。修正後就不會在有人大量放棄時看到「ρ > 1 假崩潰」。"
+      },
+      "normalDist": {
+        "label": "常態分佈（Normal / Gaussian）",
+        "def": "鐘型曲線，由均值與標準差決定。NekoServe 的點餐、製餐、用餐時間都用常態（σ = 0.2μ）並截斷下限為 1 分。Hasugian 2020 對快餐服務時間的 curve fitting 也得到常態分佈。"
+      },
+      "curveFit": {
+        "label": "Curve Fitting（曲線擬合）",
+        "def": "用實測資料去挑出最合適的機率分佈與其參數的過程。常用工具如 EasyFit。教授指的「每家店不一樣」就是在講這件事：要 curve fit 目標店家的實際資料，才能得到對應分佈。"
+      },
+      "mm1": {
+        "label": "M/M/1 模型",
+        "def": "Kendall 符號的最簡排隊系統：到達是 Poisson、服務時間是指數、只有 1 個服務台。Dbeis 2024 的 drive-thru 研究就是 M/M/1，因為窗口只有一個點餐員。"
+      },
+      "plsSem": {
+        "label": "PLS-SEM（偏最小平方結構方程模型）",
+        "def": "一種處理潛在變數因果關係的統計方法，適合樣本小或變數間非線性的情況。Li et al. (2025) 用它分析 423 位中國寵物咖啡廳顧客，發現「寵物互動性」「可愛度」「清潔度」是核心因子，咖啡品質反而不顯著。"
+      },
+      "chiSquare": {
+        "label": "卡方檢定（Chi-Square Test）",
+        "def": "檢驗「實測資料是否符合某個分佈」的統計方法。p 值越高代表越符合假設分佈。Dbeis 2024 對到達、服務、reneging 三種分佈都做了卡方檢定（p = 0.414、0.634、0.669），全都通過，才敢確認 Poisson / Log-Normal / Exponential。"
+      },
+      "agentBased": {
+        "label": "Agent-Based（代理人基底建模）",
+        "def": "把每個個體（customer、cat）當作獨立自主的 agent 來模擬，agent 之間透過互動產生整體行為。NekoServe 的貓咪就是 agent：每隻貓是獨立 SimPy process，會自己決定何時主動找顧客、何時休息，不是被動的排隊資源。"
       }
     }
   },
@@ -514,5 +562,21 @@
       "unit": "分鐘",
       "example": "設定 15 分鐘表示貓平均睡 15 分鐘才醒來重新找客人互動。"
     }
+  },
+  "rhoCorrection": {
+    "title": "古典 ρ vs Dbeis 2024 修正 ρ_R",
+    "summary": "上面那三格時間佔用率是引擎實測的真值，這裡再把古典 M/M/c 的 ρ 和 Dbeis & Al-Sahili 2024 的修正 ρ_R 並排給你看，方便和文獻對照。",
+    "classicalLabel": "古典公式",
+    "correctedLabel": "修正公式",
+    "classicalHint": "到達率 ÷（店員數 × 服務率）。接近 1 代表店員已經被塞滿。",
+    "correctedHint": "從 λ 先扣掉「提早放棄」的客人再看，才是店員真正的負擔。",
+    "friendlyExplain": "意思是：有些顧客等不到就走了，他們其實沒真的佔用店員。把這批人扣掉再看 ρ，才知道系統是不是真的撐不住。",
+    "lambda": "λ（人/分）",
+    "renegingRate": "RR（人/分）",
+    "meanService": "E[S]（分鐘）",
+    "staffC": "c（店員）",
+    "warningTitle": "⚠ 古典公式誤判為崩潰",
+    "warningText": "古典 ρ 算出來超過 1 看起來像系統炸了，但把中途放棄的顧客扣掉後 ρ_R 仍小於 1，實際負擔沒那麼重。這正是 Dbeis 2024 想修正的地方。",
+    "citationText": "公式依據：Dbeis & Al-Sahili (2024), Enhancing Queuing Theory Realism, J. Management Analytics 11(4):659–674"
   }
 }

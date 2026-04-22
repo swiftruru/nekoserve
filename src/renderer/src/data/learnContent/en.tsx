@@ -3,8 +3,9 @@
  * Classroom-note style: formulas, examples, and the "why this design" reasoning.
  */
 
-import { Formula, Example, Note, P, B, UL, LI, Ref, type LearnContent } from './shared'
+import { Formula, Example, Note, P, B, UL, LI, Ref, Term, type LearnContent } from './shared'
 import { BlockMath } from '../../components/Math'
+import FormulaExplain from '../../components/FormulaExplain'
 
 export const LEARN_CONTENT_EN: LearnContent = {
 
@@ -240,6 +241,230 @@ export const LEARN_CONTENT_EN: LearnContent = {
               <B>Not good for</B>: real investment decisions, quantitative predictions
               in government reports, scientific papers that need bounded error.
               Those all need measured data, which scenario assumptions cannot stand in for.
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-1-queueing-foundation',
+      icon: '📘',
+      title: '2.1 Discrete-event simulation & queueing theory foundations',
+      content: (
+        <div>
+          <P>
+            NekoServe's methodological lineage goes back to Erlang's 1909 telephone-exchange work. Classical queueing theory decomposes the problem into three probabilistic pieces — arrivals, service, and the queue discipline — which Kendall later codified as <Term k="mmc">M/M/c</Term>: Markovian arrivals (<Term k="poisson">Poisson</Term>), Markovian service times (<Term k="exponential">Exponential</Term>), and c servers.
+          </P>
+          <P>
+            The model has to track arrival rate <Term k="lambdaRate">λ</Term>, service rate μ, and system occupancy L. <Term k="littlesLaw">Little's Law</Term> ties these together:
+          </P>
+          <FormulaExplain
+            formula={String.raw`L = \lambda W, \qquad \rho = \frac{\lambda}{c\,\mu}`}
+            hint={<>Left: average system population = arrival rate × average time in system. Right: <Term k="utilization">utilization ρ</Term> = arrivals ÷ (servers × per-server service rate).</>}
+            more={<>Little's Law is distribution-free — it holds for any stationary system. The right-hand side requires ρ &lt; 1 for stability; as ρ → 1 the queue length blows up (which is why in practice you never want staff pinned at 100%).</>}
+          />
+          <P>
+            <Term k="balking">Balking</Term> and <Term k="reneging">reneging</Term> — customers refusing to join, or bailing out of the queue — were formalized by Ancker &amp; Gafarian (1963). They assumed patience times follow an <Term k="exponential">Exponential distribution</Term>, which is still the textbook default. NekoServe's maximum-wait parameter inherits this.
+          </P>
+          <P>
+            I picked <Term k="des">DES</Term> over a closed-form solution because cats are a stochastic non-fixed resource, which breaks the analytical tractability of plain M/M/c. DES lets me watch each event, run sensitivity sweeps, and study tail behavior at peaks — things closed-form solutions can't give.
+          </P>
+          <P><B>References</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.11.1.88">
+                Ancker Jr., C. J., &amp; Gafarian, A. V. (1963). Some Queuing Problems with Balking and Reneging. I. <i>Operations Research</i>, 11(1), 88–100.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.11.6.928">
+                Ancker Jr., C. J., &amp; Gafarian, A. V. (1963). Some Queuing Problems with Balking and Reneging. II. <i>Operations Research</i>, 11(6), 928–937.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1287/opre.9.3.383">
+                Little, J. D. C. (1961). A Proof for the Queuing Formula: L = λW. <i>Operations Research</i>, 9(3), 383–387.
+              </Ref>
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-2-service-empirical',
+      icon: '☕',
+      title: '2.2 Empirical service-system studies in F&B',
+      content: (
+        <div>
+          <P>
+            My advisor said "every shop is different" — the literature bears that out. Hasugian et al. (2020) did a <Term k="curveFit">curve fit</Term> with EasyFit on an Indonesian fast-food chain and reported: interarrival times fit a <Term k="weibull"><B>Weibull distribution</B></Term> (mean 67.5 s), service times fit a <Term k="normalDist"><B>Normal distribution</B></Term> (mean 125.1 s). That's the most concrete "curve fitting" example I have in hand.
+          </P>
+          <P>
+            Dbeis &amp; Al-Sahili (2024), however, studied a Palestinian drive-thru (<Term k="mm1">M/M/1</Term>, 123 hours of observation, 2,713 customers) and, with <Term k="chiSquare">chi-square</Term> tests, landed on: arrivals are <Term k="poisson"><B>Poisson</B></Term> (22/hr, p=0.414), service times are <Term k="logNormal"><B>Log-Normal</B></Term> (mean 2.01 min, σ=0.9, p=0.634), and <Term k="reneging">reneging</Term> event spacing is <Term k="exponential"><B>Exponential</B></Term> (λ=0.23, p=0.669).
+          </P>
+          <P>
+            Two rigorous studies, two different arrival distributions (Weibull vs Poisson). Not one being wrong — the shop's context matters. I took away two things: first, NekoServe's defaults need to be swappable; second, Hasugian's pipeline is the template if I ever calibrate against a specific real café.
+          </P>
+          <P>
+            Dbeis also caught a subtle point: reneging <i>event spacing</i> is Poisson-like, but the reneging <i>rate itself</i> is strongly time-varying (sharply peaking at rush hour, nonlinearly in a peak-sensitivity index S ∈ [0,1]). Their correction formula (the <Term k="rcrf">RCRF</Term> model) based on that observation gets its own section in 2.5.
+          </P>
+          <P><B>References</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1088/1757-899X/851/1/012028">
+                Hasugian, I. A., Vandrick, N., &amp; Dewi, E. (2020). Analysis of Queuing Models of Fast Food Restaurant with Simulation Approach. <i>IOP Conf. Ser. Mater. Sci. Eng.</i>, 851, 012028.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1080/23270012.2024.2408528">
+                Dbeis, A., &amp; Al-Sahili, K. (2024). Enhancing Queuing Theory Realism: Analysis of Reneging Behavior Impact on M/M/1 Drive-Thru Service System. <i>Journal of Management Analytics</i>, 11(4), 659–674.
+              </Ref>
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-3-cat-cafe-uniqueness',
+      icon: '🐾',
+      title: '2.3 Why cat cafés need their own model',
+      content: (
+        <div>
+          <P>
+            Cat cafés started in Taiwan, took off in Japan, and spread to Europe and North America. But through 2025 there is almost nothing that treats a cat café as a queueing system. The three closest studies I found:
+          </P>
+          <P>
+            Hirsch, Navarro Rivero &amp; Andersson (2025) did <B>227 hours of direct observation</B> across 70 days and 27 cats at a Stockholm cat café. Key empirical numbers:
+          </P>
+          <UL>
+            <LI>Median daily arrivals: 59 (weekday 34, weekend 84.5, max 134)</LI>
+            <LI>Capacity cap: 14 customers; staff 2 weekday / 3 weekend; 8–9 cats</LI>
+            <LI>Cat behavior mix: resting 31.7%, social 12.8%, out-of-sight 10.7%</LI>
+            <LI>
+              <B>Cat-human interaction fills only 55.6% of observed time</B> (non-contact 29.0%, contact 23.2%, other 3.4%); conversely, <B>cats and humans are doing nothing together 44.4% of the time</B>
+            </LI>
+            <LI>Cat-cat interaction rate: 0.58 interactions/cat/hr</LI>
+            <LI>Cats clearly prefer elevated perches (49.3% of observed time)</LI>
+          </UL>
+          <P>
+            This overturned my intuition. I assumed "cat presence = customers delighted." In reality cats spend nearly half their time doing their own thing. A NekoServe that assumes every cat is always engaging a customer would overstate satisfaction.
+          </P>
+          <P>
+            Li et al. (2025) ran <Term k="plsSem">PLS-SEM</Term> on 423 Chinese pet café customers and found that <B>coffee quality has no significant impact on satisfaction</B>, while <B>pet interactivity</B>, <B>cuteness</B>, and <B>cleanliness</B> are the main drivers. Fortunately NekoServe already ignores coffee quality — that matches the empirical finding.
+          </P>
+          <P>
+            Ropski, Pike &amp; Ramezani (2023) compared 797 cats across foster networks vs cat cafés: cat-café mean stay was 23.06 days (median 16), with a significantly higher illness rate (p=0.03). Useful institutional backdrop, less actionable for the queueing model itself.
+          </P>
+          <P><B>References</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.3390/ani15223233">
+                Hirsch, E. N., Navarro Rivero, B., &amp; Andersson, M. (2025). Cats in a Cat Café: Individual Cat Behavior and Interactions with Humans. <i>Animals</i>, 15(22), 3233.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1177/21582440251378834">
+                Li, J., Wong, J. W. C., Fong, L. H. N., &amp; Zhou, Y. (2025). Attributes Influencing Pet Café Satisfaction and Social Media Sharing Intentions. <i>SAGE Open</i>.
+              </Ref>
+            </LI>
+            <LI>
+              <Ref href="https://doi.org/10.1016/j.jveb.2023.02.005">
+                Ropski, M. K., Pike, A. L., &amp; Ramezani, N. (2023). Analysis of illness and length of stay for cats in a foster-based rescue organization compared with cats housed in a cat café. <i>Journal of Veterinary Behavior</i>.
+              </Ref>
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-4-gap-and-positioning',
+      icon: '🎯',
+      title: '2.4 Research gap & how NekoServe positions itself',
+      content: (
+        <div>
+          <P>
+            Lining up the three literature clusters side by side, three clear gaps show up:
+          </P>
+          <P><B>Gap A: cat-café empirical research isn't plugged into a queueing system</B></P>
+          <P>
+            Hirsch 2025, Li 2025, and Ropski 2023 document cat behavior, customer psychology, and animal welfare in detail, but no one has fed those numbers into a service-system simulation to see what peak hour or abandonment looks like.
+          </P>
+          <P><B>Gap B: F&amp;B queueing simulations don't model "stochastic resources"</B></P>
+          <P>
+            Hasugian 2020 and Dbeis 2024 both assume fixed servers (staff). None of them simulates "part of the service is delivered by an animal that wanders off on its own and occasionally takes a nap." NekoServe's cats are <Term k="agentBased">agent-based</Term> non-fixed resources, structurally different from the c in <Term k="mmc">M/M/c</Term>.
+          </P>
+          <P><B>Gap C: <Term k="balking">balking</Term> / <Term k="reneging">reneging</Term> hasn't been validated "in the presence of animals"</B></P>
+          <P>
+            Ancker 1963 assumes <Term k="exponential">exponential</Term> patience, but that's in a cat-free context. When there's a cat nearby, does patience stretch? Does a customer who gets temporarily stuck during a cat visit renege sooner? Nobody has addressed this interaction.
+          </P>
+          <P><B>NekoServe's positioning</B></P>
+          <UL>
+            <LI>First open-source tool I'm aware of that plugs cat-café behavior data directly into a queueing simulation, bridging gaps A + B + C.</LI>
+            <LI>Target audience is researchers and operators — this is a design-thinking tool, not a predictor for any single café.</LI>
+            <LI>
+              After running many scenarios, I noticed that whenever staff saturate, <B>every cat-side effect gets systematically diluted</B>. I call this the <B>bottleneck-dominance effect</B> and write it up in the results chapter.
+            </LI>
+          </UL>
+          <Note>
+            💡 Scope caveat: all 14 parameters are scenario assumptions, not curve-fit results from a specific café. The obvious next step is to replicate Hasugian 2020's pipeline against a real partner café.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'lit-2-5-math-rho-correction',
+      icon: '🧮',
+      title: '2.5 Math correction: Dbeis 2024 ρ_R formula',
+      content: (
+        <div>
+          <P>
+            A follow-on to 2.2. One of the biggest contributions in Dbeis &amp; Al-Sahili (2024) is pointing out that the classical <Term k="utilization">utilization</Term> formula breaks down when the system has <Term k="reneging">reneging</Term>.
+          </P>
+          <P>Classical:</P>
+          <FormulaExplain
+            formula={String.raw`\rho = \frac{\lambda}{\mu}`}
+            hint={<>Single-server utilization: arrival rate λ over service rate μ. Values close to 1 mean the server is slammed.</>}
+            more={<>λ is customers arriving per minute, μ is customers a single server can finish per minute. When ρ &gt; 1 the classical reading is "system collapse" — arrivals outpace service and the queue diverges. The corrected form below shows this reading is wrong when customers keep walking away before being served.</>}
+          />
+          <P>Dbeis 2024 corrected (Eq. 7):</P>
+          <FormulaExplain
+            formula={String.raw`\rho_R = \frac{\lambda - RR}{\mu}`}
+            hint={<>Subtract the reneging rate RR from λ first, then divide by μ. That's the actual load staff experience.</>}
+            more={<>RR is customers per minute who joined and later bailed out. They never actually used the server, so they shouldn't be in the numerator. The <Term k="rhoCorrected">ρ_R</Term> that remains is the true resource utilization. Dbeis's data: at morning peak, classical ρ reads 1.14 (fake collapse) while ρ_R is only 0.94 (system actually running fine).</>}
+          />
+          <P>
+            RR is the reneging rate (customers per unit time). The intuition is direct: customers who left early never actually consumed server time, so subtracting them out gives the real load. Dbeis validated it against observed data:
+          </P>
+          <UL>
+            <LI>All time windows: classical ρ = 0.74, corrected ρ_R = 0.69</LI>
+            <LI>Morning peak: classical ρ = 0.97, corrected ρ_R = 0.90</LI>
+            <LI>
+              Reneging-detected + all windows: classical ρ = <B>1.02 (collapse)</B>, corrected ρ_R = <B>0.82 (reasonable)</B>
+            </LI>
+            <LI>
+              Reneging-detected + morning peak: classical ρ = <B>1.14 (collapse)</B>, corrected ρ_R = <B>0.94 (reasonable)</B>
+            </LI>
+          </UL>
+          <P>
+            That's a methodological red flag. If NekoServe only reported the classical ρ, a scenario that produces ρ &gt; 1 would look like a system crash, when in fact the system runs fine — it's just that a lot of people walked away. So NekoServe's Results page now shows three ρ values side by side: time-based (engine-measured), classical λ/(cμ), and <Term k="rhoCorrected">ρ_R</Term> — with a warning banner when the classical formula falsely reports collapse.
+          </P>
+          <P>
+            Dbeis also provides a nonlinear regression that describes how reneging density moves with peak-hour sensitivity S ∈ [0,1] (R² = 0.945):
+          </P>
+          <FormulaExplain
+            formula={String.raw`\text{RCRF} = -2.056\,S + 1.37\,e^{S} - 1.173`}
+            hint={<>RCRF is the share of customers who <Term k="reneging">renege</Term>. Near off-peak (S=0) it's tiny; at peak (S=1) it explodes to 0.5+.</>}
+            more={<>R² = 0.945 means the model fits Dbeis's observations tightly. The -2.056S term bends the curve down linearly; the 1.37·eˢ term blows it up exponentially as S rises; the -1.173 constant anchors the baseline. Together they produce "near-zero reneging off-peak, explosive reneging at peak." If later implemented, feeding S = (current hour's arrivals ÷ peak-hour arrivals) is the natural mapping.</>}
+          />
+          <P>
+            I'm deferring the <Term k="rcrf">RCRF</Term> model to Priority 1.
+          </P>
+          <P><B>References</B></P>
+          <UL>
+            <LI>
+              <Ref href="https://doi.org/10.1080/23270012.2024.2408528">
+                Dbeis, A., &amp; Al-Sahili, K. (2024). Enhancing Queuing Theory Realism: Analysis of Reneging Behavior Impact on M/M/1 Drive-Thru Service System. <i>Journal of Management Analytics</i>, 11(4), 659–674.
+              </Ref>
             </LI>
           </UL>
         </div>

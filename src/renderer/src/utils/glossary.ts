@@ -86,6 +86,54 @@ export const TERMS: TermDef[] = [
     key: 'bottleneck',
     keywords: ['瓶頸', 'bottleneck'],
   },
+  {
+    key: 'reneging',
+    keywords: ['reneging', '反悔', '提早放棄'],
+  },
+  {
+    key: 'balking',
+    keywords: ['balking', 'balk', '猶豫離開'],
+  },
+  {
+    key: 'logNormal',
+    keywords: ['Log-Normal', 'log-normal', '對數常態'],
+  },
+  {
+    key: 'weibull',
+    keywords: ['Weibull', '韋伯分佈'],
+  },
+  {
+    key: 'rcrf',
+    keywords: ['RCRF'],
+  },
+  {
+    key: 'rhoCorrected',
+    keywords: ['ρ_R'],
+  },
+  {
+    key: 'normalDist',
+    keywords: ['常態分佈', 'Normal distribution', 'Normal 分佈'],
+  },
+  {
+    key: 'curveFit',
+    keywords: ['curve fitting', 'curve fit'],
+  },
+  {
+    key: 'mm1',
+    keywords: ['M/M/1'],
+  },
+  {
+    key: 'plsSem',
+    keywords: ['PLS-SEM'],
+  },
+  {
+    key: 'chiSquare',
+    keywords: ['卡方檢定', 'chi-square', 'chi square'],
+  },
+  {
+    key: 'agentBased',
+    keywords: ['agent-based', 'Agent-Based', 'agent based'],
+  },
 ]
 
 /**

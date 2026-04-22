@@ -55,6 +55,9 @@ test-results/
 docs/screenshots/
 docs/screenshots-v2/
 
+# Unpublished internal planning docs
+docs/NekoServe_文獻探討改進_ClaudeCodePlan.md
+
 # Python virtual envs
 .venv/
 venv/
