@@ -20,6 +20,8 @@ import WaitHistogram from '../components/results/WaitHistogram'
 import KeyMomentsTimeline from '../components/results/KeyMomentsTimeline'
 import KingmanPrediction from '../components/results/KingmanPrediction'
 import RhoCorrectionPanel from '../components/results/RhoCorrectionPanel'
+import WelfareSection from '../components/results/WelfareSection'
+import ParetoFrontier from '../components/results/ParetoFrontier'
 import UtilizationTimeSeries from '../components/results/UtilizationTimeSeries'
 import StayDistribution from '../components/results/StayDistribution'
 import type { LearningLevel } from '../components/learning/types'
@@ -641,6 +643,11 @@ export default function ResultsPage({
             </div>
             <div className="mt-3">
               <RhoCorrectionPanel metrics={metrics} level={level} />
+            </div>
+            {/* v2.0 Epic D: cat welfare + Pareto frontier */}
+            <div className="mt-3 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3">
+              <WelfareSection metrics={metrics} />
+              <ParetoFrontier currentMetrics={metrics} history={history} />
             </div>
           </ResultsSection>
 

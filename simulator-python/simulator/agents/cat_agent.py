@@ -16,12 +16,16 @@ from random import Random
 from typing import Callable
 
 from ..constants.hirsch2025 import (
+    CafeArea,
     CatBehaviorState,
     HIRSCH_BASE_PROBABILITIES,
     HIRSCH_OCCUPANCY_MODIFIERS,
     HIRSCH_STATE_MEAN_DURATION,
+    HIRSCH_VERTICAL_BASE,
     OccupancyLevel,
+    VerticalLevel,
     classify_occupancy,
+    shelf_preference_for_occupancy,
 )
 
 
@@ -116,13 +120,15 @@ UnavailableStates = frozenset(
 
 @dataclass
 class CatAgent:
-    """One cat's FSM state + personality. Stateless w.r.t. SimPy env;
-    core.py owns the timing / yielding."""
+    """One cat's FSM state + personality + 2.5D position. Stateless
+    w.r.t. SimPy env; core.py owns the timing / yielding."""
 
     cat_id: int
     label: str
     personality: CatPersonality
     state: CatBehaviorState = CatBehaviorState.RESTING
+    area: CafeArea = CafeArea.AREA_1
+    level: VerticalLevel = VerticalLevel.FLOOR
 
     def pick_next_state(
         self,
@@ -176,6 +182,68 @@ class CatAgent:
     def is_available_to_interact(self) -> bool:
         """Does the current state allow the cat to visit a customer seat?"""
         return self.state in InteractableStates
+
+    def pick_position(
+        self,
+        rng: Random,
+        seated_count: int,
+    ) -> tuple[CafeArea, VerticalLevel | None]:
+        """
+        Sample the next (area, level) for this cat given current
+        state + occupancy + personality. OUT_OF_LOUNGE routes to the
+        cat room (no vertical level). Other states sample an area
+        weighted by personality and a vertical level weighted by the
+        Hirsch shelf-preference curve.
+        """
+        if self.state == CatBehaviorState.OUT_OF_LOUNGE:
+            return CafeArea.CAT_ROOM, None
+
+        # Stress-sensitive cats bias toward Area 2 (quieter side) at high occupancy.
+        occupancy = classify_occupancy(seated_count)
+        stress = self.personality.stress_sensitivity
+        if occupancy == OccupancyLevel.HIGH and stress > 0.6:
+            area = CafeArea.AREA_2 if rng.random() < 0.7 else CafeArea.AREA_1
+        else:
+            area = CafeArea.AREA_1 if rng.random() < 0.6 else CafeArea.AREA_2
+
+        # Vertical: blend base preference with occupancy-driven shelf
+        # preference. Active states (PLAYING / EXPLORING / MOVING) lean
+        # toward FLOOR / FURNITURE; sedentary states lean SHELF.
+        shelf_pref = shelf_preference_for_occupancy(occupancy)
+        if self.state in (
+            CatBehaviorState.PLAYING,
+            CatBehaviorState.EXPLORING,
+            CatBehaviorState.MOVING,
+            CatBehaviorState.SOCIALIZING,
+        ):
+            # Active: FLOOR-heavy
+            weights = {
+                VerticalLevel.FLOOR: 0.5,
+                VerticalLevel.FURNITURE: 0.35,
+                VerticalLevel.SHELF: 0.15,
+            }
+        elif self.state in (CatBehaviorState.ALERT, CatBehaviorState.HIDDEN):
+            # Defensive: shelf-heavy, scaled by occupancy
+            weights = {
+                VerticalLevel.FLOOR: 0.1,
+                VerticalLevel.FURNITURE: 0.25,
+                VerticalLevel.SHELF: 0.65,
+            }
+            weights[VerticalLevel.SHELF] = max(weights[VerticalLevel.SHELF], shelf_pref)
+        else:
+            # Base distribution (RESTING / GROOMING)
+            weights = dict(HIRSCH_VERTICAL_BASE)
+            # Raise shelf weight in proportion to occupancy
+            weights[VerticalLevel.SHELF] = max(weights[VerticalLevel.SHELF], shelf_pref)
+
+        total = sum(weights.values())
+        threshold = rng.random() * total
+        running = 0.0
+        for lvl, w in weights.items():
+            running += w
+            if running >= threshold:
+                return area, lvl
+        return area, VerticalLevel.FLOOR
 
 
 OnStateChange = Callable[[CatBehaviorState, CatBehaviorState], None]

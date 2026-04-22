@@ -24,6 +24,78 @@ import type { CafeState, CatSlot, CustomerRuntime } from './replay'
 export const VIEW_W = 1000
 export const VIEW_H = 500
 
+// ── v2.0 Epic A: 3-area floor plan overlay ─────────────────
+//
+// Layered on top of the existing seat / cat / kitchen grids as a
+// semantic backdrop. When 3D mode is enabled the CafeScene paints
+// these rectangles with faint fills + labels; when disabled, they
+// are hidden and the single-floor v1.x layout appears.
+//
+// Rect coordinates use the existing 1000×500 view box so the overlay
+// does not reflow any existing animation path.
+
+export type CafeAreaId = 'AREA_1' | 'AREA_2' | 'CAT_ROOM'
+
+export interface AreaRect {
+  id: CafeAreaId
+  /** Top-left x in SVG units. */
+  x: number
+  y: number
+  w: number
+  h: number
+  /** Center point for placing the label. */
+  labelX: number
+  labelY: number
+}
+
+export const AREAS: Record<CafeAreaId, AreaRect> = {
+  // Area 2: upper half (Area 2 in Hirsch floor plan is the quieter,
+  // table-heavy zone). Spans the seat-grid bay.
+  AREA_2: { id: 'AREA_2', x: 230, y: 60, w: 350, h: 180, labelX: 405, labelY: 150 },
+  // Area 1: lower half (sofa + main lounge, where most cat-human
+  // interaction happens).
+  AREA_1: { id: 'AREA_1', x: 230, y: 250, w: 350, h: 190, labelX: 405, labelY: 345 },
+  // Cat Room: customers never enter. The OUT_OF_LOUNGE behavior state
+  // pulls cats offstage into this rectangle.
+  CAT_ROOM: { id: 'CAT_ROOM', x: 720, y: 60, w: 220, h: 180, labelX: 830, labelY: 150 },
+}
+
+export interface ShelfAnchor {
+  /** Label such as "S-L1" so event log can refer back to a shelf. */
+  id: string
+  x: number
+  y: number
+  /** Which area this shelf belongs to (visual grouping only). */
+  area: CafeAreaId
+}
+
+export const SHELVES: ShelfAnchor[] = [
+  { id: 'S-A2-1', x: 250, y: 80,  area: 'AREA_2' },
+  { id: 'S-A2-2', x: 560, y: 80,  area: 'AREA_2' },
+  { id: 'S-A1-1', x: 250, y: 270, area: 'AREA_1' },
+  { id: 'S-A1-2', x: 560, y: 270, area: 'AREA_1' },
+  { id: 'S-TREE', x: 234, y: 355, area: 'AREA_1' },  // cat tree along left wall
+  { id: 'S-CR-1', x: 740, y: 80,  area: 'CAT_ROOM' },
+  { id: 'S-CR-2', x: 920, y: 80,  area: 'CAT_ROOM' },
+]
+
+export interface FurnitureSpot {
+  id: string
+  x: number
+  y: number
+  area: CafeAreaId
+}
+
+export const FURNITURE_SPOTS: FurnitureSpot[] = [
+  { id: 'F-A1-SOFA-L', x: 270, y: 415, area: 'AREA_1' },
+  { id: 'F-A1-SOFA-R', x: 560, y: 415, area: 'AREA_1' },
+  { id: 'F-A1-TABLE',  x: 410, y: 400, area: 'AREA_1' },
+  { id: 'F-A2-T1',     x: 290, y: 215, area: 'AREA_2' },
+  { id: 'F-A2-T2',     x: 410, y: 215, area: 'AREA_2' },
+  { id: 'F-A2-T3',     x: 530, y: 215, area: 'AREA_2' },
+  { id: 'F-CR-PERCH',  x: 830, y: 210, area: 'CAT_ROOM' },
+]
+
 // ── Zone anchors (visual centers) ──────────────────────────
 
 export const DOOR = { x: 60, y: 250 } as const

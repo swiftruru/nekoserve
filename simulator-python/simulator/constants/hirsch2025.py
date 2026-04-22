@@ -91,6 +91,61 @@ def classify_occupancy(seated_count: int) -> OccupancyLevel:
 # state-duration estimates in the discussion. Adjust via personality.
 # ─────────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────
+# Spatial model (Epic A): 3 areas × 3 vertical levels.
+# Cat Room (OUT_OF_LOUNGE) is a separate horizontal area with no
+# vertical subdivision. Hirsch 2025 Figure 4b: shelf preference rises
+# from ~35% at low occupancy to ~65% at high occupancy.
+# ─────────────────────────────────────────────────────────────────────
+
+class CafeArea(str, Enum):
+    AREA_1 = "AREA_1"
+    AREA_2 = "AREA_2"
+    CAT_ROOM = "CAT_ROOM"
+
+
+class VerticalLevel(str, Enum):
+    FLOOR = "FLOOR"
+    FURNITURE = "FURNITURE"
+    SHELF = "SHELF"
+
+
+# Base vertical-level preference for an interactable cat (not OUT_OF_LOUNGE).
+# Slight floor lean at rest, furniture lean while active.
+HIRSCH_VERTICAL_BASE: dict[VerticalLevel, float] = {
+    VerticalLevel.FLOOR: 0.22,
+    VerticalLevel.FURNITURE: 0.36,
+    VerticalLevel.SHELF: 0.42,
+}
+
+
+def shelf_preference_for_occupancy(occupancy: "OccupancyLevel") -> float:
+    """Fraction of time a cat prefers SHELF at each occupancy level."""
+    if occupancy == OccupancyLevel.LOW:
+        return 0.35
+    if occupancy == OccupancyLevel.MID:
+        return 0.48
+    return 0.65  # HIGH
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Cat welfare baselines (Hirsch 2025 Discussion section).
+# Score = sum over indicators of clamp(share / baseline, 0, 1) for the
+# three positive indicators, and clamp(1 - share / baseline, 0, 1) for
+# the two negative indicators. Max total = 5.
+# ─────────────────────────────────────────────────────────────────────
+
+CAT_WELFARE_BASELINE: dict[str, float] = {
+    # Positive (higher is better) — normalized against Figure 3 base rates
+    "play":        0.003,
+    "exploration": 0.008,
+    "maintenance": 0.045,
+    # Negative (lower is better) — penalize when share exceeds baseline
+    "hidden":      0.107,
+    "alert":       0.049,
+}
+
+
 HIRSCH_STATE_MEAN_DURATION: dict[CatBehaviorState, float] = {
     CatBehaviorState.OUT_OF_LOUNGE: 18.0,
     CatBehaviorState.RESTING:       15.0,

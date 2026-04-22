@@ -24,9 +24,12 @@ from typing import Any
 from .models import SimulationConfig
 from .agents.cat_agent import CatAgent, sample_personality
 from .constants.hirsch2025 import (
+    CAT_WELFARE_BASELINE,
+    CafeArea,
     CatBehaviorState,
     CustomerType,
     CUSTOMER_TYPE_DEFAULT_MIX,
+    VerticalLevel,
 )
 
 
@@ -91,6 +94,12 @@ def run_simulation(config_dict: dict) -> dict:
     wait_seat_times: list[float] = []
     wait_order_times: list[float] = []
     stay_times: list[float] = []
+
+    # v2.0 Epic D: per-state time accumulators (seconds spent in each
+    # CatBehaviorState across all cats). Used to compute the welfare
+    # score and the behavior share distribution at the end of the run.
+    state_time: dict[str, float] = {s.value: 0.0 for s in CatBehaviorState}
+    level_time: dict[str, float] = {lv.value: 0.0 for lv in VerticalLevel}
 
     # Registry of currently-seated customers, keyed by customer id. Cat
     # processes pick a target from this dict; customer processes insert
@@ -274,20 +283,33 @@ def run_simulation(config_dict: dict) -> dict:
                 rng, seated_count, previous_state=prev_state,
             )
             duration = agent.sample_state_duration(rng, next_state)
+            next_area, next_level = agent.pick_position(rng, seated_count)
+
+            # Accumulate time in the state and vertical level for welfare scoring.
+            state_time[next_state.value] += duration
+            if next_level is not None:
+                level_time[next_level.value] += duration
 
             # Emit the state-change event on every transition (skip if
-            # identical; the self-loop penalty makes this rare).
+            # identical; the self-loop penalty makes this rare). The
+            # event carries the new (area, level) so Playback can route
+            # the cat sprite to its 2.5D position without extra polling.
             if next_state != prev_state:
                 log(
                     env.now, "CAT_STATE_CHANGE", cat_id,
-                    f"{cat_label} 從 {prev_state.value} 轉為 {next_state.value}",
+                    f"{cat_label} 從 {prev_state.value} 轉為 {next_state.value} "
+                    f"({next_area.value}{'/' + next_level.value if next_level else ''})",
                     cat_label,
                     extra={
                         "fromState": prev_state.value,
                         "toState": next_state.value,
+                        "area": next_area.value,
+                        "level": next_level.value if next_level else None,
                     },
                 )
             agent.state = next_state
+            agent.area = next_area
+            agent.level = next_level if next_level else VerticalLevel.FLOOR
 
             # Interactable states: attempt a visit. If no seated customer
             # is available, fall through and just dwell for `duration`.
@@ -442,6 +464,59 @@ def run_simulation(config_dict: dict) -> dict:
         if mean_service_time > 0 else 0.0
     )
 
+    # v2.0 Epic D: cat welfare score.
+    #   - three positive indicators reward being above baseline
+    #   - two negative indicators reward being below baseline
+    total_state_time = sum(state_time.values()) or 1.0
+    behavior_share = {k: round(v / total_state_time, 4) for k, v in state_time.items()}
+    total_level_time = sum(level_time.values()) or 1.0
+    level_share = {k: round(v / total_level_time, 4) for k, v in level_time.items()}
+
+    def welfare_component(share: float, baseline: float, positive: bool) -> float:
+        if baseline <= 0:
+            return 0.0
+        ratio = share / baseline
+        if positive:
+            return max(0.0, min(1.0, ratio))
+        return max(0.0, min(1.0, 1.0 - ratio))
+
+    play_score = welfare_component(
+        behavior_share.get("PLAYING", 0.0),
+        CAT_WELFARE_BASELINE["play"],
+        positive=True,
+    )
+    exploration_score = welfare_component(
+        behavior_share.get("EXPLORING", 0.0),
+        CAT_WELFARE_BASELINE["exploration"],
+        positive=True,
+    )
+    maintenance_score = welfare_component(
+        behavior_share.get("GROOMING", 0.0),
+        CAT_WELFARE_BASELINE["maintenance"],
+        positive=True,
+    )
+    not_hiding = welfare_component(
+        behavior_share.get("HIDDEN", 0.0),
+        CAT_WELFARE_BASELINE["hidden"],
+        positive=False,
+    )
+    not_alert = welfare_component(
+        behavior_share.get("ALERT", 0.0),
+        CAT_WELFARE_BASELINE["alert"],
+        positive=False,
+    )
+    welfare_total = round(
+        play_score + exploration_score + maintenance_score + not_hiding + not_alert,
+        3,
+    )
+
+    # Customer satisfaction proxy (0–1): low abandonment + most customers
+    # get visited. Combines 1 - abandonRate (weight 0.6) and catInteractionRate
+    # (weight 0.4). Keeps a single scalar for Pareto frontier plotting.
+    customer_satisfaction = round(
+        0.6 * (1.0 - abandon_rate) + 0.4 * cat_interaction_rate, 4
+    )
+
     result: dict[str, Any] = {
         "config": config.to_dict(),
         "metrics": {
@@ -469,6 +544,10 @@ def run_simulation(config_dict: dict) -> dict:
             "waitForOrderP50": _percentile(wait_order_times, 50),
             "waitForOrderP95": _percentile(wait_order_times, 95),
             "waitForOrderP99": _percentile(wait_order_times, 99),
+            "catWelfareScore": welfare_total,
+            "catBehaviorShare": behavior_share,
+            "catVerticalLevelShare": level_share,
+            "customerSatisfactionScore": customer_satisfaction,
         },
         "eventLog": sorted(event_log, key=lambda e: e["timestamp"]),
     }

@@ -94,6 +94,14 @@ export interface MetricSummary {
   waitForOrderP95: number
   /** 等待點餐 P99 (分鐘) */
   waitForOrderP99: number
+  /** v2.0 Epic D: aggregate cat welfare score (mean across all cats, 0–5). */
+  catWelfareScore: number
+  /** v2.0 Epic D: per-state time share across all cats, keyed by CatBehaviorState. */
+  catBehaviorShare: Record<string, number>
+  /** v2.0 Epic D: vertical-level time share across all cats. */
+  catVerticalLevelShare: Record<string, number>
+  /** v2.0 Epic D: overall customer satisfaction proxy (0–1). */
+  customerSatisfactionScore: number
 }
 
 export type EventType =
@@ -145,6 +153,48 @@ export type CatBehaviorState =
  * (see constants/hirsch2025). Users can override via UI.
  */
 export type CustomerType = 'WOMAN' | 'MAN' | 'GIRL' | 'BOY'
+
+/**
+ * v2.0 Epic A: 2.5D spatial model.
+ *
+ * The café is split horizontally into three areas (Area 1 main lounge,
+ * Area 2 secondary lounge with tables, Cat Room which customers can't
+ * enter). On top of the horizontal partition, each cat occupies one of
+ * three vertical levels (floor / furniture / shelf). Hirsch 2025
+ * Figure 4b shows shelf preference rises sharply with occupancy.
+ */
+export type CafeArea = 'AREA_1' | 'AREA_2' | 'CAT_ROOM'
+
+export type VerticalLevel = 'FLOOR' | 'FURNITURE' | 'SHELF'
+
+export interface Position3D {
+  area: CafeArea
+  /** Optional for CAT_ROOM (cat-room cats are off-screen). */
+  level?: VerticalLevel
+}
+
+/**
+ * v2.0 Epic D: cat welfare score breakdown.
+ *
+ * Five behavioral indicators from Hirsch et al. (2025) Discussion.
+ * Each sub-score lies in [0, 1]; total is their sum (0 to 5). Positive
+ * indicators (play / exploration / maintenance) reward good welfare;
+ * negative indicators (hidden / alert) penalize it.
+ */
+export interface CatWelfareScore {
+  /** PLAYING time share vs baseline. */
+  play: number
+  /** EXPLORING time share vs baseline. */
+  exploration: number
+  /** GROOMING (maintenance) time share vs baseline. */
+  maintenance: number
+  /** Inverted HIDDEN share; higher means less hiding. */
+  notHiding: number
+  /** Inverted ALERT share; higher means less alert / anxious. */
+  notAlert: number
+  /** Sum of the five sub-scores, clamped to [0, 5]. */
+  total: number
+}
 
 export interface EventLogItem {
   /** 模擬時間（分鐘，保留 2 位小數） */

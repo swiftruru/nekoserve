@@ -81,7 +81,10 @@ const METRIC_KEYS: (keyof MetricSummary)[] = [
 function buildBatchSummary(runs: SimulationResult[]): BatchSummary {
   const summary = {} as BatchSummary
   for (const key of METRIC_KEYS) {
-    const values = runs.map((r) => r.metrics[key])
+    // v2.0: MetricSummary now has a couple of Record-valued fields
+    // (catBehaviorShare, catVerticalLevelShare). METRIC_KEYS only lists
+    // numeric metrics, so the cast is safe.
+    const values = runs.map((r) => r.metrics[key] as unknown as number)
     ;(summary as Record<string, MetricCI>)[key] = computeCI95(values)
   }
   return summary
@@ -338,7 +341,7 @@ export function useSimulation(): UseSimulationReturn {
       if (runs.length > 0) {
         const metricsCI: Record<string, MetricCI> = {}
         for (const key of METRIC_KEYS) {
-          const values = runs.map((r) => r.metrics[key])
+          const values = runs.map((r) => r.metrics[key] as unknown as number)
           metricsCI[key] = computeCI95(values)
         }
         points.push({ paramValue, metrics: metricsCI })

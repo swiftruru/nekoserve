@@ -563,6 +563,33 @@
       "example": "Set to 15 min: the cat sleeps about 15 minutes before waking up and finding the next customer."
     }
   },
+  "welfare": {
+    "title": "Cat Welfare Score",
+    "citation": "Based on Hirsch et al. (2025), DOI: 10.3390/ani15223233",
+    "intro": "Five behavioral indicators summed into a 0–5 welfare score. Positive indicators should be high; negative indicators should be low. Scenarios scoring below 2 flag as cat-unfriendly.",
+    "positive": "Positive indicators (higher is better)",
+    "negative": "Negative indicators (lower is better)",
+    "playing": "🎾 Playing",
+    "exploring": "🗺️ Exploring",
+    "grooming": "✨ Self-grooming",
+    "hidden": "🙈 Hiding",
+    "alert": "😾 Alert / anxious",
+    "verticalLevels": "Vertical space usage",
+    "floor": "Floor",
+    "furniture": "Furniture",
+    "shelf": "Shelf",
+    "shelfHint": "Hirsch 2025 Figure 4b: more customers → cats flee to shelves. A shelf-heavy bar here means the scenario is stressing cats."
+  },
+  "pareto": {
+    "title": "Customer satisfaction vs Cat welfare (Pareto frontier)",
+    "intro": "Each dot is one historical run. Top-right is ideal (happy customers AND happy cats). Green-ringed dots are Pareto-dominant: nothing else beats them on both axes at once.",
+    "xAxis": "Customer satisfaction",
+    "yAxis": "Cat welfare (normalized 0–1)",
+    "ideal": "Ideal",
+    "current": "Current",
+    "currentLegend": "Current run",
+    "dominantLegend": "Pareto frontier (not dominated)"
+  },
   "rhoCorrection": {
     "title": "Classical ρ vs Dbeis 2024 corrected ρ_R",
     "summary": "The three time-based utilizations above stay as the engine's measured truth. Here I put classical M/M/c ρ next to Dbeis & Al-Sahili's corrected ρ_R so you can line it up with the literature.",

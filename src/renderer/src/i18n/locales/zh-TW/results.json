@@ -563,6 +563,33 @@
       "example": "設定 15 分鐘表示貓平均睡 15 分鐘才醒來重新找客人互動。"
     }
   },
+  "welfare": {
+    "title": "貓咪福利指數",
+    "citation": "基於 Hirsch 等 (2025)，DOI: 10.3390/ani15223233",
+    "intro": "五個行為指標加總成 0 到 5 分的福利分數。正向指標越高越好，負向指標越低越好。分數低於 2 的情境，我把它算作對貓咪不友善。",
+    "positive": "正向指標（越高越好）",
+    "negative": "負向指標（越低越好）",
+    "playing": "🎾 玩耍",
+    "exploring": "🗺️ 探索",
+    "grooming": "✨ 清理自己",
+    "hidden": "🙈 躲藏",
+    "alert": "😾 警戒",
+    "verticalLevels": "立體空間使用",
+    "floor": "地板",
+    "furniture": "家具",
+    "shelf": "架子",
+    "shelfHint": "Hirsch 2025 Figure 4b：顧客越多，貓越常往架子上躲。如果這張圖的架子比例拉很高，代表模擬情境讓貓感到壓力。"
+  },
+  "pareto": {
+    "title": "顧客滿意 vs 貓咪福利（Pareto frontier）",
+    "intro": "每個圓點是一次歷史模擬的結果。右上角是理想點（顧客爽、貓也爽）；被綠圈框住的點代表這個方案在兩個指標上都沒有被其他方案完勝。",
+    "xAxis": "顧客滿意度",
+    "yAxis": "貓咪福利（0–1 標準化）",
+    "ideal": "理想",
+    "current": "當前",
+    "currentLegend": "當前模擬",
+    "dominantLegend": "Pareto 前沿（無被完勝）"
+  },
   "rhoCorrection": {
     "title": "古典 ρ vs Dbeis 2024 修正 ρ_R",
     "summary": "上面那三格時間佔用率是引擎實測的真值，這裡再把古典 M/M/c 的 ρ 和 Dbeis & Al-Sahili 2024 的修正 ρ_R 並排給你看，方便和文獻對照。",

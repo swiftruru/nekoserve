@@ -162,8 +162,8 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
             </thead>
             <tbody className="divide-y divide-purple-50 dark:divide-purple-800/20">
               {COMPARE_METRICS.map(({ key, scale, suffix, lowerIsBetter }) => {
-                const base = baseMetrics[key] * scale
-                const whatIf = whatIfMetrics[key] * scale
+                const base = (baseMetrics[key] as number) * scale
+                const whatIf = (whatIfMetrics[key] as number) * scale
                 const delta = whatIf - base
                 const improved = lowerIsBetter === null ? null : lowerIsBetter ? delta < -0.01 : delta > 0.01
                 const worsened = lowerIsBetter === null ? null : lowerIsBetter ? delta > 0.01 : delta < -0.01

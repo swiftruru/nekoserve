@@ -3,16 +3,19 @@ import { useTranslation } from 'react-i18next'
 import type { SimulationConfig } from '../../types'
 import {
   ABANDON,
+  AREAS,
   BOTTOM_AISLE_Y,
   CAT_GRID,
   DOOR,
   EXIT,
   FOOD_CORNER,
+  FURNITURE_SPOTS,
   KITCHEN,
   LITTER_CORNER,
   QUEUE_SEAT,
   REST_WANDER_CYCLE_MIN,
   SEAT_GRID,
+  SHELVES,
   TOP_AISLE_Y,
   VIEW_H,
   VIEW_W,
@@ -68,6 +71,12 @@ interface CafeSceneProps {
    * and doesn't feel sluggish at 0.5×.
    */
   speed: number
+  /**
+   * v2.0 Epic A: show the 3-area floor-plan overlay (Area 1 / Area 2 /
+   * Cat Room + shelves + furniture anchors) on top of the scene. Off by
+   * default so existing UX doesn't change for returning users.
+   */
+  floorPlanOverlay?: boolean
 }
 
 // Zone constants, VIEW dimensions, REST_WANDER_CYCLE_MIN and per-slot
@@ -628,6 +637,7 @@ export default function CafeScene({
   focus,
   onSelectFocus,
   speed,
+  floorPlanOverlay = false,
 }: CafeSceneProps) {
   const { t } = useTranslation('playback')
 
@@ -791,6 +801,80 @@ export default function CafeScene({
           </linearGradient>
         </defs>
         <rect x="0" y="0" width={VIEW_W} height={VIEW_H} fill="url(#floor)" />
+
+        {/* v2.0 Epic A: 3-area + shelf / furniture overlay. Painted
+            BEHIND everything interactive so it reads as backdrop. */}
+        {floorPlanOverlay && (
+          <g aria-hidden="true" opacity="0.85">
+            {Object.values(AREAS).map((a) => (
+              <g key={a.id}>
+                <rect
+                  x={a.x}
+                  y={a.y}
+                  width={a.w}
+                  height={a.h}
+                  fill={
+                    a.id === 'CAT_ROOM'
+                      ? 'rgba(251, 191, 36, 0.08)'
+                      : a.id === 'AREA_2'
+                      ? 'rgba(251, 146, 60, 0.06)'
+                      : 'rgba(253, 186, 116, 0.08)'
+                  }
+                  stroke={
+                    a.id === 'CAT_ROOM'
+                      ? 'rgba(217, 119, 6, 0.45)'
+                      : 'rgba(234, 88, 12, 0.35)'
+                  }
+                  strokeWidth="1"
+                  strokeDasharray={a.id === 'CAT_ROOM' ? '6,3' : '4,2'}
+                  rx="10"
+                />
+                <text
+                  x={a.labelX}
+                  y={a.labelY}
+                  textAnchor="middle"
+                  className="fill-orange-700 dark:fill-orange-300"
+                  style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1 }}
+                >
+                  {a.id === 'AREA_1' ? 'AREA 1' : a.id === 'AREA_2' ? 'AREA 2' : 'CAT ROOM'}
+                </text>
+              </g>
+            ))}
+            {SHELVES.map((s) => (
+              <g key={s.id}>
+                <rect
+                  x={s.x - 16}
+                  y={s.y - 4}
+                  width={32}
+                  height={6}
+                  fill="rgba(120, 53, 15, 0.4)"
+                  stroke="rgba(120, 53, 15, 0.7)"
+                  strokeWidth="0.5"
+                  rx="1"
+                />
+                <text
+                  x={s.x}
+                  y={s.y - 8}
+                  textAnchor="middle"
+                  style={{ fontSize: 8, fill: 'rgba(120, 53, 15, 0.7)' }}
+                >
+                  📚
+                </text>
+              </g>
+            ))}
+            {FURNITURE_SPOTS.map((f) => (
+              <circle
+                key={f.id}
+                cx={f.x}
+                cy={f.y}
+                r={4}
+                fill="rgba(146, 64, 14, 0.25)"
+                stroke="rgba(146, 64, 14, 0.55)"
+                strokeWidth="0.5"
+              />
+            ))}
+          </g>
+        )}
 
         {/* ── Hanging yarn balls ─ the ceiling is strung with dangling
             yarn balls (a cat-café staple). Always on, gently sway in
