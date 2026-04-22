@@ -26,6 +26,7 @@ import {
   VIEW_W,
   catHomePos,
   catVisitingPosForSeat,
+  detourAroundCounter,
   seatPos,
   staticCatPosition,
   staticCustomerPosition,
@@ -311,63 +312,46 @@ function pathForCustomerStage(
   const end = staticCustomerPosition(c, state)
   switch (c.stage) {
     case 'arriving':
-      // Door to waiting-seat queue is handled by waitingSeat path —
-      // arriving is effectively instantaneous in the simulator (fires
-      // at the same timestamp as CUSTOMER_WAIT_SEAT). No walk.
+      // Arriving is effectively instantaneous (fires at the same timestamp
+      // as CUSTOMER_WAIT_SEAT). No walk.
       return null
     case 'waitingSeat': {
-      // Door to queue slot. Stay at door height (y=250) until we reach
-      // the queue column, then ride straight up into the queue slot.
-      // Avoids the "rocket up to the ceiling and drop down" effect that
-      // routing via TOP_AISLE_Y produces for this short door-adjacent
-      // walk, which visually reads as "customer came from the sky".
-      const start = c.stageStartPos
-      return [
-        [start.x, start.y],
-        [end.x, start.y],
-        [end.x, end.y],
-      ]
+      // Entrance (right middle) → queue anchor (just south of counter's
+      // east end). Short horizontal step then slight downward drift.
+      return detour(c.stageStartPos, end)
     }
     case 'seated':
-      // Queue slot → seat cell (the visually critical walk)
-      return topAisleLPath(c.stageStartPos, end)
+      // Queue → seat. Route around the counter via right aisle.
+      return detour(c.stageStartPos, end)
     case 'ordering':
     case 'waitingFood':
     case 'dining':
       // Stationary at the seat
       return null
     case 'leaving': {
-      // Seat → exit. Route via top aisle, then drop in the narrow gap
-      // between the Cats card (x=740..910) and the Exit card (x=920..),
-      // and finally walk horizontally into the exit door at y=EXIT.y.
-      // The horizontal final segment makes the customer read as
-      // "walking into the door" instead of "falling from the ceiling".
-      const start = c.stageStartPos
-      const dropX = 916
-      return [
-        [start.x, start.y],
-        [start.x, TOP_AISLE_Y],
-        [dropX, TOP_AISLE_Y],
-        [dropX, end.y],
-        [end.x, end.y],
-      ]
+      // Seat → entrance (same door; it's the only way in or out).
+      return detour(c.stageStartPos, { x: ENTRANCE.x, y: ENTRANCE.y })
     }
     case 'abandoned': {
-      // Queue → front door via bottom aisle, then ride up in the narrow
-      // gap between the Door card and the Queue card, and slam out the
-      // front door horizontally. Bottom-aisle routing stays as the sad
-      // exit visual cue, distinct from the happy top-aisle leave.
-      const start = c.stageStartPos
-      const riseX = 90
-      return [
-        [start.x, start.y],
-        [start.x, BOTTOM_AISLE_Y],
-        [riseX, BOTTOM_AISLE_Y],
-        [riseX, end.y],
-        [end.x, end.y],
-      ]
+      // Abandoned customers take the same route out, just with a sadder
+      // vibe via the abandonDrama CSS class. No need for a different path.
+      return detour(c.stageStartPos, { x: ENTRANCE.x, y: ENTRANCE.y })
     }
   }
+}
+
+/**
+ * Wrap detourAroundCounter into a Path (number tuple) for consumption
+ * by pointOnPath. Keeps the reducer-side geometry module pure (it
+ * returns {x,y} objects) while CafeScene uses [x,y] tuples.
+ */
+function detour(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Path {
+  return detourAroundCounter(from, to).map(
+    (p): [number, number] => [p.x, p.y],
+  )
 }
 
 /**
@@ -383,13 +367,10 @@ function pathForCatState(
   if (cat.stateStartPos === undefined) return null
   switch (cat.state) {
     case 'visiting':
-      return topAisleLPath(cat.stateStartPos, staticCatPosition(cat, state))
+      return detour(cat.stateStartPos, staticCatPosition(cat, state))
     case 'idle':
       // After a visit, animate back home from the seat we just left.
-      // cat.stateStartPos is the seat-side position snapshotted in the
-      // CAT_LEAVE_SEAT handler, and staticCatPosition for an idle cat
-      // is catHomePos.
-      return topAisleLPath(cat.stateStartPos, catHomePos(cat.slotIdx))
+      return detour(cat.stateStartPos, catHomePos(cat.slotIdx))
     case 'resting':
       return null
   }
@@ -1754,12 +1735,59 @@ export default function CafeScene({
         {/* ── Cat sprites (drawn AFTER customers so they sit on top when
             visiting a seat) ──────────────────────────────────────── */}
         {state.cats.map((cat) => {
-          const { x, y } = catXY(cat, state, speed)
+          let { x, y } = catXY(cat, state, speed)
           const isFocus =
             focus?.kind === 'cat' && focus.slotIdx === cat.slotIdx
           const resting = cat.state === 'resting'
           const visiting = cat.state === 'visiting'
           const walking = catIsWalking(cat, state, speed)
+
+          // v2.1: cats in OUT_OF_LOUNGE ethogram state retreat into the
+          // cat room and render at 35% opacity at the cat-room inside
+          // anchor. Cats landing on SHELF verticalLevel get the nearest
+          // shelf anchor + a hop arc in the last 0.3s of the transition.
+          const inCatRoom = cat.area === 'CAT_ROOM'
+          const onShelf = cat.verticalLevel === 'SHELF'
+          const onFurniture = cat.verticalLevel === 'FURNITURE'
+          if (inCatRoom && !visiting) {
+            // Override position: put the cat deep inside the cat room at
+            // a slotIdx-based anchor so cats don't stack on each other.
+            const anchor = SHELVES.filter((s) => s.area === 'CAT_ROOM')[
+              cat.slotIdx % 2
+            ]
+            if (anchor) {
+              x = anchor.x
+              y = anchor.y + 6
+            }
+          } else if (onShelf && !visiting) {
+            // Pick the nearest shelf in the cat's current area and
+            // teleport the y coordinate up to the shelf height. The arc
+            // hop animation adds the "jump up" feel via CSS below.
+            const areaShelves = SHELVES.filter((s) => s.area === cat.area)
+            if (areaShelves.length > 0) {
+              let best = areaShelves[0]
+              let bestDist = Number.POSITIVE_INFINITY
+              for (const s of areaShelves) {
+                const d = Math.hypot(s.x - x, s.y - y)
+                if (d < bestDist) {
+                  bestDist = d
+                  best = s
+                }
+              }
+              x = best.x
+              y = best.y - 4
+            }
+          } else if (onFurniture && !visiting && cat.area !== 'CAT_ROOM') {
+            const areaSpots = FURNITURE_SPOTS.filter(
+              (f) => f.area === cat.area,
+            )
+            if (areaSpots.length > 0) {
+              const spot = areaSpots[cat.slotIdx % areaSpots.length]
+              x = spot.x
+              y = spot.y - 8
+            }
+          }
+
           const tint = CAT_TINT_FILL[cat.slotIdx % CAT_TINT_FILL.length]
           const tintStroke = CAT_TINT_STROKE[cat.slotIdx % CAT_TINT_STROKE.length]
           const bg = resting ? '#e0e7ff' : visiting ? '#bbf7d0' : tint
@@ -1792,8 +1820,15 @@ export default function CafeScene({
               role="button"
               aria-label={t('playback:a11y.cat', { n: cat.slotIdx + 1, status: t(`playback:a11y.catState.${cat.state}` as const) })}
               style={{
-                transition: transformTransition,
+                transition: `${transformTransition}${transformTransition ? ', ' : ''}opacity 400ms ease-out`,
                 willChange: 'transform',
+                // v2.1: cats in the cat room fade to 35% — they're still
+                // visible as a hint but clearly off-duty. Cats on shelves
+                // get a tiny elevation hint via drop-shadow.
+                opacity: inCatRoom ? 0.35 : 1,
+                filter: onShelf
+                  ? 'drop-shadow(0 3px 2px rgba(0,0,0,0.18))'
+                  : undefined,
               }}
               onClick={(e) => {
                 e.stopPropagation()
