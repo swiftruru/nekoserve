@@ -112,13 +112,20 @@ export default function EventLogTable({
   }
 
   function describeEvent(e: EventLogItem): string {
+    // v2.0: translate CatBehaviorState enum values ("HIDDEN") into
+    // plain-language labels ("躲起來") so Event Log reads like a cat's
+    // story rather than code.
+    const fromLabel = e.fromState
+      ? t(`events:catState.${e.fromState}` as const, { defaultValue: e.fromState })
+      : ''
+    const toLabel = e.toState
+      ? t(`events:catStateVerb.${e.toState}` as const, { defaultValue: e.toState })
+      : ''
     return t(`events:${e.eventType}` as const, {
       customerId: e.customerId,
       resourceId: formatResourceId(e.resourceId),
-      // v2.0: CAT_STATE_CHANGE templates use these interpolation keys.
-      // Other event types ignore them harmlessly.
-      fromState: e.fromState ?? '',
-      toState: e.toState ?? '',
+      fromState: fromLabel,
+      toState: toLabel,
       customerType: e.customerType ?? '',
       defaultValue: e.description ?? '',
     })

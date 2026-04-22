@@ -267,14 +267,10 @@ def run_simulation(config_dict: dict) -> dict:
         nonlocal total_cat_busy
         cat_label = agent.label
 
-        # Emit an opening CAT_STATE_CHANGE so the timeline has a clear
-        # starting point for this cat's behavior track.
-        log(
-            env.now, "CAT_STATE_CHANGE", cat_id,
-            f"{cat_label} 初始狀態：{agent.state.value}",
-            cat_label,
-            extra={"fromState": None, "toState": agent.state.value},
-        )
+        # (v2.0: previously emitted an "initial state" CAT_STATE_CHANGE
+        # with fromState=None here. Removed because it confuses the
+        # Event Log display — the first real transition is the true
+        # starting point.)
 
         while True:
             seated_count = len(seated)

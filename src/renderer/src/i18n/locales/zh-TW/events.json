@@ -13,7 +13,7 @@
   "CAT_LEAVE_SEAT": "{{resourceId}} 離開顧客 #{{customerId}} 的座位",
   "CAT_START_REST": "{{resourceId}} 進入休息",
   "CAT_END_REST": "{{resourceId}} 結束休息",
-  "CAT_STATE_CHANGE": "{{resourceId}} 狀態轉變：{{fromState}} → {{toState}}",
+  "CAT_STATE_CHANGE": "{{resourceId}}：{{fromState}}，改去{{toState}}",
   "label": {
     "CUSTOMER_ARRIVE": "顧客到達",
     "CUSTOMER_WAIT_SEAT": "等待座位",
@@ -34,5 +34,27 @@
   "resource": {
     "cat": "貓 #{{n}}",
     "seat": "座位 #{{n}}"
+  },
+  "catState": {
+    "OUT_OF_LOUNGE": "躲到貓房",
+    "RESTING": "休息中",
+    "SOCIALIZING": "跟人或貓互動",
+    "HIDDEN": "躲起來",
+    "ALERT": "警戒著",
+    "GROOMING": "舔毛整理自己",
+    "MOVING": "走動",
+    "EXPLORING": "四處探索",
+    "PLAYING": "在玩耍"
+  },
+  "catStateVerb": {
+    "OUT_OF_LOUNGE": "躲回貓房",
+    "RESTING": "休息",
+    "SOCIALIZING": "找人或貓互動",
+    "HIDDEN": "躲起來",
+    "ALERT": "提高警戒",
+    "GROOMING": "舔毛整理",
+    "MOVING": "走動",
+    "EXPLORING": "到處探索",
+    "PLAYING": "玩耍"
   }
 }
