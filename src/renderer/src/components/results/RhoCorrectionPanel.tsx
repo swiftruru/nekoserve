@@ -2,13 +2,17 @@ import { useTranslation } from 'react-i18next'
 import type { MetricSummary } from '../../types'
 import { BlockMath } from '../Math'
 import type { LearningLevel } from '../learning/types'
+import { CITATIONS, citationUrl } from '../../data/citations'
 
 interface Props {
   metrics: MetricSummary
   level?: LearningLevel
 }
 
-const DBEIS_DOI = 'https://doi.org/10.1080/23270012.2024.2408528'
+// Single source of truth: read the canonical URL from the citations
+// registry so any future URL switch (e.g. publisher change, new
+// preprint location) only needs to update citations.ts.
+const DBEIS_DOI = citationUrl(CITATIONS.dbeis2024enhancing)
 
 /**
  * Guard against older simulator binaries that return metrics without

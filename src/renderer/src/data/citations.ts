@@ -86,7 +86,12 @@ export const CITATIONS: Record<string, Citation> = {
     issue: 4,
     pages: '659-674',
     publisher: 'Taylor & Francis',
-    openAccess: false,
+    // Taylor & Francis has IP-based paywall. Point to the Najah
+    // University open-access mirror maintained by co-author Al-Sahili
+    // (verified 2026-04-22). doi.org still resolves for archival
+    // completeness, but the primary link is the free PDF.
+    url: 'https://staff.najah.edu/media/published_research/2025/02/14/Enhancing_queuing_theory_realism__analysis_of_reneging_behavior_impact_on_M_M_1_drive-thru_service_system.pdf',
+    openAccess: true,
     role: 'empirical-reneging',
   },
 
