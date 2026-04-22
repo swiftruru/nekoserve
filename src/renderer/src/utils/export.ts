@@ -161,6 +161,9 @@ function localizedEventDescription(e: EventLogItem): string {
   return i18n.t(`events:${e.eventType as EventType}` as const, {
     customerId: e.customerId,
     resourceId: e.resourceId ?? '',
+    fromState: e.fromState ?? '',
+    toState: e.toState ?? '',
+    customerType: e.customerType ?? '',
     defaultValue: e.description ?? '',
   })
 }

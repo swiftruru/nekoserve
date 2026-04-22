@@ -115,6 +115,11 @@ export default function EventLogTable({
     return t(`events:${e.eventType}` as const, {
       customerId: e.customerId,
       resourceId: formatResourceId(e.resourceId),
+      // v2.0: CAT_STATE_CHANGE templates use these interpolation keys.
+      // Other event types ignore them harmlessly.
+      fromState: e.fromState ?? '',
+      toState: e.toState ?? '',
+      customerType: e.customerType ?? '',
       defaultValue: e.description ?? '',
     })
   }
