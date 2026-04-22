@@ -51,12 +51,8 @@ npm-debug.log*
 playwright-report/
 test-results/
 
-# Auto-captured screenshots for slide decks
-docs/screenshots/
-docs/screenshots-v2/
-
-# Unpublished internal planning docs
-docs/NekoServe_文獻探討改進_ClaudeCodePlan.md
+# Private planning scratchpad (personal notes, drafts, unpublished plans)
+docs/
 
 # Python virtual envs
 .venv/

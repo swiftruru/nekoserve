@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Page, SimulationConfig, EventType } from './types'
 import { useSimulation } from './hooks/useSimulation'
-import { SCENARIOS, DEFAULT_CONFIG } from './data/scenarios'
+import { SCENARIOS } from './data/scenarios'
+import { useConfigStore } from './store/configStore'
 import SettingsPage from './pages/SettingsPage'
 import ResultsPage from './pages/ResultsPage'
 import EventLogPage from './pages/EventLogPage'
 import PlaybackPage, { PlaybackPageEmpty } from './pages/PlaybackPage'
 import HowItWorksPage from './pages/HowItWorksPage'
+import CitationsPage from './pages/CitationsPage'
 import AboutPage from './pages/AboutPage'
 import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
@@ -52,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'results',    icon: '📊' },
   { id: 'eventlog',   icon: '📋' },
   { id: 'howitworks', icon: '🎬' },
+  { id: 'citations',  icon: '📚' },
   { id: 'about',      icon: 'ℹ️' },
 ]
 
@@ -62,7 +65,8 @@ const NAV_ITEMS: NavItem[] = [
 export default function App() {
   const { t } = useTranslation(['common', 'nav'])
   const [page, setPage] = useState<Page>('settings')
-  const [config, setConfig] = useState<SimulationConfig>(DEFAULT_CONFIG)
+  const config = useConfigStore((s) => s.config)
+  const setConfig = useConfigStore((s) => s.setConfig)
   const [pendingEventFilter, setPendingEventFilter] = useState<EventType[] | null>(null)
   const [panelOpen, setPanelOpen] = useState<boolean>(() => loadPanelState())
   /**
@@ -462,6 +466,7 @@ export default function App() {
                 <PlaybackPageEmpty />
               ))}
             {page === 'howitworks' && <HowItWorksPage />}
+            {page === 'citations' && <CitationsPage />}
             {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} updateChecking={update.status === 'checking'} />}
           </PageTransition>
           </ErrorBoundary>

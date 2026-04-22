@@ -1,0 +1,23 @@
+{
+  "pageTitle": "📚 文獻依據",
+  "intro": "NekoServe 使用的每個預設值都有出處。下面是所有被引用的文獻，連同 DOI、APA 格式、以及 BibTeX 條目。要寫論文時直接整包複製帶走。",
+  "openAccess": "Open Access",
+  "role": {
+    "core-empirical": "核心實證（行為學）",
+    "empirical-arrival": "實證（到達分佈）",
+    "empirical-reneging": "實證（反悔行為）",
+    "classical-queueing": "經典排隊論",
+    "classical-balking-reneging": "經典 Balking / Reneging",
+    "customer-psychology": "顧客心理學",
+    "animal-welfare": "動物福祉"
+  },
+  "apa": "APA",
+  "bibtex": "BibTeX",
+  "copyApa": "複製 APA",
+  "copyBibtex": "複製 BibTeX",
+  "copiedToast": "已複製",
+  "downloadAllBibtex": "📥 下載完整 references.bib",
+  "downloadAllBibtexHint": "把所有文獻打包成 BibTeX 檔案存到電腦上，貼進論文 LaTeX 專案就能用。",
+  "usedByParams": "這篇文獻被這些參數引用：",
+  "noParamLink": "未被參數引用（僅供學理支撐）"
+}

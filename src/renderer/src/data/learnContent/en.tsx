@@ -1121,6 +1121,8 @@ export const LEARN_CONTENT_EN: LearnContent = {
   // deliberately has no extra notes for it; readers focus on the main content.
   howitworks: [],
 
+  citations: [],
+
   about: [
     {
       id: 'queueing-theory',

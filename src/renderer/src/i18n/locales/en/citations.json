@@ -1,0 +1,23 @@
+{
+  "pageTitle": "📚 Citations",
+  "intro": "Every default value in NekoServe comes from somewhere. Below are all the cited works with DOIs, APA formatting, and BibTeX entries. When writing the thesis, just grab the whole block.",
+  "openAccess": "Open Access",
+  "role": {
+    "core-empirical": "Core empirical (behavioral)",
+    "empirical-arrival": "Empirical (arrival distribution)",
+    "empirical-reneging": "Empirical (reneging behavior)",
+    "classical-queueing": "Classical queueing theory",
+    "classical-balking-reneging": "Classical balking / reneging",
+    "customer-psychology": "Customer psychology",
+    "animal-welfare": "Animal welfare"
+  },
+  "apa": "APA",
+  "bibtex": "BibTeX",
+  "copyApa": "Copy APA",
+  "copyBibtex": "Copy BibTeX",
+  "copiedToast": "Copied",
+  "downloadAllBibtex": "📥 Download references.bib",
+  "downloadAllBibtexHint": "Download every citation as a single BibTeX file. Paste into your LaTeX project's bib directory and cite via \\cite{hirsch2025cats} etc.",
+  "usedByParams": "Referenced by these parameters:",
+  "noParamLink": "Not referenced by any parameter (supporting literature only)"
+}

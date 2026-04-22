@@ -1083,6 +1083,8 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
   // deliberately has no extra notes for it; readers focus on the main content.
   howitworks: [],
 
+  citations: [],
+
   about: [
     {
       id: 'queueing-theory',

@@ -1,5 +1,6 @@
 import i18n from '@i18n/index'
 import type { SimulationResult, EventLogItem, EventType, BatchResult, SweepResult } from '../types'
+import { PARAMETER_META } from '../data/parameterMeta'
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
@@ -211,7 +212,29 @@ export function exportEventLogCSV(events: EventLogItem[]): void {
     escapeCSV(e.resourceId ?? ''),
     escapeCSV(localizedEventDescription(e)),
   ])
-  const csv = [EVENT_LOG_HEADERS.join(','), ...rows.map((r) => r.join(','))].join('\n')
+  const prelude = buildParameterSourcePrelude()
+  const csv = [prelude, EVENT_LOG_HEADERS.join(','), ...rows.map((r) => r.join(','))].join('\n')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
   downloadBlob(blob, `nekoserve-eventlog-${timestamp()}.csv`)
+}
+
+/**
+ * Comment-prefixed header block listing every parameter and its DOI.
+ * Prepended to CSV exports as `# ...` lines (most spreadsheet tools
+ * treat these as comments). Epic E7: exports carry their own provenance.
+ */
+function buildParameterSourcePrelude(): string {
+  const lines: string[] = [
+    '# NekoServe event log export',
+    `# Generated: ${new Date().toISOString()}`,
+    '# Parameter defaults and their literature sources:',
+  ]
+  for (const [key, meta] of Object.entries(PARAMETER_META)) {
+    const unitStr = meta.unit ? ` ${meta.unit}` : ''
+    lines.push(
+      `#   ${key}=${meta.value}${unitStr}  [${meta.source.key}, doi:${meta.source.doi}]`,
+    )
+  }
+  lines.push('# See docs/references.bib or the Citations page for full APA / BibTeX forms.')
+  return lines.join('\n')
 }

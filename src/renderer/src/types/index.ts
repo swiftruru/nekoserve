@@ -22,6 +22,7 @@ export type Page =
   | 'eventlog'
   | 'playback'
   | 'howitworks'
+  | 'citations'
   | 'about'
 
 /**
@@ -35,6 +36,7 @@ export const PAGE_ORDER: readonly Page[] = [
   'results',
   'eventlog',
   'howitworks',
+  'citations',
   'about',
 ] as const
 

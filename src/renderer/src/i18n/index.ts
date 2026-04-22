@@ -16,6 +16,7 @@ import zhTW_playback from './locales/zh-TW/playback.json'
 import zhTW_learnMode from './locales/zh-TW/learnMode.json'
 import zhTW_update from './locales/zh-TW/update.json'
 import zhTW_challenges from './locales/zh-TW/challenges.json'
+import zhTW_citations from './locales/zh-TW/citations.json'
 
 import en_common from './locales/en/common.json'
 import en_nav from './locales/en/nav.json'
@@ -32,6 +33,7 @@ import en_playback from './locales/en/playback.json'
 import en_learnMode from './locales/en/learnMode.json'
 import en_update from './locales/en/update.json'
 import en_challenges from './locales/en/challenges.json'
+import en_citations from './locales/en/citations.json'
 
 import { registerFormatters } from './formatters'
 
@@ -57,6 +59,7 @@ export const namespaces = [
   'learnMode',
   'update',
   'challenges',
+  'citations',
 ] as const
 
 export const resources = {
@@ -76,6 +79,7 @@ export const resources = {
     learnMode: zhTW_learnMode,
     update: zhTW_update,
     challenges: zhTW_challenges,
+    citations: zhTW_citations,
   },
   en: {
     common: en_common,
@@ -93,6 +97,7 @@ export const resources = {
     learnMode: en_learnMode,
     update: en_update,
     challenges: en_challenges,
+    citations: en_citations,
   },
 } as const
 
