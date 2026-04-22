@@ -11,8 +11,8 @@
   "CUSTOMER_ABANDON": "顧客 #{{customerId}} 等待過久放棄離開",
   "CAT_VISIT_SEAT": "{{resourceId}} 走到顧客 #{{customerId}} 的座位",
   "CAT_LEAVE_SEAT": "{{resourceId}} 離開顧客 #{{customerId}} 的座位",
-  "CAT_START_REST": "{{resourceId}} 進入休息",
-  "CAT_END_REST": "{{resourceId}} 結束休息",
+  "CAT_START_REST": "{{resourceId}} 躺下來瞇一下",
+  "CAT_END_REST": "{{resourceId}} 睡飽了，起來伸懶腰",
   "CAT_STATE_CHANGE": "{{toSentence}}",
   "CAT_STATE_CHANGE_initial": "{{toSentence}}",
   "label": {

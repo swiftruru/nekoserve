@@ -11,8 +11,8 @@
   "CUSTOMER_ABANDON": "Customer #{{customerId}} gave up after waiting too long",
   "CAT_VISIT_SEAT": "{{resourceId}} walked over to customer #{{customerId}}",
   "CAT_LEAVE_SEAT": "{{resourceId}} left customer #{{customerId}}",
-  "CAT_START_REST": "{{resourceId}} started resting",
-  "CAT_END_REST": "{{resourceId}} finished resting",
+  "CAT_START_REST": "{{resourceId}} curls up for a nap",
+  "CAT_END_REST": "{{resourceId}} wakes up and stretches",
   "CAT_STATE_CHANGE": "{{toSentence}}",
   "CAT_STATE_CHANGE_initial": "{{toSentence}}",
   "label": {
