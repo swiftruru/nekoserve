@@ -6,12 +6,17 @@ import {
   AREAS,
   BOTTOM_AISLE_Y,
   CAT_GRID,
+  COUNTER,
   DOOR,
+  ENTRANCE,
   EXIT,
   FOOD_CORNER,
+  FURNITURE,
   FURNITURE_SPOTS,
   KITCHEN,
+  KITCHEN_STAFF_SLOTS,
   LITTER_CORNER,
+  QUEUE_ANCHOR,
   QUEUE_SEAT,
   REST_WANDER_CYCLE_MIN,
   SEAT_GRID,
@@ -71,12 +76,6 @@ interface CafeSceneProps {
    * and doesn't feel sluggish at 0.5×.
    */
   speed: number
-  /**
-   * v2.0 Epic A: show the 3-area floor-plan overlay (Area 1 / Area 2 /
-   * Cat Room + shelves + furniture anchors) on top of the scene. Off by
-   * default so existing UX doesn't change for returning users.
-   */
-  floorPlanOverlay?: boolean
 }
 
 // Zone constants, VIEW dimensions, REST_WANDER_CYCLE_MIN and per-slot
@@ -637,7 +636,6 @@ export default function CafeScene({
   focus,
   onSelectFocus,
   speed,
-  floorPlanOverlay = false,
 }: CafeSceneProps) {
   const { t } = useTranslation('playback')
 
@@ -802,79 +800,247 @@ export default function CafeScene({
         </defs>
         <rect x="0" y="0" width={VIEW_W} height={VIEW_H} fill="url(#floor)" />
 
-        {/* v2.0 Epic A: 3-area + shelf / furniture overlay. Painted
-            BEHIND everything interactive so it reads as backdrop. */}
-        {floorPlanOverlay && (
-          <g aria-hidden="true" opacity="0.85">
-            {Object.values(AREAS).map((a) => (
-              <g key={a.id}>
-                <rect
-                  x={a.x}
-                  y={a.y}
-                  width={a.w}
-                  height={a.h}
-                  fill={
-                    a.id === 'CAT_ROOM'
-                      ? 'rgba(251, 191, 36, 0.08)'
-                      : a.id === 'AREA_2'
-                      ? 'rgba(251, 146, 60, 0.06)'
-                      : 'rgba(253, 186, 116, 0.08)'
-                  }
-                  stroke={
-                    a.id === 'CAT_ROOM'
-                      ? 'rgba(217, 119, 6, 0.45)'
-                      : 'rgba(234, 88, 12, 0.35)'
-                  }
-                  strokeWidth="1"
-                  strokeDasharray={a.id === 'CAT_ROOM' ? '6,3' : '4,2'}
-                  rx="10"
-                />
-                <text
-                  x={a.labelX}
-                  y={a.labelY}
-                  textAnchor="middle"
-                  className="fill-orange-700 dark:fill-orange-300"
-                  style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1 }}
-                >
-                  {a.id === 'AREA_1' ? 'AREA 1' : a.id === 'AREA_2' ? 'AREA 2' : 'CAT ROOM'}
-                </text>
-              </g>
-            ))}
-            {SHELVES.map((s) => (
-              <g key={s.id}>
-                <rect
-                  x={s.x - 16}
-                  y={s.y - 4}
-                  width={32}
-                  height={6}
-                  fill="rgba(120, 53, 15, 0.4)"
-                  stroke="rgba(120, 53, 15, 0.7)"
-                  strokeWidth="0.5"
-                  rx="1"
-                />
-                <text
-                  x={s.x}
-                  y={s.y - 8}
-                  textAnchor="middle"
-                  style={{ fontSize: 8, fill: 'rgba(120, 53, 15, 0.7)' }}
-                >
-                  📚
-                </text>
-              </g>
-            ))}
-            {FURNITURE_SPOTS.map((f) => (
-              <circle
-                key={f.id}
-                cx={f.x}
-                cy={f.y}
-                r={4}
-                fill="rgba(146, 64, 14, 0.25)"
-                stroke="rgba(146, 64, 14, 0.55)"
-                strokeWidth="0.5"
+        {/* v2.1 Floor plan — replaces the v1.x abstract zone cards.
+            Painted behind characters so sprites always read clearly
+            over it. All geometry lives in cafeGeometry.ts. */}
+        <g aria-hidden="true">
+          {/* Three area rectangles (Area 2 upper, Area 1 lower, Cat
+              Room top-right). Filled solid enough to be the room
+              background, not a faint overlay. */}
+          {Object.values(AREAS).map((a) => (
+            <g key={a.id}>
+              <rect
+                x={a.x}
+                y={a.y}
+                width={a.w}
+                height={a.h}
+                fill={
+                  a.id === 'CAT_ROOM'
+                    ? '#fef3c7'
+                    : a.id === 'AREA_2'
+                    ? '#fff7ed'
+                    : '#fffbeb'
+                }
+                stroke={
+                  a.id === 'CAT_ROOM'
+                    ? '#d97706'
+                    : '#fb923c'
+                }
+                strokeWidth="1.5"
+                strokeDasharray={a.id === 'CAT_ROOM' ? '6,3' : '0'}
+                rx="12"
               />
-            ))}
+              <text
+                x={a.labelX}
+                y={a.labelY}
+                textAnchor="middle"
+                className="fill-orange-700 dark:fill-orange-500"
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                  opacity: 0.7,
+                }}
+              >
+                {a.id === 'AREA_1' ? 'AREA 1' : a.id === 'AREA_2' ? 'AREA 2' : 'CAT ROOM'}
+              </text>
+            </g>
+          ))}
+
+          {/* Counter / bar — physical barrier between Area 1 and Area 2.
+              Wood-grain gradient hint + stroke, rendered as a thick
+              strip across the middle. */}
+          <rect
+            x={COUNTER.x}
+            y={COUNTER.y}
+            width={COUNTER.w}
+            height={COUNTER.h}
+            fill="#7c2d12"
+            stroke="#431407"
+            strokeWidth="1"
+            rx="4"
+          />
+          <rect
+            x={COUNTER.x + 4}
+            y={COUNTER.y + 4}
+            width={COUNTER.w - 8}
+            height={COUNTER.h - 8}
+            fill="#92400e"
+            stroke="none"
+            rx="3"
+            opacity="0.6"
+          />
+          <text
+            x={COUNTER.x + COUNTER.w / 2}
+            y={COUNTER.y + COUNTER.h / 2 + 4}
+            textAnchor="middle"
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 3,
+              fill: '#fef3c7',
+              opacity: 0.8,
+            }}
+          >
+            吧台 · COUNTER
+          </text>
+
+          {/* Entrance door mark — right side, between Cat Room and Counter */}
+          <g transform={`translate(${ENTRANCE.x - 18}, ${ENTRANCE.y - 25})`}>
+            <rect x="0" y="0" width="36" height="50" rx="4"
+              fill="#fef3c7" stroke="#d97706" strokeWidth="1.5" />
+            <text x="18" y="30" textAnchor="middle" fontSize="20">🚪</text>
           </g>
-        )}
+
+          {/* Cat Tree — tall vertical furniture on the left wall of AREA_1 */}
+          <g transform="translate(42, 540)">
+            <rect x="0" y="0" width="20" height="80"
+              fill="#92400e" stroke="#431407" strokeWidth="1" rx="2" />
+            <rect x="-6" y="20" width="32" height="6"
+              fill="#a16207" stroke="#431407" strokeWidth="0.5" rx="1" />
+            <rect x="-4" y="50" width="28" height="6"
+              fill="#a16207" stroke="#431407" strokeWidth="0.5" rx="1" />
+            <text x="10" y="-4" textAnchor="middle" fontSize="9"
+              style={{ fill: '#7c2d12', fontWeight: 600 }}>🌳</text>
+          </g>
+
+          {/* Shelves — wall-mounted wood planks that cats can jump up on */}
+          {SHELVES.filter((s) => s.id !== 'CAT-TREE').map((s) => (
+            <g key={s.id}>
+              <rect
+                x={s.x - 22}
+                y={s.y - 3}
+                width={44}
+                height={7}
+                fill="#92400e"
+                stroke="#431407"
+                strokeWidth="0.6"
+                rx="1.5"
+              />
+              {/* books on the shelf */}
+              <text x={s.x} y={s.y - 5}
+                textAnchor="middle"
+                style={{ fontSize: 9, opacity: 0.65 }}>📚</text>
+            </g>
+          ))}
+
+          {/* Furniture: sofas, round tables, two-tops, coffee table */}
+          {FURNITURE.map((f) => {
+            if (f.type === 'sofa') {
+              return (
+                <g key={f.id}>
+                  {/* sofa backrest */}
+                  <rect
+                    x={f.x - f.w / 2}
+                    y={f.y - f.h / 2 - 6}
+                    width={f.w}
+                    height="10"
+                    rx="4"
+                    fill="#c2410c"
+                    stroke="#7c2d12"
+                    strokeWidth="1"
+                  />
+                  {/* sofa seat */}
+                  <rect
+                    x={f.x - f.w / 2}
+                    y={f.y - f.h / 2 + 4}
+                    width={f.w}
+                    height={f.h - 4}
+                    rx="5"
+                    fill="#ea580c"
+                    stroke="#7c2d12"
+                    strokeWidth="1.5"
+                  />
+                  {/* cushions */}
+                  {Array.from({ length: f.seats }).map((_, i) => {
+                    const span = f.w - 16
+                    const step = f.seats > 1 ? span / f.seats : 0
+                    const cx = f.x - span / 2 + step * (i + 0.5) - step / 2 + step / 2
+                    return (
+                      <rect
+                        key={i}
+                        x={cx - 14}
+                        y={f.y - 2}
+                        width={28}
+                        height={18}
+                        rx="4"
+                        fill="#fdba74"
+                        stroke="#9a3412"
+                        strokeWidth="0.8"
+                        opacity="0.85"
+                      />
+                    )
+                  })}
+                </g>
+              )
+            }
+            if (f.type === 'coffee') {
+              return (
+                <rect
+                  key={f.id}
+                  x={f.x - f.w / 2}
+                  y={f.y - f.h / 2}
+                  width={f.w}
+                  height={f.h}
+                  rx="8"
+                  fill="#78350f"
+                  stroke="#431407"
+                  strokeWidth="1.5"
+                />
+              )
+            }
+            if (f.type === 'round6' || f.type === 'round4') {
+              const r = Math.max(f.w, f.h) / 2 - 2
+              return (
+                <g key={f.id}>
+                  <circle
+                    cx={f.x}
+                    cy={f.y}
+                    r={r}
+                    fill="#fef3c7"
+                    stroke="#b45309"
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx={f.x}
+                    cy={f.y}
+                    r={r - 5}
+                    fill="none"
+                    stroke="#d97706"
+                    strokeWidth="0.8"
+                    opacity="0.5"
+                  />
+                </g>
+              )
+            }
+            // table2 (two-top square table)
+            return (
+              <g key={f.id}>
+                <rect
+                  x={f.x - f.w / 2}
+                  y={f.y - f.h / 2}
+                  width={f.w}
+                  height={f.h}
+                  rx="6"
+                  fill="#fef3c7"
+                  stroke="#b45309"
+                  strokeWidth="1.8"
+                />
+                <rect
+                  x={f.x - f.w / 2 + 4}
+                  y={f.y - f.h / 2 + 4}
+                  width={f.w - 8}
+                  height={f.h - 8}
+                  rx="4"
+                  fill="none"
+                  stroke="#d97706"
+                  strokeWidth="0.6"
+                  opacity="0.5"
+                />
+              </g>
+            )
+          })}
+        </g>
 
         {/* ── Hanging yarn balls ─ the ceiling is strung with dangling
             yarn balls (a cat-café staple). Always on, gently sway in
@@ -997,62 +1163,64 @@ export default function CafeScene({
           </g>
         )}
 
-        {/* Door */}
-        <ZoneCard
-          x="10"
-          y="200"
-          w="100"
-          h="110"
-          label={t('playback:zones.door')}
-          fillClass={doorFlashing ? 'neko-door-flash' : undefined}
+        {/* Entrance mini-card — shows arrived / served / abandoned
+            counts near the right-middle door. The door graphic itself
+            is already painted in the floor-plan overlay above. */}
+        <g
+          transform={`translate(${ENTRANCE.x - 52}, ${ENTRANCE.y + 40})`}
+          className={doorFlashing ? 'neko-door-flash' : undefined}
         >
-          <text x="60" y="250" textAnchor="middle" fontSize="32">🚪</text>
-          <text x="60" y="285" textAnchor="middle" fontSize="11" fill="#9a3412">
+          <rect
+            x="0"
+            y="0"
+            width="96"
+            height="60"
+            rx="8"
+            fill="#ffffff"
+            stroke="#fb923c"
+            strokeWidth="1.2"
+            opacity="0.85"
+          />
+          <text x="48" y="16" textAnchor="middle" fontSize="9"
+            fontWeight="700" fill="#9a3412">
+            {t('playback:zones.door')}
+          </text>
+          <text x="48" y="32" textAnchor="middle" fontSize="10" fill="#2563eb">
             {t('playback:labels.arrived')} {state.counters.arrived}
           </text>
-        </ZoneCard>
-
-        {/* Seat queue */}
-        <ZoneCard
-          x="120"
-          y="60"
-          w="110"
-          h="380"
-          label={t('playback:zones.queueSeat')}
-          strokeClass={
-            state.queueSeat.length > 5 ? 'neko-warn-pulse' : undefined
-          }
-          strokeOverride={
-            state.queueSeat.length > 5 ? '#ef4444' : undefined
-          }
-        >
-          {state.queueSeat.length > 3 && (
-            <text
-              x="175"
-              y="44"
-              textAnchor="middle"
-              fontSize="11"
-              fontWeight="700"
-              fill="#c2410c"
-            >
-              {t('playback:labels.queueBadge', { count: state.queueSeat.length })}
-            </text>
-          )}
-          <text x="175" y="430" textAnchor="middle" fontSize="11" fill="#9a3412">
-            × {state.queueSeat.length}
+          <text x="48" y="45" textAnchor="middle" fontSize="10" fill="#16a34a">
+            {t('playback:labels.served')} {state.counters.served}
           </text>
-        </ZoneCard>
+          <text x="48" y="56" textAnchor="middle" fontSize="10" fill="#dc2626">
+            {t('playback:labels.abandoned')} {state.counters.abandoned}
+          </text>
+        </g>
 
-        {/* Seat grid */}
-        <ZoneCard
-          x="240"
-          y="60"
-          w="260"
-          h="380"
-          label={t('playback:zones.seats')}
-          strokeClass={seatsNearlyFull ? 'neko-warn-pulse' : undefined}
-          strokeOverride={seatsNearlyFull ? '#ef4444' : undefined}
-        >
+        {/* Queue indicator — sits in the right aisle south of counter.
+            Displays count + warn pulse when building up. */}
+        {state.queueSeat.length > 0 && (
+          <g
+            transform={`translate(${QUEUE_ANCHOR.x - 30}, ${QUEUE_ANCHOR.y + 100})`}
+            className={state.queueSeat.length > 5 ? 'neko-warn-pulse' : undefined}
+          >
+            <rect
+              x="0" y="0" width="60" height="22" rx="11"
+              fill={state.queueSeat.length > 5 ? '#fee2e2' : '#fff7ed'}
+              stroke={state.queueSeat.length > 5 ? '#ef4444' : '#fb923c'}
+              strokeWidth="1"
+            />
+            <text x="30" y="15" textAnchor="middle" fontSize="11"
+              fontWeight="700" fill="#9a3412">
+              🪑 × {state.queueSeat.length}
+            </text>
+          </g>
+        )}
+
+        {/* Seats — distributed across the FURNITURE catalog. Each seat
+            is still an interactive rect with focus + pop animation +
+            cat-leave puff; it's just anchored to a cushion coordinate
+            on a specific piece of furniture rather than a rigid grid. */}
+        <g>
           {state.seats.map((seat) => {
             const p = seatPos(seat.slotIdx)
             const busy = seat.customerId !== null
@@ -1165,36 +1333,18 @@ export default function CafeScene({
               </g>
             )
           })}
-          <text x="370" y="430" textAnchor="middle" fontSize="11" fill="#9a3412">
-            {t('playback:labels.seatsOccupied', {
-              occ: seatOcc,
-              total: config.seatCount,
-            })}
-          </text>
-        </ZoneCard>
+        </g>
 
-        {/* Kitchen (full-height now that the cat queue is gone) */}
-        <ZoneCard
-          x="520"
-          y="60"
-          w="200"
-          h="380"
-          label={t('playback:zones.kitchen')}
-          strokeClass={
-            orderReadyPulses.size > 0 ? 'neko-kitchen-ding' : undefined
-          }
-          fillClass={
-            orderReadyPulses.size > 0 ? 'neko-kitchen-ding-bg' : undefined
-          }
-        >
+        {/* Staff — behind the counter strip. Up to config.staffCount
+            chefs, each rendered on one of the KITCHEN_STAFF_SLOTS. */}
+        <g className={orderReadyPulses.size > 0 ? 'neko-kitchen-ding' : undefined}>
           {Array.from({ length: config.staffCount }, (_, i) => {
             const busy = i < state.staffBusyCount
-            const col = i % 3
-            const row = Math.floor(i / 3)
+            const slot = KITCHEN_STAFF_SLOTS[i % KITCHEN_STAFF_SLOTS.length]
             return (
               <g
                 key={`staff-${i}`}
-                transform={`translate(${KITCHEN.x - 70 + col * KITCHEN.stepX}, ${KITCHEN.y + row * 50})`}
+                transform={`translate(${slot.x}, ${slot.y})`}
               >
                 <circle
                   r="16"
@@ -1207,135 +1357,72 @@ export default function CafeScene({
             )
           })}
 
-          {/* Steam wisps above the kitchen zone when any staff is busy */}
+          {/* Steam wisps above the counter when any staff is busy */}
           {decor && state.staffBusyCount > 0 && (
             <g>
-              <text
-                x="580"
-                y="100"
-                textAnchor="middle"
-                fontSize="12"
-                className="neko-steam"
-                style={steamStyle}
-              >
-                〰️
-              </text>
-              <text
-                x="620"
-                y="100"
-                textAnchor="middle"
-                fontSize="12"
-                className="neko-steam neko-steam--d1"
-                style={steamStyle}
-              >
-                〰️
-              </text>
-              <text
-                x="660"
-                y="100"
-                textAnchor="middle"
-                fontSize="12"
-                className="neko-steam neko-steam--d2"
-                style={steamStyle}
-              >
-                〰️
-              </text>
+              <text x={KITCHEN_STAFF_SLOTS[0].x} y={COUNTER.y - 4}
+                textAnchor="middle" fontSize="12"
+                className="neko-steam" style={steamStyle}>〰️</text>
+              <text x={KITCHEN_STAFF_SLOTS[1].x} y={COUNTER.y - 4}
+                textAnchor="middle" fontSize="12"
+                className="neko-steam neko-steam--d1" style={steamStyle}>〰️</text>
+              <text x={KITCHEN_STAFF_SLOTS[2].x} y={COUNTER.y - 4}
+                textAnchor="middle" fontSize="12"
+                className="neko-steam neko-steam--d2" style={steamStyle}>〰️</text>
             </g>
           )}
+        </g>
 
-          <text x="620" y="340" textAnchor="middle" fontSize="11" fill="#9a3412">
+        {/* Stats strip — staff busy count + cat visits, pinned below
+            counter in the AREA_1 north edge. */}
+        <g transform={`translate(${COUNTER.x + COUNTER.w / 2 - 70}, ${COUNTER.y + COUNTER.h + 6})`}>
+          <rect x="0" y="0" width="140" height="22" rx="11"
+            fill="#ffffff" stroke="#fb923c" strokeWidth="0.8" opacity="0.85" />
+          <text x="70" y="15" textAnchor="middle" fontSize="10" fill="#9a3412">
             {t('playback:labels.staffBusy', {
               busy: state.staffBusyCount,
               total: config.staffCount,
             })}
-          </text>
-          <text x="620" y="356" textAnchor="middle" fontSize="10" fill="#9a3412" opacity="0.8">
+            {'  ·  '}
             {t('playback:labels.catVisitsTotal', { count: state.counters.catVisits })}
           </text>
-        </ZoneCard>
+        </g>
 
-        {/* Cat home zone */}
-        <ZoneCard x="740" y="60" w="170" h="380" label={t('playback:zones.cats')}>
-          {/* Food corner and litter corner — pure visual props that
-              resting cats wander between. No semantic meaning, no new
-              events, no new metrics. */}
-          <g opacity="0.6">
-            <circle
-              cx={FOOD_CORNER.x}
-              cy={FOOD_CORNER.y}
-              r="14"
-              fill="#fff7ed"
-              stroke="#fed7aa"
-              strokeWidth="1"
-            />
-            <text
-              x={FOOD_CORNER.x}
-              y={FOOD_CORNER.y + 5}
-              textAnchor="middle"
-              fontSize="16"
-            >
-              🍚
-            </text>
-            <circle
-              cx={LITTER_CORNER.x}
-              cy={LITTER_CORNER.y}
-              r="14"
-              fill="#fff7ed"
-              stroke="#fed7aa"
-              strokeWidth="1"
-            />
-            <text
-              x={LITTER_CORNER.x}
-              y={LITTER_CORNER.y + 5}
-              textAnchor="middle"
-              fontSize="16"
-            >
-              🚽
-            </text>
-          </g>
-          <text x="825" y="430" textAnchor="middle" fontSize="11" fill="#9a3412">
+        {/* Cat Room indicator — counts cats currently inside the room.
+            The area rect is already painted above; this just adds
+            "當前外出 N/M" + "所有貓都在貓房" hint when applicable. */}
+        <g transform={`translate(${AREAS.CAT_ROOM.x + AREAS.CAT_ROOM.w / 2}, ${AREAS.CAT_ROOM.y + AREAS.CAT_ROOM.h - 20})`}>
+          <text textAnchor="middle" fontSize="10" fill="#9a3412">
             {t('playback:labels.catsBusy', {
               busy: catsActive,
               total: config.catCount,
             })}
           </text>
           {allCatsOut && (
-            <text
-              x="825"
-              y="280"
-              textAnchor="middle"
-              fontSize="11"
-              fill="#9ca3af"
-              fontStyle="italic"
-            >
+            <text y="14" textAnchor="middle" fontSize="10"
+              fill="#9ca3af" fontStyle="italic">
               {t('playback:labels.allCatsOut')}
             </text>
           )}
-        </ZoneCard>
+        </g>
 
-        {/* Exit */}
-        <ZoneCard
-          x="920"
-          y="200"
-          w="70"
-          h="110"
-          label={t('playback:zones.exit')}
-          fillClass={
-            exitBadFlashing
-              ? 'neko-exit-flash-bad'
-              : exitGoodFlashing
-              ? 'neko-exit-flash-good'
-              : undefined
-          }
-        >
-          <text x="955" y="250" textAnchor="middle" fontSize="28">🏁</text>
-          <text x="955" y="285" textAnchor="middle" fontSize="10" fill="#16a34a">
-            {t('playback:labels.served')} {state.counters.served}
-          </text>
-          <text x="955" y="300" textAnchor="middle" fontSize="10" fill="#dc2626">
-            {t('playback:labels.abandoned')} {state.counters.abandoned}
-          </text>
-        </ZoneCard>
+        {/* Exit flash overlay — only the animation cue; the door graphic
+            itself is already rendered in the floor-plan layer. */}
+        {(exitBadFlashing || exitGoodFlashing) && (
+          <rect
+            x={ENTRANCE.x - 24}
+            y={ENTRANCE.y - 30}
+            width="48"
+            height="60"
+            rx="6"
+            fill="none"
+            className={
+              exitBadFlashing
+                ? 'neko-exit-flash-bad'
+                : 'neko-exit-flash-good'
+            }
+          />
+        )}
 
         {/* ── Cherry blossom petals ─ always on, drifting from top
             edge diagonally down and left. Rendered behind customer

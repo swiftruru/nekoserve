@@ -97,7 +97,6 @@ export default function PlaybackPage({
   const [speed, setSpeed] = useState<number>(() => loadSpeed())
   const [focus, setFocus] = useState<FocusTarget | null>(null)
   const [learningMode, setLearningMode] = useState(false)
-  const [floorPlanOverlay, setFloorPlanOverlay] = useState(false)
   const sceneRef = useRef<HTMLDivElement>(null)
 
   // Precompute metric snapshots once per simulation result. The Learning
@@ -351,24 +350,12 @@ export default function PlaybackPage({
         }
       >
         <div ref={sceneRef} className="card p-3 relative">
-          <div className="flex justify-end mb-1">
-            <label className="inline-flex items-center gap-2 text-[11px] text-gray-500 dark:text-bark-300 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={floorPlanOverlay}
-                onChange={(e) => setFloorPlanOverlay(e.target.checked)}
-                className="accent-orange-500"
-              />
-              🗺️ 樓層平面圖
-            </label>
-          </div>
           <CafeScene
             state={state}
             config={config}
             focus={focus}
             onSelectFocus={handleSelectFocus}
             speed={speed}
-            floorPlanOverlay={floorPlanOverlay}
           />
           {focus && (
             <InspectPopover
