@@ -161,10 +161,19 @@ function localizedEventDescription(e: EventLogItem): string {
   const fromLabel = e.fromState
     ? i18n.t(`events:catState.${e.fromState}` as const, { defaultValue: e.fromState })
     : ''
+  const isInitial = e.eventType === 'CAT_STATE_CHANGE' && !e.fromState
   const toLabel = e.toState
-    ? i18n.t(`events:catStateVerb.${e.toState}` as const, { defaultValue: e.toState })
+    ? i18n.t(
+        isInitial
+          ? (`events:catState.${e.toState}` as const)
+          : (`events:catStateVerb.${e.toState}` as const),
+        { defaultValue: e.toState },
+      )
     : ''
-  return i18n.t(`events:${e.eventType as EventType}` as const, {
+  const templateKey = isInitial
+    ? 'events:CAT_STATE_CHANGE_initial'
+    : `events:${e.eventType as EventType}`
+  return i18n.t(templateKey as never, {
     customerId: e.customerId,
     resourceId: e.resourceId ?? '',
     fromState: fromLabel,

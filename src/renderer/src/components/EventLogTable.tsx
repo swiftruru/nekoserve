@@ -114,14 +114,28 @@ export default function EventLogTable({
   function describeEvent(e: EventLogItem): string {
     // v2.0: translate CatBehaviorState enum values ("HIDDEN") into
     // plain-language labels ("躲起來") so Event Log reads like a cat's
-    // story rather than code.
+    // story rather than code. For a CAT_STATE_CHANGE with no fromState
+    // (the cat's first transition of the run), use the "_initial"
+    // template variant which phrases the line as "starts out resting"
+    // rather than "was blank, now resting".
     const fromLabel = e.fromState
       ? t(`events:catState.${e.fromState}` as const, { defaultValue: e.fromState })
       : ''
-    const toLabel = e.toState
+    const toLabelNoun = e.toState
+      ? t(`events:catState.${e.toState}` as const, { defaultValue: e.toState })
+      : ''
+    const toLabelVerb = e.toState
       ? t(`events:catStateVerb.${e.toState}` as const, { defaultValue: e.toState })
       : ''
-    return t(`events:${e.eventType}` as const, {
+    const templateKey =
+      e.eventType === 'CAT_STATE_CHANGE' && !e.fromState
+        ? 'events:CAT_STATE_CHANGE_initial'
+        : `events:${e.eventType}`
+    // Initial template uses the noun-form (RESTING → "休息中"); transition
+    // template uses the verb-form (RESTING → "休息").
+    const toLabel =
+      e.eventType === 'CAT_STATE_CHANGE' && !e.fromState ? toLabelNoun : toLabelVerb
+    return t(templateKey as never, {
       customerId: e.customerId,
       resourceId: formatResourceId(e.resourceId),
       fromState: fromLabel,
@@ -472,8 +486,8 @@ export default function EventLogTable({
                     <td className="px-4 py-2 font-mono text-gray-600 dark:text-bark-300">
                       {e.timestamp.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${EVENT_TYPE_COLORS[e.eventType]}`}>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${EVENT_TYPE_COLORS[e.eventType]}`}>
                         {labelForType(e.eventType)}
                       </span>
                     </td>

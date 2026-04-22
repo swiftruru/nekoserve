@@ -13,7 +13,8 @@
   "CAT_LEAVE_SEAT": "{{resourceId}} 離開顧客 #{{customerId}} 的座位",
   "CAT_START_REST": "{{resourceId}} 進入休息",
   "CAT_END_REST": "{{resourceId}} 結束休息",
-  "CAT_STATE_CHANGE": "{{resourceId}}：{{fromState}}，改去{{toState}}",
+  "CAT_STATE_CHANGE": "{{resourceId}} 從「{{fromState}}」改去{{toState}}",
+  "CAT_STATE_CHANGE_initial": "{{resourceId}} 一開始是{{toState}}",
   "label": {
     "CUSTOMER_ARRIVE": "顧客到達",
     "CUSTOMER_WAIT_SEAT": "等待座位",
