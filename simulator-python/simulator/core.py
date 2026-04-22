@@ -290,7 +290,13 @@ def run_simulation(config_dict: dict) -> dict:
             # identical; the self-loop penalty makes this rare). The
             # event carries the new (area, level) so Playback can route
             # the cat sprite to its 2.5D position without extra polling.
-            if next_state != prev_state:
+            #
+            # Deliberate exception: when the cat is entering RESTING we
+            # do NOT emit CAT_STATE_CHANGE because the existing
+            # CAT_START_REST event (emitted a few lines below) already
+            # tells the story in the Event Log, and two rows at the
+            # same timestamp reads as a duplicate to users.
+            if next_state != prev_state and next_state != CatBehaviorState.RESTING:
                 log(
                     env.now, "CAT_STATE_CHANGE", cat_id,
                     f"{cat_label} 從 {prev_state.value} 轉為 {next_state.value} "
