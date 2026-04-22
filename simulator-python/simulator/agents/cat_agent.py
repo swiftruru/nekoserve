@@ -198,13 +198,18 @@ class CatAgent:
         if self.state == CatBehaviorState.OUT_OF_LOUNGE:
             return CafeArea.CAT_ROOM, None
 
-        # Stress-sensitive cats bias toward Area 2 (quieter side) at high occupancy.
+        # Area 1 (main lounge) vs Area 2 (quieter side) split. Hirsch
+        # 2025 Figure 3 left panel: in the in-lounge sample n=8557,
+        # Area 1 n=5653 (66%), Area 2 n=2904 (34%). Stress-sensitive
+        # cats at high occupancy invert toward the quieter Area 2.
         occupancy = classify_occupancy(seated_count)
         stress = self.personality.stress_sensitivity
         if occupancy == OccupancyLevel.HIGH and stress > 0.6:
+            # Stressed + crowded: 70% Area 2 (retreat to quieter side).
             area = CafeArea.AREA_2 if rng.random() < 0.7 else CafeArea.AREA_1
         else:
-            area = CafeArea.AREA_1 if rng.random() < 0.6 else CafeArea.AREA_2
+            # Baseline Hirsch split: Area 1 66% / Area 2 34%.
+            area = CafeArea.AREA_1 if rng.random() < 0.66 else CafeArea.AREA_2
 
         # Vertical: blend base preference with occupancy-driven shelf
         # preference. Active states (PLAYING / EXPLORING / MOVING) lean

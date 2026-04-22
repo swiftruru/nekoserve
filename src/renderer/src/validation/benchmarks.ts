@@ -60,12 +60,12 @@ export const HIRSCH_2025_BENCHMARK: ValidationBenchmark = {
     PLAYING: 0.003,
   },
   catVerticalLevel: {
-    FLOOR: 0.156,
-    FURNITURE: 0.278,
-    SHELF: 0.421,
-    // Cat-room share (0.145) is intentionally excluded from the
-    // vertical-level benchmark; cats in the cat room don't have a
-    // vertical level to compare.
+    // Renormalized to the in-lounge subtotal (n = 8547 = 1560 + 2778 + 4209)
+    // per Hirsch 2025 Figure 3 right panel. Cat-room observations are
+    // excluded because cats in the cat room don't have a vertical level.
+    FLOOR: 0.182,      // 1560 / 8547
+    FURNITURE: 0.325,  // 2778 / 8547
+    SHELF: 0.492,      // 4209 / 8547 — matches the paper's "~49% shelf preference"
   },
   abandonRateRange: { min: 0.0, max: 0.25 },
   noInteractionRateRange: { min: 0.3, max: 0.6 },
