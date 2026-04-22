@@ -158,26 +158,16 @@ const EVENT_LOG_HEADERS = [
 ]
 
 function localizedEventDescription(e: EventLogItem): string {
-  const fromLabel = e.fromState
-    ? i18n.t(`events:catState.${e.fromState}` as const, { defaultValue: e.fromState })
-    : ''
-  const isInitial = e.eventType === 'CAT_STATE_CHANGE' && !e.fromState
-  const toLabel = e.toState
-    ? i18n.t(
-        isInitial
-          ? (`events:catState.${e.toState}` as const)
-          : (`events:catStateVerb.${e.toState}` as const),
-        { defaultValue: e.toState },
-      )
-    : ''
-  const templateKey = isInitial
-    ? 'events:CAT_STATE_CHANGE_initial'
-    : `events:${e.eventType as EventType}`
-  return i18n.t(templateKey as never, {
+  if (e.eventType === 'CAT_STATE_CHANGE' && e.toState) {
+    const kind = e.fromState ? 'transition' : 'initial'
+    return i18n.t(`events:catSentence.${kind}.${e.toState}` as never, {
+      resourceId: e.resourceId ?? '',
+      defaultValue: e.description ?? '',
+    })
+  }
+  return i18n.t(`events:${e.eventType as EventType}` as const, {
     customerId: e.customerId,
     resourceId: e.resourceId ?? '',
-    fromState: fromLabel,
-    toState: toLabel,
     customerType: e.customerType ?? '',
     defaultValue: e.description ?? '',
   })

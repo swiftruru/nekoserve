@@ -112,34 +112,20 @@ export default function EventLogTable({
   }
 
   function describeEvent(e: EventLogItem): string {
-    // v2.0: translate CatBehaviorState enum values ("HIDDEN") into
-    // plain-language labels ("躲起來") so Event Log reads like a cat's
-    // story rather than code. For a CAT_STATE_CHANGE with no fromState
-    // (the cat's first transition of the run), use the "_initial"
-    // template variant which phrases the line as "starts out resting"
-    // rather than "was blank, now resting".
-    const fromLabel = e.fromState
-      ? t(`events:catState.${e.fromState}` as const, { defaultValue: e.fromState })
-      : ''
-    const toLabelNoun = e.toState
-      ? t(`events:catState.${e.toState}` as const, { defaultValue: e.toState })
-      : ''
-    const toLabelVerb = e.toState
-      ? t(`events:catStateVerb.${e.toState}` as const, { defaultValue: e.toState })
-      : ''
-    const templateKey =
-      e.eventType === 'CAT_STATE_CHANGE' && !e.fromState
-        ? 'events:CAT_STATE_CHANGE_initial'
-        : `events:${e.eventType}`
-    // Initial template uses the noun-form (RESTING → "休息中"); transition
-    // template uses the verb-form (RESTING → "休息").
-    const toLabel =
-      e.eventType === 'CAT_STATE_CHANGE' && !e.fromState ? toLabelNoun : toLabelVerb
-    return t(templateKey as never, {
+    // v2.0: CAT_STATE_CHANGE rows are phrased as a full sentence per
+    // target state, not via template interpolation. The sentence tree
+    // lives at events:catSentence.{initial|transition}.<TO_STATE> so
+    // the i18n author has full control over each line's grammar.
+    if (e.eventType === 'CAT_STATE_CHANGE' && e.toState) {
+      const kind = e.fromState ? 'transition' : 'initial'
+      return t(`events:catSentence.${kind}.${e.toState}` as never, {
+        resourceId: formatResourceId(e.resourceId),
+        defaultValue: e.description ?? '',
+      })
+    }
+    return t(`events:${e.eventType}` as const, {
       customerId: e.customerId,
       resourceId: formatResourceId(e.resourceId),
-      fromState: fromLabel,
-      toState: toLabel,
       customerType: e.customerType ?? '',
       defaultValue: e.description ?? '',
     })

@@ -13,8 +13,8 @@
   "CAT_LEAVE_SEAT": "{{resourceId}} 離開顧客 #{{customerId}} 的座位",
   "CAT_START_REST": "{{resourceId}} 進入休息",
   "CAT_END_REST": "{{resourceId}} 結束休息",
-  "CAT_STATE_CHANGE": "{{resourceId}} 從「{{fromState}}」改去{{toState}}",
-  "CAT_STATE_CHANGE_initial": "{{resourceId}} 一開始是{{toState}}",
+  "CAT_STATE_CHANGE": "{{toSentence}}",
+  "CAT_STATE_CHANGE_initial": "{{toSentence}}",
   "label": {
     "CUSTOMER_ARRIVE": "顧客到達",
     "CUSTOMER_WAIT_SEAT": "等待座位",
@@ -37,25 +37,38 @@
     "seat": "座位 #{{n}}"
   },
   "catState": {
-    "OUT_OF_LOUNGE": "躲到貓房",
-    "RESTING": "休息中",
-    "SOCIALIZING": "跟人或貓互動",
+    "OUT_OF_LOUNGE": "在貓房裡",
+    "RESTING": "在休息",
+    "SOCIALIZING": "跟人互動中",
     "HIDDEN": "躲起來",
-    "ALERT": "警戒著",
+    "ALERT": "警戒中",
     "GROOMING": "舔毛整理自己",
-    "MOVING": "走動",
-    "EXPLORING": "四處探索",
+    "MOVING": "走來走去",
+    "EXPLORING": "在探索環境",
     "PLAYING": "在玩耍"
   },
-  "catStateVerb": {
-    "OUT_OF_LOUNGE": "躲回貓房",
-    "RESTING": "休息",
-    "SOCIALIZING": "找人或貓互動",
-    "HIDDEN": "躲起來",
-    "ALERT": "提高警戒",
-    "GROOMING": "舔毛整理",
-    "MOVING": "走動",
-    "EXPLORING": "到處探索",
-    "PLAYING": "玩耍"
+  "catSentence": {
+    "initial": {
+      "OUT_OF_LOUNGE": "{{resourceId}} 一開始待在貓房裡沒出來",
+      "RESTING": "{{resourceId}} 一開始就窩著休息",
+      "SOCIALIZING": "{{resourceId}} 一開始就很有精神，想找人玩",
+      "HIDDEN": "{{resourceId}} 一開始就躲起來了",
+      "ALERT": "{{resourceId}} 一開始就警戒戒備著",
+      "GROOMING": "{{resourceId}} 一開始在舔毛整理自己",
+      "MOVING": "{{resourceId}} 一開始就在走來走去",
+      "EXPLORING": "{{resourceId}} 一開始就到處探索",
+      "PLAYING": "{{resourceId}} 一開始就玩得開心"
+    },
+    "transition": {
+      "OUT_OF_LOUNGE": "{{resourceId}} 不想理人了，溜回貓房",
+      "RESTING": "{{resourceId}} 找個位子窩下來休息",
+      "SOCIALIZING": "{{resourceId}} 心情不錯，跑來找人互動",
+      "HIDDEN": "{{resourceId}} 覺得不太對勁，躲起來了",
+      "ALERT": "{{resourceId}} 警戒起來，盯著四周看",
+      "GROOMING": "{{resourceId}} 坐下來舔毛整理自己",
+      "MOVING": "{{resourceId}} 起身走動一下",
+      "EXPLORING": "{{resourceId}} 好奇心上來，到處嗅來嗅去",
+      "PLAYING": "{{resourceId}} 玩心大發，開始追東西"
+    }
   }
 }

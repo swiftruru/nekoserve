@@ -13,8 +13,8 @@
   "CAT_LEAVE_SEAT": "{{resourceId}} left customer #{{customerId}}",
   "CAT_START_REST": "{{resourceId}} started resting",
   "CAT_END_REST": "{{resourceId}} finished resting",
-  "CAT_STATE_CHANGE": "{{resourceId}} was {{fromState}}, now {{toState}}",
-  "CAT_STATE_CHANGE_initial": "{{resourceId}} starts out {{toState}}",
+  "CAT_STATE_CHANGE": "{{toSentence}}",
+  "CAT_STATE_CHANGE_initial": "{{toSentence}}",
   "label": {
     "CUSTOMER_ARRIVE": "Arrive",
     "CUSTOMER_WAIT_SEAT": "Wait seat",
@@ -37,25 +37,38 @@
     "seat": "Seat #{{n}}"
   },
   "catState": {
-    "OUT_OF_LOUNGE": "off in the cat room",
+    "OUT_OF_LOUNGE": "in the cat room",
     "RESTING": "resting",
     "SOCIALIZING": "socializing",
     "HIDDEN": "hiding",
-    "ALERT": "alert",
-    "GROOMING": "grooming itself",
-    "MOVING": "moving around",
+    "ALERT": "on alert",
+    "GROOMING": "grooming",
+    "MOVING": "wandering",
     "EXPLORING": "exploring",
     "PLAYING": "playing"
   },
-  "catStateVerb": {
-    "OUT_OF_LOUNGE": "slipping back to the cat room",
-    "RESTING": "settling down to rest",
-    "SOCIALIZING": "looking for a visitor to engage",
-    "HIDDEN": "tucking itself out of sight",
-    "ALERT": "getting alert",
-    "GROOMING": "grooming itself",
-    "MOVING": "wandering",
-    "EXPLORING": "exploring the café",
-    "PLAYING": "starting to play"
+  "catSentence": {
+    "initial": {
+      "OUT_OF_LOUNGE": "{{resourceId}} stays in the cat room and doesn't come out",
+      "RESTING": "{{resourceId}} settles down to rest from the start",
+      "SOCIALIZING": "{{resourceId}} starts the day friendly, looking for company",
+      "HIDDEN": "{{resourceId}} hides right from the beginning",
+      "ALERT": "{{resourceId}} is on guard from the start",
+      "GROOMING": "{{resourceId}} starts by grooming itself",
+      "MOVING": "{{resourceId}} starts by wandering around",
+      "EXPLORING": "{{resourceId}} starts off curious, exploring everywhere",
+      "PLAYING": "{{resourceId}} starts the day in a playful mood"
+    },
+    "transition": {
+      "OUT_OF_LOUNGE": "{{resourceId}} has had enough and slips back into the cat room",
+      "RESTING": "{{resourceId}} finds a quiet spot to settle down",
+      "SOCIALIZING": "{{resourceId}} perks up and comes over to say hi",
+      "HIDDEN": "{{resourceId}} gets a bit skittish and tucks itself out of sight",
+      "ALERT": "{{resourceId}} goes on alert and watches the room",
+      "GROOMING": "{{resourceId}} sits down for a quick grooming session",
+      "MOVING": "{{resourceId}} gets up and strolls around",
+      "EXPLORING": "{{resourceId}} gets curious and starts sniffing around",
+      "PLAYING": "{{resourceId}} is feeling playful and chases something"
+    }
   }
 }
