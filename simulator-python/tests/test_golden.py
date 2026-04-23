@@ -39,6 +39,10 @@ VALID_EVENT_TYPES = {
     "CAT_LEAVE_SEAT",
     "CAT_START_REST",
     "CAT_END_REST",
+    # v2.0: cat FSM state transitions (idle / seeking / visiting / resting)
+    # emitted alongside the existing VISIT/LEAVE/REST events so the Playback
+    # floor plan can animate the cat's current behavior band.
+    "CAT_STATE_CHANGE",
 }
 
 
