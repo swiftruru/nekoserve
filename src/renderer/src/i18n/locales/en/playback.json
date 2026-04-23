@@ -49,11 +49,12 @@
     "staffBusy": "{{busy}} / {{total}} busy",
     "seatsOccupied": "{{occ}} / {{total}} seated",
     "catsBusy": "{{busy}} / {{total}} out visiting",
-    "catVisitsTotal": "{{count}} visits so far",
+    "catVisitsTotal": "{{count}} cuddles so far",
     "allCatsOut": "(all cats out visiting)",
     "simulationEnded": "Simulation ended",
     "simulationEndedHint": "{{count}} customers were still mid-service at closing time; their processes were cut off",
-    "queueBadge": "👥 {{count}} waiting"
+    "queueBadge": "👥 {{count}} waiting",
+    "queueHint": "same customers queuing along the right aisle"
   },
   "stages": {
     "arriving": "Arriving",

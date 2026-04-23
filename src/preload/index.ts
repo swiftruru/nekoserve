@@ -125,6 +125,28 @@ const electronAPI = {
     ipcRenderer.on('menu-check-for-update', () => callback())
   },
 
+  /**
+   * Subscribe to live progress events emitted by the Python simulator
+   * during a run. Returns an unsubscribe function so React effects can
+   * clean up when the component unmounts or the run finishes.
+   */
+  onSimulationProgress: (
+    callback: (progress: {
+      stage: 'warmup' | 'main'
+      elapsedMin: number
+      totalMin: number
+    }) => void,
+  ): (() => void) => {
+    const handler = (
+      _event: unknown,
+      progress: { stage: 'warmup' | 'main'; elapsedMin: number; totalMin: number },
+    ) => callback(progress)
+    ipcRenderer.on('simulation-progress', handler)
+    return () => {
+      ipcRenderer.removeListener('simulation-progress', handler)
+    }
+  },
+
   // ── Screenshot API ──────────────────────────────────────────
 
   /** Capture a region of the page as PNG and save via dialog. */

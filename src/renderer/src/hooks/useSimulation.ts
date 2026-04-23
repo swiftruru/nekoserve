@@ -38,6 +38,16 @@ interface SimulationState {
   /** Batch mode state */
   batchResult: BatchResult | null
   batchProgress: { completed: number; total: number } | null
+  /** Live progress streamed from the Python simulator during a single run.
+   *  `rendering` is a synthetic stage we add after the IPC returns, while
+   *  React commits the heavy result cascade — without it the indicator
+   *  vanishes the moment status flips to 'success' and the user sees the
+   *  long post-result freeze with no feedback. */
+  simProgress: {
+    stage: 'warmup' | 'main' | 'rendering'
+    elapsedMin: number
+    totalMin: number
+  } | null
   /** Sweep state */
   sweepResult: SweepResult | null
 }
@@ -48,6 +58,10 @@ interface UseSimulationReturn extends SimulationState {
   runSweep: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => Promise<boolean>
   cancel: () => void
   reset: () => void
+  /** Dismiss the global run indicator. Call this after the destination
+   *  page has finished mounting so the indicator stays visible through
+   *  the post-result render cascade. */
+  clearSimProgress: () => void
   clearHistory: () => void
   deleteHistoryEntry: (id: number) => void
   renameHistoryEntry: (id: number, label: string) => void
@@ -62,6 +76,7 @@ const INITIAL_STATE: SimulationState = {
   history: [],
   batchResult: null,
   batchProgress: null,
+  simProgress: null,
   sweepResult: null,
 }
 
@@ -117,11 +132,18 @@ export function useSimulation(): UseSimulationReturn {
       elapsed: 0,
       batchResult: null,
       batchProgress: null,
+      simProgress: null,
     }))
 
     timerRef.current = setInterval(() => {
       setState((prev) => ({ ...prev, elapsed: (Date.now() - startTime) / 1000 }))
     }, 100)
+
+    // Live progress: subscribe before invoking, so the first
+    // simulator emit isn't lost to a race with handler registration.
+    const unsubProgress = window.electronAPI.onSimulationProgress?.((p) => {
+      setState((prev) => ({ ...prev, simProgress: p }))
+    })
 
     try {
       const result = await window.electronAPI.runSimulation(config)
@@ -132,8 +154,41 @@ export function useSimulation(): UseSimulationReturn {
       const runLabel =
         label ?? i18n.t('results:runLabelFallback', { index: '?' })
 
+      // ── Three-phase post-result commit ────────────────────────
+      // The eventLog can hold thousands of entries. Setting `result`
+      // synchronously triggers a heavy React cascade (PlaybackPage
+      // mount, CafeScene cat keyframe build, EventLog filter pass)
+      // that freezes the renderer for several seconds. The indicator
+      // must survive that freeze, otherwise the user sees a frozen
+      // page with no feedback.
+      //
+      // We deliberately KEEP simProgress non-null across the status
+      // flip — GlobalRunIndicator's mount condition is
+      // `isRunning || simProgress`, so the panel stays pinned even
+      // after status moves to 'success'.
+
+      // Phase A: replace the live progress with a "rendering" message
+      // so the indicator's text reflects what's actually happening.
+      setState((prev) => ({
+        ...prev,
+        simProgress: {
+          stage: 'rendering',
+          elapsedMin: prev.simProgress?.totalMin ?? 0,
+          totalMin: prev.simProgress?.totalMin ?? 0,
+        },
+      }))
+      // Two rAFs guarantee the rendering message paints to screen
+      // before the heavy commit kicks off (single rAF only schedules
+      // the next frame; the second confirms the paint happened).
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => r())),
+      )
+
       const persisted = await dbSave(result, runLabel).catch(() => null)
 
+      // Phase B: apply the heavy result. status flips to 'success'
+      // but simProgress stays set, so the indicator stays mounted
+      // throughout the cascade.
       setState((prev) => {
         const actualLabel =
           label ?? i18n.t('results:runLabelFallback', { index: prev.history.length + 1 })
@@ -154,6 +209,14 @@ export function useSimulation(): UseSimulationReturn {
           history: [...prev.history, newEntry],
         }
       })
+
+      // Phase C is intentionally deferred: the heavy cascade actually
+      // fires when the *caller* navigates to PlaybackPage (in the
+      // .then() of this run()). If we cleared simProgress here, the
+      // indicator would unmount before PlaybackPage mounted and the
+      // user would see a frozen blank page during the cascade. The
+      // caller is expected to invoke `clearSimProgress()` after the
+      // navigation has settled.
       return true
     } catch (err) {
       if (timerRef.current) clearInterval(timerRef.current)
@@ -168,8 +231,11 @@ export function useSimulation(): UseSimulationReturn {
         result: null,
         error: simulatorError,
         elapsed: 0,
+        simProgress: null,
       }))
       return false
+    } finally {
+      unsubProgress?.()
     }
   }, [])
 
@@ -430,6 +496,10 @@ export function useSimulation(): UseSimulationReturn {
     }))
   }, [])
 
+  const clearSimProgress = useCallback(() => {
+    setState((prev) => (prev.simProgress ? { ...prev, simProgress: null } : prev))
+  }, [])
+
   return {
     ...state,
     run,
@@ -437,6 +507,7 @@ export function useSimulation(): UseSimulationReturn {
     runSweep,
     cancel,
     reset,
+    clearSimProgress,
     clearHistory,
     deleteHistoryEntry,
     renameHistoryEntry,

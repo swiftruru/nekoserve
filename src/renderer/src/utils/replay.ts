@@ -1,5 +1,6 @@
 import type { EventLogItem, SimulationConfig } from '../types'
 import { staticCatPosition, staticCustomerPosition } from './cafeGeometry'
+import { accumulatePassiveExposure } from './passiveExposure'
 
 /**
  * Pure reducer that rebuilds a café floor snapshot from the time-sorted
@@ -58,6 +59,13 @@ export interface CustomerRuntime {
   visitCount: number
   /** Sim-minute at which the customer left or abandoned, used for fade-out. */
   leftAt?: number
+  /**
+   * v2.2: Weighted minutes spent with at least one visible, non-visiting
+   * cat in the same area — the "passive exposure" / ambient-joy channel.
+   * See utils/passiveExposure.ts for the rate formula. Accumulates only
+   * while the customer is in a seated stage.
+   */
+  passiveExposureMin: number
 }
 
 export interface SeatSlot {
@@ -140,7 +148,25 @@ export interface CafeState {
     abandoned: number
     /** Total cat visits completed so far (cumulative). */
     catVisits: number
+    /** v2.2: Sum of weighted passive-exposure minutes across all
+     *  customers (cumulative). Divide by `served` for avg-per-customer. */
+    totalPassiveExposureMin: number
   }
+  /**
+   * v2.2: Last simulation-minute at which the passive-exposure reducer
+   * accumulated. Used for piecewise time-integration: the rate is
+   * constant between event timestamps, so we accumulate (t - lastTick)
+   * × currentRate at every event dispatch.
+   */
+  passiveExposureLastTick: number
+  /**
+   * v2.2: Per-customer passive exposure minutes, keyed by customerId.
+   * Mirrors `customers[id].passiveExposureMin` but SURVIVES sweep
+   * (customers are deleted from state.customers after they leave +
+   * LEAVE_LINGER_MIN). The results page needs the final totals for
+   * every customer served during the run, so we persist them here.
+   */
+  customerPassiveExposure: Record<number, number>
 }
 
 /**
@@ -246,7 +272,15 @@ export function initialState(config: SimulationConfig): CafeState {
     scenePulses: [],
     lastEvent: null,
     appliedCount: 0,
-    counters: { arrived: 0, served: 0, abandoned: 0, catVisits: 0 },
+    counters: {
+      arrived: 0,
+      served: 0,
+      abandoned: 0,
+      catVisits: 0,
+      totalPassiveExposureMin: 0,
+    },
+    passiveExposureLastTick: 0,
+    customerPassiveExposure: {},
   }
 }
 
@@ -299,6 +333,7 @@ function ensureCustomer(state: CafeState, id: number, now: number): CustomerRunt
       stageStartPos: { x: 60, y: 250 },
       visitingCats: new Set<number>(),
       visitCount: 0,
+      passiveExposureMin: 0,
     }
     state.customers[id] = c
   }
@@ -380,6 +415,10 @@ export function applyEvent(
   event: EventLogItem,
   ctx: ReplayContext,
 ): void {
+  // v2.2: integrate the passive-exposure rate from the previous event
+  // timestamp up to this one BEFORE applying the new event — the rate
+  // function depends on cat/customer state, which is about to change.
+  accumulatePassiveExposure(draft, event.timestamp)
   draft.time = event.timestamp
   draft.lastEvent = event
   draft.appliedCount += 1
@@ -596,6 +635,10 @@ export function replayUpTo(ctx: ReplayContext, simTime: number): CafeState {
   // Clamp draft.time to simTime so fade timing is frame-accurate even when
   // the last applied event is several minutes behind the current clock.
   draft.time = simTime
+  // Flush passive exposure up to the clamped time as well, so scrubbing
+  // past the last event still increments the counter while customers
+  // keep sitting.
+  accumulatePassiveExposure(draft, simTime)
   // Sweep departed customers whose fade window has elapsed.
   for (const id in draft.customers) {
     const c = draft.customers[id]

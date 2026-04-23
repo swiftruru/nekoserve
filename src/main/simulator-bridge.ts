@@ -15,7 +15,7 @@ import fs from 'fs'
 
 import type { SimulationConfig, SimulationResult, SimulatorError } from '../../shared/contracts/types'
 
-const SIMULATOR_TIMEOUT_MS = 30_000
+const SIMULATOR_TIMEOUT_MS = 300_000
 const IS_E2E = process.env.NEKOSERVE_E2E === '1'
 const E2E_SIMULATION_MODE = process.env.NEKOSERVE_E2E_SIMULATION_MODE ?? 'mock'
 let e2eSimulationMode: 'mock' | 'real' = E2E_SIMULATION_MODE === 'real' ? 'real' : 'mock'
@@ -110,8 +110,11 @@ function findPython(): string {
 function resolveSpawnTarget(): SpawnTarget {
   const binaryPath = getSimulatorBinaryPath()
 
-  if (!app.isPackaged && !fs.existsSync(binaryPath)) {
-    // Dev fallback: call python -m simulator directly (no PyInstaller build needed)
+  if (!app.isPackaged) {
+    // Dev: always call python -m simulator directly. Using a stale
+    // PyInstaller binary under dist/ silently masks edits to the Python
+    // source, which is an awful debugging experience — dev should track
+    // the live source tree, not a cached build.
     return {
       cmd: findPython(),
       args: ['-u', '-m', 'simulator'],
@@ -126,7 +129,16 @@ function resolveSpawnTarget(): SpawnTarget {
 // Simulation runner
 // ──────────────────────────────────────────────────────────────
 
-export function runSimulator(config: SimulationConfig): Promise<SimulationResult> {
+export interface SimulationProgress {
+  stage: 'warmup' | 'main'
+  elapsedMin: number
+  totalMin: number
+}
+
+export function runSimulator(
+  config: SimulationConfig,
+  onProgress?: (p: SimulationProgress) => void,
+): Promise<SimulationResult> {
   if (IS_E2E && e2eSimulationMode !== 'real') {
     return runMockSimulator(config)
   }
@@ -138,15 +150,52 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
       stdio: ['pipe', 'pipe', 'pipe'],
     })
 
-    // Accumulate as Buffers and decode once at the end. Decoding each chunk
-    // individually corrupts multi-byte UTF-8 characters (e.g. Chinese) when a
-    // character straddles a chunk boundary — this is how Windows pipes fail
-    // while macOS, with its larger default pipe buffer, often does not.
+    // Buffer-based accumulation protects multi-byte UTF-8 characters
+    // (e.g. Chinese) from being split across chunk boundaries — this is
+    // how Windows pipes fail while macOS often doesn't. We still decode
+    // incrementally to extract newline-delimited progress JSON, but the
+    // last partial line stays as bytes until the next chunk arrives or
+    // the process closes.
     const stdoutChunks: Buffer[] = []
     const stderrChunks: Buffer[] = []
+    // The final result JSON line: simulator emits zero or more progress
+    // lines (`{"type":"progress",...}`) followed by the result line
+    // (which has no `type` field). We accumulate non-progress lines and
+    // pick the last one at close, in case future versions add other
+    // streaming events.
+    let lastResultLine = ''
+    // Bytes consumed by the line parser so far. Anything past this index
+    // in the concatenated buffer is the still-incomplete tail.
+    let parsedBytes = 0
+
+    function tryParseLines() {
+      const all = Buffer.concat(stdoutChunks)
+      // Find the last newline boundary; anything before it is complete.
+      const lastNl = all.lastIndexOf(0x0a)
+      if (lastNl < parsedBytes) return
+      const segment = all.slice(parsedBytes, lastNl + 1).toString('utf8')
+      parsedBytes = lastNl + 1
+      for (const line of segment.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          const obj = JSON.parse(trimmed)
+          if (obj && obj.type === 'progress') {
+            if (onProgress) onProgress(obj as SimulationProgress)
+          } else {
+            lastResultLine = trimmed
+          }
+        } catch {
+          // Non-JSON output (e.g. PyInstaller debug noise) is ignored
+          // here; the close handler will still try the full buffer if
+          // we haven't captured a result line.
+        }
+      }
+    }
 
     child.stdout.on('data', (chunk: Buffer) => {
       stdoutChunks.push(chunk)
+      tryParseLines()
     })
 
     child.stderr.on('data', (chunk: Buffer) => {
@@ -165,16 +214,20 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
     child.on('close', (code) => {
       clearTimeout(timer)
 
+      // Flush any remaining bytes (e.g. final result line not followed
+      // by a newline) before deciding success.
+      tryParseLines()
       const stdout = Buffer.concat(stdoutChunks).toString('utf8')
       const stderr = Buffer.concat(stderrChunks).toString('utf8')
 
       if (code === 0) {
+        const candidate = lastResultLine || stdout
         try {
-          const result: SimulationResult = JSON.parse(stdout)
+          const result: SimulationResult = JSON.parse(candidate)
           resolve(result)
         } catch {
           const err: SimulatorError = {
-            error: `Failed to parse simulator stdout JSON (stdout: ${stdout.slice(0, 200)})`,
+            error: `Failed to parse simulator stdout JSON (stdout: ${candidate.slice(0, 200)})`,
             type: 'PARSE_ERROR',
           }
           reject(err)
@@ -222,9 +275,14 @@ export function runSimulator(config: SimulationConfig): Promise<SimulationResult
 // ──────────────────────────────────────────────────────────────
 
 export function registerSimulationHandler(): void {
-  ipcMain.handle('run-simulation', async (_event, config: SimulationConfig) => {
+  ipcMain.handle('run-simulation', async (event, config: SimulationConfig) => {
     try {
-      const result = await runSimulator(config)
+      const sender = event.sender
+      const result = await runSimulator(config, (progress) => {
+        if (!sender.isDestroyed()) {
+          sender.send('simulation-progress', progress)
+        }
+      })
       return { success: true, data: result }
     } catch (err) {
       return { success: false, error: err }

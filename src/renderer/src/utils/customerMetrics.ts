@@ -31,6 +31,13 @@ export interface CustomerMetrics {
   totalStay: number | null
   /** Count of CAT_VISIT_SEAT events targeting this customer. */
   catVisits: number
+  /** v2.2: Sum of CAT_VISIT_SEAT → CAT_LEAVE_SEAT durations for this
+   *  customer. The "active contact" channel measured in minutes. */
+  activeContactMin: number
+  /** v2.2: weighted passive-exposure minutes (ambient cat-visibility
+   *  channel). 0 if the map wasn't supplied or the customer didn't
+   *  accumulate any exposure. */
+  passiveExposureMin: number
   outcome: CustomerOutcome
 }
 
@@ -42,10 +49,14 @@ interface PartialRow {
   leftAt?: number
   abandonedAt?: number
   catVisits: number
+  activeContactMin: number
+  /** Open visits keyed by catId: ts of CAT_VISIT_SEAT, awaiting LEAVE. */
+  openVisits: Map<string, number>
 }
 
 export function extractCustomerMetrics(
   eventLog: readonly EventLogItem[],
+  passiveExposureByCustomer?: Readonly<Record<number, number>>,
 ): CustomerMetrics[] {
   const byId = new Map<number, PartialRow>()
 
@@ -53,7 +64,7 @@ export function extractCustomerMetrics(
     if (e.customerId <= 0) continue
     let row = byId.get(e.customerId)
     if (row === undefined) {
-      row = { catVisits: 0 }
+      row = { catVisits: 0, activeContactMin: 0, openVisits: new Map() }
       byId.set(e.customerId, row)
     }
     switch (e.eventType) {
@@ -75,9 +86,23 @@ export function extractCustomerMetrics(
       case 'CUSTOMER_ABANDON':
         row.abandonedAt = e.timestamp
         break
-      case 'CAT_VISIT_SEAT':
+      case 'CAT_VISIT_SEAT': {
         row.catVisits += 1
+        // Key open-visit by resource so concurrent visits by different
+        // cats pair correctly with their own LEAVE events.
+        const key = e.resourceId ?? 'anon'
+        row.openVisits.set(key, e.timestamp)
         break
+      }
+      case 'CAT_LEAVE_SEAT': {
+        const key = e.resourceId ?? 'anon'
+        const start = row.openVisits.get(key)
+        if (start !== undefined) {
+          row.activeContactMin += Math.max(0, e.timestamp - start)
+          row.openVisits.delete(key)
+        }
+        break
+      }
     }
   }
 
@@ -98,6 +123,8 @@ export function extractCustomerMetrics(
           ? Math.max(0, r.leftAt - r.arriveAt)
           : null,
       catVisits: r.catVisits,
+      activeContactMin: r.activeContactMin,
+      passiveExposureMin: passiveExposureByCustomer?.[id] ?? 0,
       outcome:
         r.abandonedAt !== undefined
           ? 'abandoned'

@@ -21,6 +21,8 @@ import KeyMomentsTimeline from '../components/results/KeyMomentsTimeline'
 import KingmanPrediction from '../components/results/KingmanPrediction'
 import RhoCorrectionPanel from '../components/results/RhoCorrectionPanel'
 import WelfareSection from '../components/results/WelfareSection'
+import PassiveExposureSection from '../components/results/PassiveExposureSection'
+import PassiveChannelSensitivity from '../components/results/PassiveChannelSensitivity'
 import ParetoFrontier from '../components/results/ParetoFrontier'
 import UtilizationTimeSeries from '../components/results/UtilizationTimeSeries'
 import StayDistribution from '../components/results/StayDistribution'
@@ -29,7 +31,7 @@ import { BlockMath } from '../components/Math'
 import InteractiveFormula from '../components/results/InteractiveFormula'
 import { renderWithTerms } from '../components/results/TermTooltip'
 import { generateVerdict } from '../utils/verdict'
-import { buildReplayContext } from '../utils/replay'
+import { buildReplayContext, replayUpTo } from '../utils/replay'
 import { buildSnapshotSeries } from '../utils/snapshotSeries'
 import { extractCustomerMetrics } from '../utils/customerMetrics'
 import { extractKeyMoments } from '../utils/keyMoments'
@@ -98,9 +100,21 @@ export default function ResultsPage({
     () => buildSnapshotSeries(ctx, config.simulationDuration, 1),
     [ctx, config.simulationDuration],
   )
+  // Run the full replay once to harvest per-customer passive-exposure
+  // totals — they persist in CafeState.customerPassiveExposure even
+  // after served customers are swept from state.customers. The replay
+  // is O(N) in events and memoised on ctx identity.
+  const finalReplayState = useMemo(
+    () => replayUpTo(ctx, config.simulationDuration),
+    [ctx, config.simulationDuration],
+  )
   const customerMetrics = useMemo(
-    () => extractCustomerMetrics(eventLog),
-    [eventLog],
+    () =>
+      extractCustomerMetrics(
+        eventLog,
+        finalReplayState.customerPassiveExposure,
+      ),
+    [eventLog, finalReplayState],
   )
   const keyMoments = useMemo(
     () => extractKeyMoments(eventLog, snapshotSeries),
@@ -716,6 +730,13 @@ export default function ResultsPage({
             </div>
             <div className="mt-3">
               <StayDistribution customers={customerMetrics} />
+            </div>
+            {/* v2.2: Second satisfaction channel — ambient cat visibility. */}
+            <div className="mt-3">
+              <PassiveExposureSection customers={customerMetrics} />
+            </div>
+            <div className="mt-3">
+              <PassiveChannelSensitivity baseConfig={config} />
             </div>
           </ResultsSection>
 

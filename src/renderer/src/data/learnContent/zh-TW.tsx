@@ -807,6 +807,46 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
         </div>
       ),
     },
+    {
+      id: 'passive-exposure',
+      icon: '👀',
+      title: '被動曝光：論文沒測到的那一塊',
+      content: (
+        <div>
+          <P>
+            Hirsch 等 (2025) 只量測「貓跟人<B>接觸</B>」的時間，
+            整份論文沒有碰到另一個明顯存在的體驗：<B>客人只是看到貓在附近活動，也會覺得開心</B>。
+            坐在桌邊看貓跳上書架、跟別人玩、在走道上晃，這些時刻都算滿意度，但傳統接觸率指標會把它們漏掉。
+          </P>
+          <P>
+            這份模擬器加了第二條通道「被動曝光（Passive Exposure）」來補這個缺口。
+            計算方式是雙重篩選：顧客必須已經入座，同一個 AREA 內要有至少一隻貓，
+            再乘上三組權重：
+          </P>
+          <UL>
+            <LI><B>距離衰減</B>：貓離座位越遠加權越低，公式 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">1 / (1 + d/150)</code></LI>
+            <LI><B>可見度</B>：跳到書架上 1.2、坐在家具上 1.1、貼地板 1.0</LI>
+            <LI><B>行為</B>：PLAYING 1.3、MOVING/EXPLORING/ALERT/SOCIALIZING 1.1、其他 1.0</LI>
+          </UL>
+          <P>
+            加起來是每分鐘的曝光「速率」，對時間積分就是累積曝光分鐘。
+            在統計結果頁的貓互動區塊，會看到三個新 KPI：
+            <B>平均被動曝光分鐘</B>、<B>被動/主動比</B>、以及飽和後的 <B>0–1 分數</B>。
+          </P>
+          <Note>
+            ⚠️ 這是一個<B>以模擬器提出假設</B>的研究框架，不是已驗證的實證模型。
+            Hirsch 2025 沒測過被動曝光，所以權重數值（1.2/1.3 等）是合理推估、不是實測。
+            未來若想做實證研究，可以用顧客問卷搜集主觀滿意度，
+            迴歸 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">satisfaction ~ β·active + γ·passive</code> 來實際估計 β 和 γ。
+          </Note>
+          <P>
+            為了不讓新指標污染現有的驗證基準，
+            本專案<B>刻意不把被動曝光塞進既有的 customerSatisfactionScore 公式</B>，
+            而是獨立成一個側邊 KPI。這樣驗證模式的比對分數不會因為我加了新模型就退化。
+          </P>
+        </div>
+      ),
+    },
   ],
 
   // ══════════════════════════════════════════════════════════
@@ -955,7 +995,7 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
           <UL>
             <LI><B>🚪 入口</B>：顧客剛到達的位置</LI>
             <LI><B>等座位</B>：座位滿了就在這裡排隊</LI>
-            <LI><B>🪑 座位區</B>：N 格，對應 `seatCount` 參數</LI>
+            <LI><B>🪑 座位區</B>：N 格，對應 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">seatCount</code> 參數</LI>
             <LI><B>👩‍🍳 廚房</B>：M 位店員，忙碌時會亮橘色</LI>
             <LI><B>🐱 貓咪區</B>：K 隻貓的家；貓在這裡閒晃，想拜訪時會主動走到座位旁</LI>
             <LI><B>🏁 出口</B>：完成整趟或放棄的顧客淡出於此</LI>
@@ -974,6 +1014,12 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
             🐈 <B>貓咪是自主 agent</B>：每隻貓各自在貓咪區閒晃，間隔時間一到就
             隨機挑一位正在座位上的顧客走過去停留。同一位顧客可能同時被好幾隻
             貓拜訪。顧客要等身上的貓全部離開才能起身，因此「貓很黏」會拉長總停留時間。
+          </Note>
+          <Note>
+            🏠 <B>為什麼貓咪大部分時間不在貓房？</B> Hirsch 等 (2025) 實測貓在貓房
+            （視線外）的時間約占 31.7%，其餘約 2/3 時間在客區走動、休息或被拜訪。
+            我這邊的模擬沿用這份論文的行為機率表，所以回放中常常看到貓房是空的，
+            這是正常觀察，不是 bug。
           </Note>
         </div>
       ),
@@ -1047,18 +1093,18 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
               通常是座位（容量不足）或貓咪（全都在休息或都跑去拜訪別人了）。
             </LI>
             <LI>
-              <B>觀察貓咪行為</B>：把 `catIdleInterval` 調到 2 → 貓變得超黏人，
+              <B>觀察貓咪行為</B>：把 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">catIdleInterval</code> 調到 2 → 貓變得超黏人，
               幾乎每位顧客隨時都有貓在身邊；調到 20 → 貓很懶，
-              很多顧客一次都沒被拜訪（noCatVisitRate 會飆高）。
+              很多顧客一次都沒被拜訪（<code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">noCatVisitRate</code> 會飆高）。
             </LI>
             <LI>
-              <B>觀察放棄事件</B>：把 `maxWaitTime` 調小（例如 2 分鐘），
-              再調高 `customerArrivalInterval` 的倒數，就能刻意製造一連串 😿。
+              <B>觀察放棄事件</B>：把 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">maxWaitTime</code> 調小（例如 2 分鐘），
+              再調高 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">customerArrivalInterval</code> 的倒數，就能刻意製造一連串 😿。
               用逐事件 step 看每一位顧客從到達到放棄的完整序列。
             </LI>
             <LI>
               <B>貓把人留住的效應</B>：顧客必須等身上的貓全走才能離開。
-              調高 `catInteractionTime` 會讓 `avgTotalStayTime` 延長，
+              調高 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">catInteractionTime</code> 會讓 <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">avgTotalStayTime</code> 延長，
               即使用餐時間完全沒變 —— 這是「貓咪拉長停留」的直接證據。
             </LI>
             <LI>

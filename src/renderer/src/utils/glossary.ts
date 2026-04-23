@@ -134,6 +134,26 @@ export const TERMS: TermDef[] = [
     key: 'agentBased',
     keywords: ['agent-based', 'Agent-Based', 'agent based'],
   },
+  {
+    key: 'maxWaitTime',
+    keywords: ['maxWaitTime'],
+  },
+  {
+    key: 'customerArrivalInterval',
+    keywords: ['customerArrivalInterval'],
+  },
+  {
+    key: 'ethogram',
+    keywords: ['ethogram', 'Ethogram'],
+  },
+  {
+    key: 'catWelfareScore',
+    keywords: ['CatWelfareScore', '貓咪福祉分數'],
+  },
+  {
+    key: 'paretoFrontier',
+    keywords: ['Pareto frontier', 'Pareto 前沿', 'Pareto'],
+  },
 ]
 
 /**

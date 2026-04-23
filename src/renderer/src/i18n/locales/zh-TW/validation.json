@@ -19,6 +19,24 @@
   "warnings": "其他警示",
   "downloadJson": "📥 下載驗證報告（JSON）",
   "suggestionHint": "建議調整方向：",
+  "goToSettings": "→ 去模擬設定調整",
+  "fitNoteTitle": "這個分數怎麼來的",
+  "fitNoteBody": "我把模擬器跑出來的貓咪行為時間佔比，和 Hirsch 等 (2025) 在 Stockholm 一家貓咖蹲點 227 小時觀察 27 隻貓得到的時間佔比，用三個互補指標對齊。每次調完模擬設定再回來重跑，分數就會跟著變動。",
+  "fitNoteChi": "卡方適合度：對「每一類差多少」總和敏感，特別會抓出某一類整體偏太多的問題。",
+  "fitNoteKs": "KS 累積分布差距：盯整條分布形狀，量「累積到某一類為止，模擬和實證最多差多少」。",
+  "fitNoteKl": "KL 相對熵：以實證為基準計算資訊量距離，模擬把機率塞錯類別會被加重懲罰。",
+  "warn": {
+    "abandonRate": {
+      "tooHigh": "顧客放棄率 {{observed}}% 高於 Hirsch 推估的 [{{min}}%, {{max}}%] 區間，店內可能塞太多人或座位／店員不足。",
+      "tooLow": "顧客放棄率 {{observed}}% 低於 Hirsch 推估的 [{{min}}%, {{max}}%] 區間，可能是顧客密度太低，沒測到真實壓力情境。"
+    },
+    "noCatVisitRate": {
+      "tooHigh": "有 {{observed}}% 的顧客整場沒被任何貓拜訪，超出 Hirsch 推估的 [{{min}}%, {{max}}%]，貓的供給可能不足或互動時間設太短。",
+      "tooLow": "只有 {{observed}}% 的顧客整場沒被貓拜訪，低於 Hirsch 推估的 [{{min}}%, {{max}}%]，模擬器互動比論文觀察熱絡很多（貓供給高 / 互動時間長）。"
+    }
+  },
+  "smallSampleTitle": "樣本量偏小，分數會大幅波動",
+  "smallSampleBody": "這次模擬只有 {{catMinutes}} 隻貓·分鐘的觀察量，遠低於 Hirsch 2025 的 6,129 隻貓·分鐘。同樣的程式換個隨機種子，分數可能在 50–90 之間跳。要看穩定的分數，建議到「模擬設定」載入「論文樣本（Hirsch 2025）」這個情境，或自己拉高 catCount 與 simulationDuration。",
   "rightColumnTitle": "分布對照",
   "behaviorCompare": "行為九類分布（Hirsch Figure 3 vs 模擬）",
   "verticalCompare": "垂直層級分布（Hirsch Figure 4）",

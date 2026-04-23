@@ -19,6 +19,24 @@
   "warnings": "Other warnings",
   "downloadJson": "📥 Download validation report (JSON)",
   "suggestionHint": "Suggested tweak:",
+  "goToSettings": "→ Open Settings to tweak",
+  "fitNoteTitle": "How this score is computed",
+  "fitNoteBody": "The simulator's per-state time share is compared against Hirsch et al. (2025): 227 hours of direct observation of 27 cats at a Stockholm cat café. Three complementary statistics align the two distributions, so every time you tweak Settings and re-run, this score moves accordingly.",
+  "fitNoteChi": "Chi-square fit: sensitive to per-category magnitude, catches a single state being far off.",
+  "fitNoteKs": "KS cumulative gap: tracks overall shape via the largest cumulative-distribution gap.",
+  "fitNoteKl": "KL divergence: information-theoretic distance from the empirical baseline, penalising probability mass placed in the wrong category.",
+  "warn": {
+    "abandonRate": {
+      "tooHigh": "Customer abandon rate {{observed}}% is above Hirsch's expected [{{min}}%, {{max}}%] range; the cafe may be over-crowded or short on seats/staff.",
+      "tooLow": "Customer abandon rate {{observed}}% is below Hirsch's expected [{{min}}%, {{max}}%] range; demand may be too sparse to surface realistic stress."
+    },
+    "noCatVisitRate": {
+      "tooHigh": "{{observed}}% of customers leave with no cat visit, above Hirsch's expected [{{min}}%, {{max}}%]; cat supply may be too low or interaction time too short.",
+      "tooLow": "Only {{observed}}% of customers leave with no cat visit, below Hirsch's expected [{{min}}%, {{max}}%]; the simulator generates more interaction than the paper observed (high cat supply / long interaction time)."
+    }
+  },
+  "smallSampleTitle": "Sample size is small; scores will swing widely",
+  "smallSampleBody": "This run only has {{catMinutes}} cat-minutes of observation, far below Hirsch 2025's 6,129 cat-minutes. Re-running with a different seed could shift the score by 30+ points. For a stable score, load the \"Paper sample (Hirsch 2025)\" preset on the Settings page, or raise catCount and simulationDuration manually.",
   "rightColumnTitle": "Distribution comparison",
   "behaviorCompare": "Nine-state behavior distribution (Hirsch Figure 3 vs simulation)",
   "verticalCompare": "Vertical-level distribution (Hirsch Figure 4)",

@@ -49,11 +49,12 @@
     "staffBusy": "{{busy}} / {{total}} 忙碌",
     "seatsOccupied": "{{occ}} / {{total}} 入座",
     "catsBusy": "{{busy}} / {{total}} 外出",
-    "catVisitsTotal": "累計拜訪 {{count}} 次",
+    "catVisitsTotal": "累計親人 {{count}} 次",
     "allCatsOut": "（貓咪全員外出拜訪中）",
     "simulationEnded": "模擬結束",
     "simulationEndedHint": "打烊瞬間還有 {{count}} 位顧客在服務中，流程被時間截斷",
-    "queueBadge": "👥 {{count}} 位等候"
+    "queueBadge": "👥 {{count}} 位等候",
+    "queueHint": "即這些客人在右側走道排隊"
   },
   "stages": {
     "arriving": "剛到",

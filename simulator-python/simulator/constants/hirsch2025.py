@@ -111,11 +111,13 @@ class VerticalLevel(str, Enum):
 
 
 # Base vertical-level preference for an interactable cat (not OUT_OF_LOUNGE).
-# Slight floor lean at rest, furniture lean while active.
+# Hirsch 2025 Figure 4 in-lounge subtotal (n = 8547 = 1560 + 2778 + 4209).
+# Mirrors src/renderer/src/validation/benchmarks.ts so the simulator's
+# baseline matches the validator's empirical target exactly.
 HIRSCH_VERTICAL_BASE: dict[VerticalLevel, float] = {
-    VerticalLevel.FLOOR: 0.22,
-    VerticalLevel.FURNITURE: 0.36,
-    VerticalLevel.SHELF: 0.42,
+    VerticalLevel.FLOOR: 0.182,
+    VerticalLevel.FURNITURE: 0.325,
+    VerticalLevel.SHELF: 0.492,
 }
 
 

@@ -19,5 +19,172 @@
   "downloadAllBibtex": "📥 下載完整 references.bib",
   "downloadAllBibtexHint": "把所有文獻打包成 BibTeX 檔案存到電腦上，貼進論文 LaTeX 專案就能用。",
   "usedByParams": "這篇文獻被這些參數引用：",
-  "noParamLink": "未被參數引用（僅供學理支撐）"
+  "noParamLink": "未被參數引用（僅供學理支撐）",
+  "story": {
+    "hero": {
+      "kicker": "我站在誰的肩膀上",
+      "title": "我的貓咪咖啡廳模擬器，是怎麼被 8 篇文獻撐起來的",
+      "lede": "這一頁把每一篇引用文獻怎麼對應到系統的一塊功能整理成一條故事線：從 1961 年 Little 的排隊公式、1963 年 Ancker-Gafarian 的 balking/reneging 模型，一路走到 2025 年 Hirsch 等人在瑞典貓咖實地蹲點 227 小時的行為學資料，再接回我這邊的模擬邏輯。往下滑就能一章一章看。"
+    },
+    "stats": {
+      "citations": "{{count}} 篇文獻",
+      "parameters": "{{count}} 個被引用的預設值",
+      "validationTargets": "{{count}} 個驗證基準"
+    },
+    "landscape": {
+      "ariaLabel": "三層引用全景圖：經典理論、服務實證、貓咖行為",
+      "tierClassical": "經典理論",
+      "tierEmpirical": "服務實證",
+      "tierCatCafe": "貓咖行為",
+      "hoverHint": "滑鼠移過去會高亮同層，點一下方塊會跳出這篇文獻的簡介。",
+      "close": "關閉",
+      "kindLabel": "類型",
+      "contributionLabel": "貢獻",
+      "details": {
+        "little1961proof": {
+          "kind": "1961 年發表在 Operations Research 的排隊論基礎定理",
+          "contribution": "證明了 L = λ · W：系統內平均人數 = 到達率 × 平均停留時間，不論服務分佈長相如何都成立。這是我模擬器所有「平均佇列長度」「平均系統人數」統計背後那條數學根。"
+        },
+        "ancker1963balking1": {
+          "kind": "1963 年發表在 Operations Research 的理論排隊論",
+          "contribution": "第一篇完整把 balking（看到排隊直接不進來）放進 M/M/1 分析的論文。在我的模擬器裡，這對應顧客看到隊伍太長就離開的邏輯。"
+        },
+        "ancker1963balking2": {
+          "kind": "1963 年同作者的後續續作，發表在 Operations Research",
+          "contribution": "延續前一篇，把 reneging（排了一陣子後離隊）也納入分析框架。我用這一篇作為 maxWaitTime 機制的理論依據。"
+        },
+        "hasugian2020analysis": {
+          "kind": "2020 年 IOP 會議論文集的服務業實證研究",
+          "contribution": "在印尼速食店實地量測顧客到達分佈，確認到達間隔近似指數、總到達量近似 Poisson。我的 customerArrivalInterval 參數採用 Exp(λ) 就是引用自這一篇。"
+        },
+        "dbeis2024enhancing": {
+          "kind": "2024 年 Journal of Management Analytics 的 M/M/1 擴充研究",
+          "contribution": "在得來速場景實測 reneging 行為，並把 reneging rate 寫進 ρ 公式（ρ_R = (λ - RR) / μ）。我在運作原理頁展示的 ρ_R 修正公式就是引用自這一篇。"
+        },
+        "li2025attributes": {
+          "kind": "2025 年 SAGE Open 的顧客心理學研究",
+          "contribution": "調查寵物咖啡廳的滿意度來源，拆出「環境 / 價格 / 服務」三個主要屬性。讓我在設計 customerSatisfactionScore 時知道這不是單一數字，而是多維向量。"
+        },
+        "hirsch2025cats": {
+          "kind": "2025 年 Animals 期刊的核心行為學實證",
+          "contribution": "在瑞典貓咖連續觀察 27 隻貓 227 小時，量出 9 狀態 ethogram、垂直層級偏好、4 類顧客 × 4 種互動的完整分佈。這是整個 NekoServe 最重要的實證骨幹。"
+        },
+        "ropski2023analysis": {
+          "kind": "2023 年 Journal of Veterinary Behavior 的動物福祉研究",
+          "contribution": "對照貓咖與寄養家庭的貓健康與停留期指標，提醒我貓本身是 stakeholder、不是服務的布景板。我的 CatWelfareScore 是這個視角的延伸。"
+        }
+      }
+    },
+    "nav": {
+      "title": "章節導覽",
+      "ch0": "序章：引用地圖",
+      "ch1": "第 1 章：經典理論",
+      "ch2": "第 2 章：服務實證",
+      "ch3": "第 3 章：貓咖行為學",
+      "ch4": "第 4 章：福祉指標",
+      "ch5": "終章：兜回模擬器",
+      "appendix": "附錄：完整引用清單"
+    },
+    "chapter": {
+      "ch1a": {
+        "title": "Little's Law：我所有佇列統計的根",
+        "narrative": "Little (1961) 證明了一條看起來簡單、實際上很深的公式：系統裡平均人數 L、顧客到達率 λ、顧客平均停留時間 W 三者永遠滿足 L = λ·W，不管服務分佈長什麼樣子。我的模擬器裡每一塊「平均隊長」「平均佇列人數」統計都是這條公式的延伸應用。右邊的 gauge 讓你看 λ 與 W 同步波動時 L 怎麼跟著變。點播按鈕可以看 λ 從 0.5 拉到 2.0 時 L 的 1:1 線性成長。"
+      },
+      "ch1b": {
+        "title": "Balking vs Reneging：兩種不同的「放棄」",
+        "narrative": "Ancker & Gafarian (1963) 的兩篇對看就是一整套放棄行為模型。Balking 是顧客一到店門口看到排隊就掉頭走（「我不排了」）；reneging 是已經排了一陣子、但等不下去中途離隊（「算了，下次再來」）。我的模擬器裡把這兩種實作成不同的 trigger：balking 看當下 queue 長度門檻，reneging 看累積等待時間超過 maxWaitTime。右邊的動畫把兩種同時畫出來讓你對照。"
+      },
+      "ch2a": {
+        "title": "Hasugian 2020：顧客到達近似 Poisson",
+        "narrative": "Hasugian et al. (2020) 在印尼速食店做的實地量測顯示，顧客到達間隔符合指數分佈、總到達人數符合 Poisson 的典型形狀。這給了我模擬器裡 customerArrivalInterval 這個參數的理論正當性：我用 Exp(λ) 抽間隔、讓顧客依序到店，這樣跑出來的流量結構就符合這份論文的實測形狀。播放動畫會把 30 位顧客壓縮在 5 秒內依 Poisson 掉進店裡，可以明顯看到「有時擠在一起、有時停很久」的 bursty 特徵。"
+      },
+      "ch2b": {
+        "title": "Dbeis & Al-Sahili 2024：reneging 有時間分佈",
+        "narrative": "Dbeis & Al-Sahili (2024) 在 drive-thru 場景量了每位顧客「排多久會放棄」的分佈，並提出把 reneging 納入 M/M/1 分析時會怎麼改寫傳統 ρ 公式（詳見第 1.5 章的 ρ_R 修正）。我在模擬器裡把 reneging 實作成「累積等待 > maxWaitTime 就直接出隊」，是這份分佈的近似版本。播放動畫會把單一顧客的耐心條畫成紅色弧，耗盡那一刻就 fade 出去，對應 Dbeis 論文裡的「超過耐性閾值就走」的語意。"
+      },
+      "ch2c": {
+        "title": "Li 2025：寵物咖啡廳滿意度有三個屬性維度",
+        "narrative": "Li et al. (2025) 調查寵物咖啡廳顧客滿意度來源，抽出三個主要屬性：環境 (environment)、價格 (price)、服務 (service)。三個屬性的加權組合決定顧客是否願意二訪或在社群分享。我的 customerSatisfactionScore 雖然還沒直接拆成這三塊，但這一篇給了我「滿意度不是單一數字、而是多維向量」的依據，未來做 scenario 比較時會按這個架構拆開來顯示。播放動畫示範服務屬性下降時，整體平均滿意度如何從 😊 退到 😐 再到 😟。"
+      },
+      "ch3a": {
+        "title": "Hirsch 2025 · Ethogram：9 種貓咪狀態",
+        "narrative": "Hirsch 等 (2025) 把 227 小時的觀察壓成 9 格 ethogram：從「躲藏」「休息」一路到「探索」「玩耍」，每一格都有實測頻率。其中最讓我驚訝的是 PLAY 只佔 0.3%、OUT_OF_LOUNGE（在貓房裡）就佔 31.6%，這直接影響到我模擬器裡貓咪 FSM 的機率表，以及為什麼回放時貓房常常是空的（那 31.6% 現在變成 OUT_OF_LOUNGE 狀態而不在畫面上）。右邊的輪盤會把 9 格按實測比例畫出來，指針繞一圈等於一次完整觀察樣本。"
+      },
+      "ch3b": {
+        "title": "Hirsch 2025 · 垂直分層：貓會往上逃",
+        "narrative": "Hirsch 的 Figure 4b 帶出了一個直覺但關鍵的發現：當顧客越多，貓越傾向從地板往家具、再往書架上逃。在我的模擬器裡這對應 verticalLevel 這個屬性，以及高占用率時 shelf 偏好會上升的機率規則。動畫會展示 occupancy 從 20% 爬到 90% 時，貓逐步從 floor 跳到 furniture 再跳到 shelf 的過程。"
+      },
+      "ch3c": {
+        "title": "Hirsch 2025 · 互動矩陣：四類顧客 × 四種互動",
+        "narrative": "Hirsch 的 Figure 6 展示了顧客性別 × 年齡（女/男/女童/男童）與四種互動方式（不互動 / 只經過 / 注目但不接觸 / 接觸）之間的差異，其中女性顧客的接觸比例最高、男童最常造成 active avoidance。這給了我模擬器裡顧客 profile 系統的原型：每類顧客有不同的互動機率向量。右邊動畫播的是一位女性顧客從剛入座（no interaction）→ 注意到貓（non-contact）→ 真的摸到貓（contact）的時序。"
+      },
+      "ch4": {
+        "title": "動物福祉：不只顧客爽，貓也要爽",
+        "narrative": "Ropski et al. (2023) 提醒我：貓咖不是一個只算顧客滿意度的服務業，貓也是 stakeholder。再加上 Hirsch 2025 在 discussion 裡暗示的福祉 sub-indicator（玩耍、探索、維護行為越多越好；躲藏、警戒越少越好），我把它們組合成了 CatWelfareScore 這個 0–5 分的綜合指標，再跟顧客滿意度並列畫成 Pareto frontier。右邊動畫把低擁擠與高擁擠兩個情境的五項指標擺在一起對比，一看就知道貓咖「人爆多」對貓本身是什麼樣的災難。"
+      },
+      "ch5": {
+        "title": "把一切兜回我的 NekoServe",
+        "narrative": "終章把前面每一篇文獻兜成一條完整的顧客旅程 pipeline：顧客依 Poisson 到達 → 可能 balk 或順利入座 → 點餐用餐 → 等貓互動 → 最後離店或 renege → 結果跟 Hirsch 基準驗證。每一段背後都至少站著一篇文獻。下面的流程圖可以直接點任一節點跳到模擬器對應的頁面，親眼看這段邏輯跑起來的樣子。"
+      }
+    },
+    "pipeline": {
+      "title": "NekoServe 模擬 pipeline × 文獻對應",
+      "clickHint": "點我看這段",
+      "caption": "箭頭是流動方向；每個節點下的 ref 數字代表這一段至少有多少篇文獻在背後撐。",
+      "nodes": {
+        "arrive": "到達",
+        "queue": "排隊",
+        "seat": "入座",
+        "serve": "點餐用餐",
+        "cat": "貓互動",
+        "exit": "離店/放棄",
+        "verify": "驗證"
+      },
+      "popover": {
+        "close": "關閉",
+        "citationsLabel": "背後的文獻",
+        "jumpLabel": "深入看這段在模擬器裡怎麼跑",
+        "stageSummary": {
+          "arrive": "顧客以 Poisson 過程到達咖啡廳。每一位的出現時刻互相獨立，平均每 customerArrivalInterval 分鐘一位，實際落點由 Exp(λ) 抽樣。",
+          "queue": "座位滿了就排隊。Ancker & Gafarian (1963) 的 balking（看到太多人直接走）與 reneging（排一半忍不住離隊）是這段的古典理論骨架；Little (1961) 告訴我這條隊伍的長度期望值。",
+          "seat": "座位一釋出就指派給隊首的顧客。Little's Law 讓我把座位利用率跟平均隊長綁在一起。",
+          "serve": "點餐、等廚房、開始用餐。這段用指數分佈抽服務時間，服務率 μ 是店員平均能出餐的速度。",
+          "cat": "一位顧客坐下後可能被貓拜訪。Hirsch 2025 的 9 格 ethogram 決定每隻貓此刻在做什麼，垂直層級、互動矩陣則決定牠找哪位顧客、以什麼方式互動。",
+          "exit": "顧客離開的兩條路：滿意用完餐走（正常 exit）或耐心耗盡中途放棄（reneging，見 Dbeis & Al-Sahili 2024）。Li 2025 的三屬性滿意度也在這裡決定他們「會不會再來」。",
+          "verify": "跑完一整輪模擬後，把貓的行為分布和 Hirsch 2025 的實測比對，算驗證分數。Ropski 2023 福祉視角補強這一段的貓咪權益檢查。"
+        }
+      }
+    },
+    "placeholder": {
+      "title": "施工中",
+      "body": "這一章的互動圖表與 scripted 動畫會在下個 PR 補上。目前先把骨架、章節導覽、序章全景圖與附錄的學術引用卡片做齊。"
+    },
+    "appendix": {
+      "title": "📑 附錄：完整引用清單",
+      "intro": "下面是所有被引用文獻的 APA 格式、BibTeX 條目、以及反向參數索引。寫論文時可以直接複製帶走，或按下面的按鈕下載整包 .bib。"
+    },
+    "playScripted": "▶ 看完整情境",
+    "replayScripted": "▶ 再播一次",
+    "formula": {
+      "label": "公式細節",
+      "ch1a": {
+        "equation": "L = λ · W",
+        "symbols": [
+          { "sym": "L", "meaning": "系統中平均人數（排隊的 + 被服務的總和），長期時間平均值" },
+          { "sym": "λ", "meaning": "顧客到達率（每單位時間平均進來幾位顧客），單位通常是「人/分」" },
+          { "sym": "W", "meaning": "顧客在系統中的平均停留時間（排隊 + 服務的總時長）" },
+          { "sym": "·", "meaning": "純粹的乘法：三個量一恆等相乘，不帶任何分布假設" }
+        ]
+      },
+      "ch2b": {
+        "equation": "ρ_R = (λ - RR) / μ",
+        "symbols": [
+          { "sym": "ρ_R", "meaning": "Dbeis 2024 修正後的利用率，扣掉了 reneging 造成的「虛假忙碌」" },
+          { "sym": "λ", "meaning": "名義到達率（門口進來的人數率）" },
+          { "sym": "RR", "meaning": "reneging rate：每單位時間放棄離開的人數率" },
+          { "sym": "μ", "meaning": "服務率：每單位時間一位店員能完成多少人" }
+        ]
+      }
+    }
+  }
 }

@@ -278,8 +278,17 @@ def run_simulation(config_dict: dict) -> dict:
             next_state = agent.pick_next_state(
                 rng, seated_count, previous_state=prev_state,
             )
+            # SOCIALIZING with zero seated customers degenerates into
+            # solo dwell-time and inflates the SOCIALIZING share without
+            # any actual interaction. Resample once when this happens.
+            if next_state == CatBehaviorState.SOCIALIZING and seated_count == 0:
+                next_state = agent.pick_next_state(
+                    rng, seated_count, previous_state=CatBehaviorState.SOCIALIZING,
+                )
             duration = agent.sample_state_duration(rng, next_state)
-            next_area, next_level = agent.pick_position(rng, seated_count)
+            next_area, next_level = agent.pick_position(
+                rng, seated_count, for_state=next_state,
+            )
 
             # Accumulate time in the state and vertical level for welfare scoring.
             state_time[next_state.value] += duration
@@ -416,6 +425,41 @@ def run_simulation(config_dict: dict) -> dict:
     if warm_up > 0:
         env.process(warm_up_reset())
     env.process(generator())
+
+    # Progress emitter: writes one newline-delimited JSON object every 5
+    # simulated minutes so the Electron bridge can stream live progress
+    # to the renderer instead of using a fake exponential curve.
+    import sys as _sys, json as _json
+    total_int = int(total_duration)
+    # Initial 0% emit fires *before* env.run() so the UI snaps to the real
+    # bar immediately. Emitting this from inside the simpy process would
+    # queue behind every other process registered with env.process() above
+    # (27+ cat agents, generator, warm-up reset), which on heavy configs
+    # delays the first progress line by several seconds of wall time and
+    # looks like the app is frozen.
+    _sys.stdout.write(_json.dumps({
+        "type": "progress",
+        "stage": "warmup" if warm_up > 0 else "main",
+        "elapsedMin": 0,
+        "totalMin": total_int,
+    }) + "\n")
+    _sys.stdout.flush()
+
+    def progress_emitter():
+        while True:
+            yield env.timeout(5.0)
+            cur = int(env.now)
+            if cur >= total_int:
+                break
+            _sys.stdout.write(_json.dumps({
+                "type": "progress",
+                "stage": "warmup" if cur < warm_up else "main",
+                "elapsedMin": cur,
+                "totalMin": total_int,
+            }) + "\n")
+            _sys.stdout.flush()
+
+    env.process(progress_emitter())
     env.run(until=total_duration)
 
     # ── Compute metrics ────────────────────────────────────

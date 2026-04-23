@@ -130,12 +130,34 @@ export function TermTooltip({ termKey, children }: TermTooltipProps) {
 export function renderWithTerms(text: string): ReactNode[] {
   if (!text) return []
   const segments = splitByTerms(text)
-  return segments.map((seg, i) => {
-    if (seg.type === 'text') return seg.text
-    return (
-      <TermTooltip key={i} termKey={seg.termKey}>
-        {seg.keyword}
-      </TermTooltip>
-    )
+  const out: ReactNode[] = []
+  segments.forEach((seg, i) => {
+    if (seg.type === 'text') {
+      // Also expand markdown-style `inline code` spans so i18n strings
+      // containing backticks (e.g. "增加 `seatCount`") render as styled
+      // monospace instead of showing the literal backticks on screen.
+      const parts = seg.text.split(/`([^`]+)`/g)
+      parts.forEach((part, j) => {
+        if (j % 2 === 1) {
+          out.push(
+            <code
+              key={`${i}-c-${j}`}
+              className="px-1 py-0.5 mx-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[0.9em]"
+            >
+              {part}
+            </code>,
+          )
+        } else if (part) {
+          out.push(part)
+        }
+      })
+    } else {
+      out.push(
+        <TermTooltip key={i} termKey={seg.termKey}>
+          {seg.keyword}
+        </TermTooltip>,
+      )
+    }
   })
+  return out
 }

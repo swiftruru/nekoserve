@@ -256,6 +256,26 @@
       "agentBased": {
         "label": "Agent-Based（代理人基底建模）",
         "def": "把每個個體（customer、cat）當作獨立自主的 agent 來模擬，agent 之間透過互動產生整體行為。NekoServe 的貓咪就是 agent：每隻貓是獨立 SimPy process，會自己決定何時主動找顧客、何時休息，不是被動的排隊資源。"
+      },
+      "maxWaitTime": {
+        "label": "maxWaitTime（耐心上限參數）",
+        "def": "顧客在排隊時願意等多久的門檻，單位：分鐘。累積等待超過這個值就觸發 reneging（離隊）。是 NekoServe 把 Ancker & Gafarian (1963) / Dbeis (2024) 的耐心分佈化簡成單一硬門檻後的參數名。"
+      },
+      "customerArrivalInterval": {
+        "label": "customerArrivalInterval（顧客到達間隔參數）",
+        "def": "NekoServe 抽顧客到達時刻用的平均間隔，單位：分鐘。實際值從 Exp(1 / customerArrivalInterval) 取樣，因此整體流量呈 Poisson 過程。Hasugian 2020 的實測支持這個分佈假設。"
+      },
+      "ethogram": {
+        "label": "Ethogram（行為譜）",
+        "def": "動物行為學用來「把觀察到的行為全部列表 + 給比例」的工具。Hirsch 2025 的 9 狀態 ethogram 就是他們 227 小時觀察的總結：休息 31.7%、社交 12.8%、玩耍 0.3% 等等。NekoServe 的貓咪 FSM 直接沿用這份比例當轉移機率。"
+      },
+      "catWelfareScore": {
+        "label": "CatWelfareScore（貓咪福祉分數）",
+        "def": "NekoServe 自製的 0–5 分綜合指標，把 Hirsch 2025 提出的五個福祉 sub-indicator（玩耍 / 探索 / 整理越多越好；躲藏 / 警戒越少越好）加權組合，讓「貓過得好不好」能跟顧客滿意度並列比較。"
+      },
+      "paretoFrontier": {
+        "label": "Pareto frontier（柏拉圖前沿）",
+        "def": "多目標取捨下「沒有任何一個方案在兩個指標上都完勝」的集合。在 NekoServe 裡我用顧客滿意度 vs 貓咪福祉畫二維散布圖，被綠圈框住的點就是 Pareto frontier：那些方案代表你不犧牲一邊就動不了另一邊。"
       }
     }
   },
@@ -579,6 +599,42 @@
     "furniture": "家具",
     "shelf": "架子",
     "shelfHint": "Hirsch 2025 Figure 4b：顧客越多，貓越常往架子上躲。如果這張圖的架子比例拉很高，代表模擬情境讓貓感到壓力。"
+  },
+  "passive": {
+    "title": "被動曝光：看到貓也算滿意度",
+    "tagline": "Hirsch 2025 只測接觸，這是我延伸出的第二通道",
+    "intro": "即使貓沒跳到你身上，光是看牠在附近走動、窩在架子、跟別人玩，你也會覺得開心。我把這份「看得到貓」的時間加權累積，獨立計算，不動原本以接觸為主的滿意度公式。公式細節：同一個 AREA 內有貓、距離越近加權越重、貓在架子上或玩耍時加權更重。",
+    "kpi": {
+      "avgMinutes": "平均被動曝光",
+      "minutes": "分鐘",
+      "avgMinutesHint": "{{count}} 位服務完成的顧客的平均值（已加權）",
+      "ratio": "被動 / 主動比",
+      "ratioUnit": "×",
+      "ratioHint": "主動互動平均 {{active}} 分鐘、被動曝光平均 {{passive}} 分鐘",
+      "score": "飽和分數",
+      "scoreHint": "1 − exp(−平均/15)，讓被動曝光跟其他 0–1 指標能對齊"
+    },
+    "caveat": "⚠️ 本指標是假設導向的模型延伸：Hirsch 2025 沒有量測「被動曝光」，未來實證研究可以透過顧客問卷迴歸驗證主動/被動通道的實際權重。"
+  },
+  "passiveSweep": {
+    "title": "被動通道敏感度：catCount 掃描",
+    "tagline": "多加一隻貓，兩條通道會怎麼變化？",
+    "intro": "按下按鈕會在背景跑八次模擬（catCount = 1..8），其餘參數完全沿用目前情境，然後把「主動接觸」與「被動曝光」兩條曲線畫出來。主動曲線會被貓數上限卡住飽和；被動曲線則跟著曝光面積繼續往上。兩條線的交叉點就是「加貓已經不是花在接觸、而是花在氣氛」的門檻。",
+    "run": "執行 catCount 掃描",
+    "rerun": "重新執行掃描",
+    "running": "掃描中... ({{done}}/{{total}})",
+    "error": "掃描失敗：{{message}}",
+    "xLabel": "catCount",
+    "yLabel": "每位服務完成顧客的平均分鐘",
+    "seriesActive": "主動接觸（實測）",
+    "seriesPassive": "被動曝光（延伸）",
+    "crossoverLabel": "交叉點",
+    "readingTitle": "怎麼讀這張圖",
+    "readingWithCrossover": "被動曝光大約在 catCount ≈ {{catCount}}（{{value}} 分鐘）處超越主動接觸。門檻以下主要是實測通道在撐體驗；門檻以上則是氣氛（ambient visibility）開始吃掉比較大的份量。",
+    "readingNoCrossover": "在 1..8 隻貓的範圍內兩條線沒有交叉。可能是主動通道從頭到尾都領先（低擁擠情境，貓永遠找得到人拜訪），或是被動通道從 catCount = 1 就已經佔優（高擁擠情境，貓根本沒空做接觸）。",
+    "marginalTitle": "每多一隻貓的邊際效益",
+    "marginalRow": "{{from}} → {{to}}：主動 {{dActive}}、被動 {{dPassive}} 分鐘/人",
+    "caveat": "⚠️ 這個掃描為了速度每個點只跑一次模擬。邊際差異小於 0.5 分鐘/人的變化屬於雜訊範圍，如果想確認趨勢穩定性可以多按幾次「重新執行掃描」。"
   },
   "pareto": {
     "title": "顧客滿意 vs 貓咪福利（Pareto frontier）",

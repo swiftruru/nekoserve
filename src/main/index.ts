@@ -138,6 +138,11 @@ function buildAppMenu(): void {
       submenu: [
         { role: 'minimize', label: s.menu.minimize },
         { role: 'zoom', label: s.menu.zoom },
+        // DevTools toggle: registers Cmd+Option+I (or F12) so the
+        // shortcut works even though we removed the default View menu.
+        { type: 'separator' as const },
+        { role: 'toggleDevTools' as const },
+        { role: 'reload' as const },
         ...(isMac
           ? [
               { type: 'separator' as const },
@@ -306,6 +311,14 @@ function createWindow(): void {
 
   if (process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    // Dev mode: open DevTools automatically only when NEKOSERVE_DEVTOOLS=1.
+    // Auto-popping DevTools on every `npm run dev` is noisy; use Cmd+Option+I
+    // (wired up in the custom application menu) when you actually need it.
+    if (process.env['NEKOSERVE_DEVTOOLS'] === '1') {
+      win.webContents.once('did-finish-load', () => {
+        win.webContents.openDevTools({ mode: 'detach' })
+      })
+    }
   } else {
     win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }

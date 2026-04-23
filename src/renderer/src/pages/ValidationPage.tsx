@@ -4,6 +4,7 @@ import { useSimulationStore } from '../store/simulationStore'
 import { HIRSCH_2025_BENCHMARK } from '../validation/benchmarks'
 import { validateAgainst, type ValidationReport } from '../validation/validator'
 import { citationShort, citationUrl } from '../data/citations'
+import type { Page } from '../types'
 
 /**
  * v2.0 Epic F: validation mode page.
@@ -13,7 +14,11 @@ import { citationShort, citationUrl } from '../data/citations'
  * 0-100 score, lists significant deviations with parameter-tweak
  * suggestions, and lets the user download the report as JSON.
  */
-export default function ValidationPage() {
+export default function ValidationPage({
+  onNavigate,
+}: {
+  onNavigate?: (page: Page) => void
+} = {}) {
   const { t } = useTranslation(['validation', 'results'])
   const result = useSimulationStore((s) => s.result)
   const [report, setReport] = useState<ValidationReport | null>(null)
@@ -109,6 +114,8 @@ export default function ValidationPage() {
       {report && (
         <>
           <ScoreCard report={report} />
+          {result && <SmallSampleWarning config={result.config} />}
+          <FitNoteCard />
 
           <section className="mt-4 rounded-xl ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-white/70 dark:bg-bark-700/60 p-4">
             <h2 className="text-sm font-bold text-orange-700 dark:text-orange-400 mb-2">
@@ -132,11 +139,53 @@ export default function ValidationPage() {
             </div>
           </section>
 
-          <IssuesCard report={report} />
+          <IssuesCard report={report} onNavigate={onNavigate} />
           <WarningsCard report={report} />
         </>
       )}
     </div>
+  )
+}
+
+function SmallSampleWarning({
+  config,
+}: {
+  config: { catCount: number; simulationDuration: number }
+}) {
+  const { t } = useTranslation('validation')
+  const catMinutes = config.catCount * config.simulationDuration
+  // Hirsch 2025 had 27 cats x 227 hours = ~367,740 cat-minutes; anything under
+  // 1000 cat-minutes carries enough sampling noise to swing the composite by
+  // 30+ points across seeds.
+  if (catMinutes >= 1000) return null
+  return (
+    <section className="mt-4 rounded-xl ring-1 ring-inset ring-amber-300 dark:ring-amber-700/60 bg-amber-50 dark:bg-amber-900/20 p-4">
+      <h2 className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
+        ⚠ {t('smallSampleTitle')}
+      </h2>
+      <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+        {t('smallSampleBody', { catMinutes: catMinutes.toLocaleString() })}
+      </p>
+    </section>
+  )
+}
+
+function FitNoteCard() {
+  const { t } = useTranslation('validation')
+  return (
+    <section className="mt-4 rounded-xl ring-1 ring-inset ring-amber-200 dark:ring-amber-700/40 bg-amber-50/60 dark:bg-amber-900/15 p-4">
+      <h2 className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
+        {t('fitNoteTitle')}
+      </h2>
+      <p className="text-xs text-gray-700 dark:text-bark-200 leading-relaxed mb-2">
+        {t('fitNoteBody')}
+      </p>
+      <ul className="text-xs text-gray-700 dark:text-bark-200 leading-relaxed space-y-0.5 list-disc pl-5">
+        <li>{t('fitNoteChi')}</li>
+        <li>{t('fitNoteKs')}</li>
+        <li>{t('fitNoteKl')}</li>
+      </ul>
+    </section>
   )
 }
 
@@ -289,7 +338,13 @@ function DistributionCompare({
   )
 }
 
-function IssuesCard({ report }: { report: ValidationReport }) {
+function IssuesCard({
+  report,
+  onNavigate,
+}: {
+  report: ValidationReport
+  onNavigate?: (page: Page) => void
+}) {
   const { t } = useTranslation('validation')
   if (report.issues.length === 0) {
     return (
@@ -324,6 +379,15 @@ function IssuesCard({ report }: { report: ValidationReport }) {
               <p className="mt-1 text-gray-600 dark:text-bark-300 leading-snug">
                 💡 {t('suggestionHint')} {t(issue.suggestionKey)}
               </p>
+              {onNavigate && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate('settings')}
+                  className="mt-1 text-[11px] font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
+                >
+                  {t('goToSettings')}
+                </button>
+              )}
             </li>
           )
         })}
@@ -340,7 +404,7 @@ function WarningsCard({ report }: { report: ValidationReport }) {
       <h2 className="font-bold mb-1">⚠ {t('warnings')}</h2>
       <ul className="list-disc pl-5 space-y-1 text-xs leading-snug">
         {report.warnings.map((w, i) => (
-          <li key={i}>{w}</li>
+          <li key={i}>{t(w.key, w.params)}</li>
         ))}
       </ul>
     </section>

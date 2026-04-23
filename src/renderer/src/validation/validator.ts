@@ -50,13 +50,20 @@ export interface ValidationIssue {
   suggestionKey: string
 }
 
+export interface ValidationWarning {
+  /** i18n key under the `validation` namespace. */
+  key: string
+  /** Interpolation params for the i18n string. */
+  params: Record<string, string | number>
+}
+
 export interface ValidationReport {
   benchmarkId: string
   benchmarkName: string
   scores: ValidationScores
   issues: ValidationIssue[]
   /** Soft-check warnings beyond the three stats (abandon rate, etc.). */
-  warnings: string[]
+  warnings: ValidationWarning[]
   /** ISO timestamp at which validation ran. */
   ranAt: string
 }
@@ -221,28 +228,38 @@ export function validateAgainst(
     }
   }
 
-  const warnings: string[] = []
+  const warnings: ValidationWarning[] = []
   if (
     metrics.abandonRate < benchmark.abandonRateRange.min ||
     metrics.abandonRate > benchmark.abandonRateRange.max
   ) {
-    warnings.push(
-      `abandonRate ${(metrics.abandonRate * 100).toFixed(1)}% is outside the literature range [` +
-        `${(benchmark.abandonRateRange.min * 100).toFixed(0)}%, ${(
-          benchmark.abandonRateRange.max * 100
-        ).toFixed(0)}%]`,
-    )
+    warnings.push({
+      key:
+        metrics.abandonRate > benchmark.abandonRateRange.max
+          ? 'warn.abandonRate.tooHigh'
+          : 'warn.abandonRate.tooLow',
+      params: {
+        observed: (metrics.abandonRate * 100).toFixed(1),
+        min: (benchmark.abandonRateRange.min * 100).toFixed(0),
+        max: (benchmark.abandonRateRange.max * 100).toFixed(0),
+      },
+    })
   }
   if (
     metrics.noCatVisitRate < benchmark.noInteractionRateRange.min ||
     metrics.noCatVisitRate > benchmark.noInteractionRateRange.max
   ) {
-    warnings.push(
-      `noCatVisitRate ${(metrics.noCatVisitRate * 100).toFixed(1)}% is outside the expected [` +
-        `${(benchmark.noInteractionRateRange.min * 100).toFixed(0)}%, ${(
-          benchmark.noInteractionRateRange.max * 100
-        ).toFixed(0)}%] range`,
-    )
+    warnings.push({
+      key:
+        metrics.noCatVisitRate > benchmark.noInteractionRateRange.max
+          ? 'warn.noCatVisitRate.tooHigh'
+          : 'warn.noCatVisitRate.tooLow',
+      params: {
+        observed: (metrics.noCatVisitRate * 100).toFixed(1),
+        min: (benchmark.noInteractionRateRange.min * 100).toFixed(0),
+        max: (benchmark.noInteractionRateRange.max * 100).toFixed(0),
+      },
+    })
   }
 
   return {

@@ -150,7 +150,12 @@ class CatAgent:
         for state, base in HIRSCH_BASE_PROBABILITIES.items():
             occ_mod = HIRSCH_OCCUPANCY_MODIFIERS.get(state, {}).get(occupancy, 1.0)
             pers_mod = self.personality.as_state_modifier(state)
-            weight = base * occ_mod * pers_mod
+            # Hirsch Figure 3 base rates are *time shares*, not transition
+            # probabilities. For a CTMC the long-run time share converges
+            # to (transition_weight x mean_duration) / Σ, so we divide by
+            # mean_duration here to make the simulator hit Figure 3.
+            mean_dur = HIRSCH_STATE_MEAN_DURATION.get(state, 5.0)
+            weight = (base / mean_dur) * occ_mod * pers_mod
             # Light self-loop penalty so the cat doesn't repeat the
             # same state every tick. 0.7x makes a re-entry possible
             # but less likely than transitioning.
@@ -187,15 +192,17 @@ class CatAgent:
         self,
         rng: Random,
         seated_count: int,
+        for_state: CatBehaviorState | None = None,
     ) -> tuple[CafeArea, VerticalLevel | None]:
         """
-        Sample the next (area, level) for this cat given current
-        state + occupancy + personality. OUT_OF_LOUNGE routes to the
-        cat room (no vertical level). Other states sample an area
-        weighted by personality and a vertical level weighted by the
-        Hirsch shelf-preference curve.
+        Sample the next (area, level) for this cat. The level weights
+        depend on the state we're *about to enter* (passed via
+        ``for_state``); falling back to ``self.state`` would tag the
+        new state's dwell time with the previous state's level, which
+        was the source of the FLOOR over-share in validation runs.
         """
-        if self.state == CatBehaviorState.OUT_OF_LOUNGE:
+        target_state = for_state if for_state is not None else self.state
+        if target_state == CatBehaviorState.OUT_OF_LOUNGE:
             return CafeArea.CAT_ROOM, None
 
         # Area 1 (main lounge) vs Area 2 (quieter side) split. Hirsch
@@ -215,7 +222,7 @@ class CatAgent:
         # preference. Active states (PLAYING / EXPLORING / MOVING) lean
         # toward FLOOR / FURNITURE; sedentary states lean SHELF.
         shelf_pref = shelf_preference_for_occupancy(occupancy)
-        if self.state in (
+        if target_state in (
             CatBehaviorState.PLAYING,
             CatBehaviorState.EXPLORING,
             CatBehaviorState.MOVING,
@@ -227,19 +234,23 @@ class CatAgent:
                 VerticalLevel.FURNITURE: 0.35,
                 VerticalLevel.SHELF: 0.15,
             }
-        elif self.state in (CatBehaviorState.ALERT, CatBehaviorState.HIDDEN):
-            # Defensive: shelf-heavy, scaled by occupancy
-            weights = {
-                VerticalLevel.FLOOR: 0.1,
-                VerticalLevel.FURNITURE: 0.25,
-                VerticalLevel.SHELF: 0.65,
-            }
-            weights[VerticalLevel.SHELF] = max(weights[VerticalLevel.SHELF], shelf_pref)
+        elif target_state in (CatBehaviorState.ALERT, CatBehaviorState.HIDDEN):
+            # Defensive: shelf-heavy, scaled by occupancy. Hirsch Figure 4b
+            # describes shelf-as-refuge climbing with crowding for stressed
+            # cats specifically, so the uplift only applies here.
+            weights = _apply_shelf_uplift(
+                {
+                    VerticalLevel.FLOOR: 0.1,
+                    VerticalLevel.FURNITURE: 0.25,
+                    VerticalLevel.SHELF: 0.65,
+                },
+                shelf_pref,
+            )
         else:
-            # Base distribution (RESTING / GROOMING)
+            # RESTING / GROOMING use the empirical Figure 4 in-lounge mix
+            # without occupancy uplift, otherwise SHELF time inflates past
+            # the paper's 49.2% baseline.
             weights = dict(HIRSCH_VERTICAL_BASE)
-            # Raise shelf weight in proportion to occupancy
-            weights[VerticalLevel.SHELF] = max(weights[VerticalLevel.SHELF], shelf_pref)
 
         total = sum(weights.values())
         threshold = rng.random() * total
@@ -249,6 +260,29 @@ class CatAgent:
             if running >= threshold:
                 return area, lvl
         return area, VerticalLevel.FLOOR
+
+
+def _apply_shelf_uplift(
+    weights: dict[VerticalLevel, float],
+    shelf_target: float,
+) -> dict[VerticalLevel, float]:
+    """Pull SHELF up to shelf_target and proportionally squeeze FLOOR /
+    FURNITURE so the three weights still sum to 1.0. Without the squeeze
+    the previous max() approach left the distribution un-normalized and
+    SHELF time over-shot the empirical share."""
+    cur_shelf = weights[VerticalLevel.SHELF]
+    if shelf_target <= cur_shelf:
+        return weights
+    rest_budget = max(0.0, 1.0 - shelf_target)
+    cur_rest = weights[VerticalLevel.FLOOR] + weights[VerticalLevel.FURNITURE]
+    if cur_rest <= 0:
+        return weights
+    scale = rest_budget / cur_rest
+    return {
+        VerticalLevel.FLOOR: weights[VerticalLevel.FLOOR] * scale,
+        VerticalLevel.FURNITURE: weights[VerticalLevel.FURNITURE] * scale,
+        VerticalLevel.SHELF: shelf_target,
+    }
 
 
 OnStateChange = Callable[[CatBehaviorState, CatBehaviorState], None]

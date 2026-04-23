@@ -154,6 +154,24 @@ hook 會偵測焦點是否在 `<input>` / `<textarea>` / `contenteditable`，所
 
 **環境裝飾**（v0.5.0）— 背景現在有時間感的氛圍：14 朵 🌸 櫻花瓣斜飄過整個場景（永遠開著）、9 顆 🧶 毛線球從天花板微晃（永遠開著）、3 隻 🦋 蝴蝶在前 ~45% 時間做八字飛舞、7 隻 ✨ 螢火蟲在後 ~40% 閃黃光。全部純 CSS keyframes，零 React rerender，`prefers-reduced-motion` 時停用。
 
+### 店面平面圖重建、被動曝光通道、引用故事化、效能大升級（v2.0.0）
+
+v2.0.0 一次包裝了三條主要的功能線（平面圖、被動曝光通道、引用故事化），外加把論文尺寸模擬在 Playback / Results 頁面 mount 時的計算量砍掉約 640 倍的效能改寫。這是第一個版本能讓 Hirsch 2025 完整配置（35 座、27 貓、720 分鐘）在「模擬完成」後立刻進到模擬回放，不再卡住好幾秒。
+
+**🏠 真實的 SVG 店面平面圖** — 模擬回放頁面不再用抽象色塊，改成直式畫布的實體店面：上方 Area 2 包含餐桌和貓咪層架、中間吧台把空間切開、下方 Area 1 是卡座、右側貓咪房間隔著玻璃有自己的食盆水盆和貓門，右邊是入口走道。顧客走真實的走道（要去 Area 2 會 L 型繞過吧台），貓咪穿越貓咪房時透明度會漸變，垂直層級切換（地板 / 家具 / 層架）用快速的 squash-and-stretch 跳躍動畫。
+
+**😊 被動曝光通道（PE）** — Hirsch 2025 只測了「接觸」通道（貓實際靠在顧客身上）。實務上顧客光是「看見」附近有貓也會開心。新的第二通道模型用 `PE_rate = Σ_k 1[同區] · V(k) · D(c, k) · B(k)`（可見度 × 距離衰減 × 行為權重）累積每位顧客的「看得到但沒來訪」的貓咪分鐘數。新的 `PassiveExposureSection` 在統計結果頁顯示三個 KPI（每位已服務顧客的平均加權 PE 分鐘、被動 : 主動 比例、飽和化 0-1 分數），完全不動到原本 `customerSatisfactionScore`（那是驗證模式的 baseline）。新增 `PassiveChannelSensitivity` 小面板可以即時拉動權重觀察 PE 如何變化。
+
+**📖 引用故事化** — 文獻依據頁從論文清單重建為捲動式故事，九個概念動畫模組各有 ambient（背景恆動）和 scripted（逐步解說）兩種模式：`LittlesLawGauge`、`BalkReneQueue`、`ArrivalDropper`、`RenegingFader`、`AttributeBars`（Li 2025 PLS-SEM 構念權重）、`EthogramWheel`（Ropski 2023）、`InteractionMatrix`（Hirsch 2025）、`VerticalLevelBounce`（Hirsch 2025 Figure 4）、`WelfareBars`。共享的 `ScriptedAnim` 基底組件提供確定性的 keyframe 播放、暫停、拖曳、倒轉。`CitationLandscapeMap` 與 `CitationPipelineFlow` 畫出頂層「這些論文怎麼串起來」的概念圖。
+
+**📐 Hirsch 2025 Figure 4 基準值對齊 + `hirsch-paper` 情境預設** — 模擬器的 `HIRSCH_VERTICAL_BASE` 現在精準對上驗證器的目標值（0.182 / 0.325 / 0.492，來自 Figure 4 的「在咖啡廳內」小計，n = 8547），不再是手調近似值。新增「**論文樣本（Hirsch 2025）**」情境預設，一鍵載入完整的 35 座 / 27 貓 / 720 分鐘配置，讓重現論文分數變成一次點擊。原本三個預設（平日白天 / 假日尖峰 / 貓咪午睡）的 `seatCount` 從 10 升到 35，以配合新平面圖的店面尺度。
+
+**⚡ 回放效能：sweep-line 版 `buildSnapshotSeries`** — 舊版每個取樣點都呼叫 `replayUpTo(ctx, t)`，每次都從 t=0 重播一次。Hirsch 情境（750 分鐘 × 4617 事件）等於在 Playback / Results mount 時把 ~346 萬次事件套用塞進同一個 frame。新版單次 pass 帶著 state 向前推進，在取樣邊界當下拍快照，複雜度從 O(events × duration) 降到 O(events + duration)，只剩 ~5400 次操作，輸出完全等價、約 **640 倍快**，再也不卡。
+
+**🔔 GlobalRunIndicator** — 新的全域執行中指示器（螢幕頂端 3 px 進度條 + 右下浮動面板）活在頁面樹之外，切換分頁不會消失，也會跨越「結果 commit 期間 React 凍結」這段過渡。三種模式：批次進度、Python 即時串流的模擬時間進度、以及在 React 開始套用結果時手動插入的 render stage（避免使用者看到空白頁以為當掉）。沒收到即時進度時退化成指數曲線逼近 95% 的 fallback，確保進度條總是在動。
+
+**🔧 開發體驗** — `npm run dev` 不再自動彈 DevTools（需要的話設 `NEKOSERVE_DEVTOOLS=1` 或按 `Cmd+Option+I`）；dev 模式一律直接跑 Python 原始碼，不再吃 `dist/simulator/` 下的舊 PyInstaller binary；模擬器 timeout 從 30 秒放寬到 5 分鐘，Hirsch 情境才跑得完；驗證警告現在是 `{key, params}` 結構的 i18n 物件，不再是寫死的英文字串；Python 的 0% 初始進度 emit 從 SimPy process 裡搬出來，在 `env.run()` 之前就直接寫 stdout，不用排隊等 27 個 cat agent。
+
 ### 文獻探討、ρ_R 修正與互動式公式教學（v1.3.0）
 
 v1.3.0 是學術嚴謹度的大版本更新，回應指導教授「14 個參數是觀察假設、不是 curve fitting」的意見。模擬器本體沒變，變的是整套框架與教學的呈現方式。

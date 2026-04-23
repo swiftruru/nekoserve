@@ -29,6 +29,15 @@ declare global {
       onUpdateAvailable: (callback: (info: UpdateInfo) => void) => void
       onMenuCheckForUpdate: (callback: () => void) => void
 
+      // Live simulation progress (returns unsubscribe)
+      onSimulationProgress: (
+        callback: (progress: {
+          stage: 'warmup' | 'main'
+          elapsedMin: number
+          totalMin: number
+        }) => void,
+      ) => () => void
+
       // Screenshot
       captureScreenshot: (rect: { x: number; y: number; width: number; height: number }) => Promise<boolean>
       testEnv: {

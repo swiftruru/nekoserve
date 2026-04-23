@@ -19,5 +19,172 @@
   "downloadAllBibtex": "📥 Download references.bib",
   "downloadAllBibtexHint": "Download every citation as a single BibTeX file. Paste into your LaTeX project's bib directory and cite via \\cite{hirsch2025cats} etc.",
   "usedByParams": "Referenced by these parameters:",
-  "noParamLink": "Not referenced by any parameter (supporting literature only)"
+  "noParamLink": "Not referenced by any parameter (supporting literature only)",
+  "story": {
+    "hero": {
+      "kicker": "Whose shoulders I'm standing on",
+      "title": "How 8 papers hold my cat-café simulator together",
+      "lede": "This page walks through every cited work and the part of the simulator it powers, as one story. We start with Little's 1961 queueing identity, move through Ancker & Gafarian's 1963 balking/reneging model, and land on Hirsch et al.'s 2025 ethological study where they watched 27 cats in a Swedish cat café for 227 hours. Scroll down to read it chapter by chapter."
+    },
+    "stats": {
+      "citations": "{{count}} papers",
+      "parameters": "{{count}} cited parameters",
+      "validationTargets": "{{count}} validation targets"
+    },
+    "landscape": {
+      "ariaLabel": "Three-tier citation landscape: classical theory, service empirics, cat-café behavior",
+      "tierClassical": "Classical theory",
+      "tierEmpirical": "Service empirics",
+      "tierCatCafe": "Cat-café behavior",
+      "hoverHint": "Hover to dim the other tiers; click a card for a short summary of the paper.",
+      "close": "Close",
+      "kindLabel": "Kind",
+      "contributionLabel": "Contribution",
+      "details": {
+        "little1961proof": {
+          "kind": "1961 foundational queueing-theory proof in Operations Research",
+          "contribution": "Proved L = λ·W: average number in the system = arrival rate × average time in system, independent of service-time distribution. This is the math behind every \"average queue length\" / \"average in-system count\" statistic in my simulator."
+        },
+        "ancker1963balking1": {
+          "kind": "1963 theoretical queueing paper, Operations Research",
+          "contribution": "First paper to formally incorporate balking (refusing to join a visible queue) into M/M/1 analysis. In my simulator this maps to customers leaving when the queue appears too long."
+        },
+        "ancker1963balking2": {
+          "kind": "1963 follow-up from the same authors in Operations Research",
+          "contribution": "Extended the prior paper to include reneging (abandoning the queue after waiting). I cite this paper as the theoretical basis for my maxWaitTime mechanism."
+        },
+        "hasugian2020analysis": {
+          "kind": "2020 empirical service-industry study in IOP Conference Series",
+          "contribution": "Field-measured customer arrivals at an Indonesian fast-food restaurant and confirmed exponential inter-arrivals / Poisson totals. My customerArrivalInterval (Exp(λ) sampling) cites this paper."
+        },
+        "dbeis2024enhancing": {
+          "kind": "2024 M/M/1 extension in Journal of Management Analytics",
+          "contribution": "Measured reneging behavior in a drive-thru and folded it into the ρ formula (ρ_R = (λ - RR) / μ). The ρ_R correction shown on my How-It-Works page cites this paper directly."
+        },
+        "li2025attributes": {
+          "kind": "2025 customer-psychology study in SAGE Open",
+          "contribution": "Surveyed pet-café satisfaction sources and decomposed them into environment / price / service attributes. Informs the multi-dimensional view behind my customerSatisfactionScore design."
+        },
+        "hirsch2025cats": {
+          "kind": "2025 core behavioral-ethology field study in Animals",
+          "contribution": "227 hours of continuous observation of 27 cats in a Swedish cat café, producing a 9-state ethogram, vertical-level distribution, and a 4-customer-type × 4-interaction-mode matrix. This is the empirical backbone of the whole NekoServe simulator."
+        },
+        "ropski2023analysis": {
+          "kind": "2023 animal-welfare study in Journal of Veterinary Behavior",
+          "contribution": "Compared cat health and length-of-stay between cat cafés and foster-based rescue. A key reminder that cats are stakeholders, not stage dressing. My CatWelfareScore extends this perspective."
+        }
+      }
+    },
+    "nav": {
+      "title": "Chapters",
+      "ch0": "Intro: citation map",
+      "ch1": "Ch. 1: Classical theory",
+      "ch2": "Ch. 2: Service empirics",
+      "ch3": "Ch. 3: Cat-café ethology",
+      "ch4": "Ch. 4: Welfare indicators",
+      "ch5": "Finale: back to the sim",
+      "appendix": "Appendix: full reference list"
+    },
+    "chapter": {
+      "ch1a": {
+        "title": "Little's Law: the root of every queue statistic",
+        "narrative": "Little (1961) proved a deceptively simple identity: the average number in the system L, the arrival rate λ, and the average time-in-system W always satisfy L = λ·W, no matter the service distribution. Every \"average queue length\" / \"average in-system count\" statistic in my simulator is an extension of this equation. The gauge on the right shows λ and W wiggling together with L tracking them live. Hit play to see λ ramp from 0.5 to 2.0 and watch L grow linearly."
+      },
+      "ch1b": {
+        "title": "Balking vs reneging: two flavors of giving up",
+        "narrative": "Ancker & Gafarian's two 1963 papers form one complete abandonment-behavior model. Balking is a customer who sees the queue at the door and turns around immediately (\"I'm not queuing for that\"). Reneging is someone who already joined but can't wait any longer and bails mid-queue (\"forget it, next time\"). My simulator encodes these as two distinct triggers: balking fires off a queue-length threshold, reneging fires off accumulated wait > maxWaitTime. The animation plays both side by side."
+      },
+      "ch2a": {
+        "title": "Hasugian 2020: customer arrivals ≈ Poisson",
+        "narrative": "Hasugian et al. (2020) measured real arrivals at an Indonesian fast-food restaurant and found inter-arrival times were exponential and total counts were Poisson-shaped. That justifies my customerArrivalInterval parameter: I sample gaps from Exp(λ) and let customers walk in one at a time, reproducing the bursty-then-quiet flow this paper measured. The scripted scene compresses 30 arrivals into 5 seconds so you can clearly see the bursty / bunchy nature of Poisson arrivals."
+      },
+      "ch2b": {
+        "title": "Dbeis & Al-Sahili 2024: reneging has a time distribution",
+        "narrative": "Dbeis & Al-Sahili (2024) measured in a drive-thru how long each customer waited before giving up, and re-derived the classical ρ formula to account for reneging (see Ch. 1.5's ρ_R correction). My simulator approximates their distribution with a hard maxWaitTime threshold: wait past it and you're out. The scripted scene renders a single customer's patience as a red arc; when it drains, they fade away, matching the paper's \"past the tolerance, leave\" semantic."
+      },
+      "ch2c": {
+        "title": "Li 2025: pet-café satisfaction has three attribute dimensions",
+        "narrative": "Li et al. (2025) surveyed pet-café patrons and teased out three dominant satisfaction attributes: environment, price, service. The weighted blend predicts whether customers revisit or share on social media. My customerSatisfactionScore isn't yet decomposed this way, but this paper justifies my plan to report satisfaction as a multi-dimensional vector rather than a single scalar. The scripted scene drops the service attribute and shows the overall face decay from 😊 to 😐 to 😟."
+      },
+      "ch3a": {
+        "title": "Hirsch 2025 · Ethogram: 9 cat states",
+        "narrative": "Hirsch et al. (2025) compressed 227 hours of observation into a 9-state ethogram running from \"hidden\" and \"resting\" all the way to \"exploring\" and \"playing,\" each with a measured frequency. What surprised me most was PLAY at just 0.3% and OUT_OF_LOUNGE (back in the cat room) at 31.6%. That directly drives my cat FSM's probability table and explains why the cat room often looks empty in playback: that 31.6% is now a state, not a sprite on screen. The wheel on the right draws the 9 sectors proportional to Hirsch's measurements; one full rotation of the pointer = one complete observation sample."
+      },
+      "ch3b": {
+        "title": "Hirsch 2025 · Vertical stratification: cats flee upward",
+        "narrative": "Hirsch's Figure 4b captures a simple but important finding: as customer count rises, cats migrate from floor to furniture to shelf. That maps onto my simulator's verticalLevel attribute and the rule that shelf preference scales with occupancy. The animation shows occupancy ramping 20% → 90% and the cat hopping floor → furniture → shelf in response."
+      },
+      "ch3c": {
+        "title": "Hirsch 2025 · Interaction matrix: 4 customer types × 4 modes",
+        "narrative": "Hirsch's Figure 6 reports differences across customer type (woman / man / girl / boy) × interaction mode (no interaction / passing / looking / touching). Women had the highest contact rate; boys drove the most active-avoidance. This seeded my simulator's customer-profile system, where each type carries its own interaction-probability vector. The animation walks one woman's interaction over time: seated (no interaction) → noticing the cat (non-contact) → actually petting (contact)."
+      },
+      "ch4": {
+        "title": "Animal welfare: customers aren't the only stakeholders",
+        "narrative": "Ropski et al. (2023) reminded me that cats are stakeholders too, not just the service surface. Combined with Hirsch 2025's discussion of welfare sub-indicators (play / explore / maintenance = higher is better; hiding / alert = lower is better), I built a 0–5 CatWelfareScore and plotted it as a Pareto frontier against customer satisfaction. The animation contrasts a low-occupancy and high-occupancy scenario side by side so \"a packed café is a cat disaster\" becomes obvious at a glance."
+      },
+      "ch5": {
+        "title": "Pulling it back into NekoServe",
+        "narrative": "The finale threads every paper into the complete customer journey pipeline: Poisson arrival → possible balking or successful seating → ordering and dining → waiting for cat interaction → exit or reneging → comparing results against the Hirsch benchmark. Every stage is backed by at least one paper. Click any node in the flow below to jump straight to the matching page in the simulator and watch the logic run live."
+      }
+    },
+    "pipeline": {
+      "title": "NekoServe simulation pipeline × citations",
+      "clickHint": "tap for detail",
+      "caption": "Arrows show flow direction. \"ref\" count under each node indicates how many papers back that stage.",
+      "nodes": {
+        "arrive": "Arrive",
+        "queue": "Queue",
+        "seat": "Seat",
+        "serve": "Serve",
+        "cat": "Cat visit",
+        "exit": "Exit / renege",
+        "verify": "Validate"
+      },
+      "popover": {
+        "close": "Close",
+        "citationsLabel": "Backed by",
+        "jumpLabel": "See this stage run live in the simulator",
+        "stageSummary": {
+          "arrive": "Customers arrive as a Poisson process. Each arrival is independent, with an average of one per customerArrivalInterval minutes; actual gaps are drawn from Exp(λ).",
+          "queue": "When seats are full, customers queue. Ancker & Gafarian (1963) supplies the classical balking (turn around on sight of the queue) and reneging (abandon after waiting) model; Little (1961) gives the expected queue length.",
+          "seat": "When a seat frees up, it's assigned to the queue head. Little's Law ties seat utilization to average queue length.",
+          "serve": "Order, wait for the kitchen, then dine. Service times are drawn from an exponential distribution with rate μ (staff's output-per-unit-time).",
+          "cat": "Once seated, a customer may be visited by a cat. Hirsch 2025's 9-state ethogram decides each cat's current activity; the vertical-level and interaction matrix decide who gets visited and how.",
+          "exit": "Two exit paths: a satisfied customer who finished their meal (normal exit) or one who ran out of patience (reneging, per Dbeis & Al-Sahili 2024). Li 2025's three-attribute satisfaction also influences return intent here.",
+          "verify": "After the simulation run, we compare the cat behavior distribution to Hirsch 2025's field measurements and compute a validation score. Ropski 2023's welfare lens reinforces the cat-rights check at this stage."
+        }
+      }
+    },
+    "placeholder": {
+      "title": "Coming in the next PR",
+      "body": "The interactive diagrams and scripted animations for this chapter land in the next PR. For now the scaffolding, chapter nav, landscape map, and academic-form appendix are in place."
+    },
+    "appendix": {
+      "title": "📑 Appendix: full reference list",
+      "intro": "APA format, BibTeX entries, and reverse parameter index for every cited work. Copy individual entries or grab the whole .bib below."
+    },
+    "playScripted": "▶ Play scripted scene",
+    "replayScripted": "▶ Replay",
+    "formula": {
+      "label": "Formula breakdown",
+      "ch1a": {
+        "equation": "L = λ · W",
+        "symbols": [
+          { "sym": "L", "meaning": "Time-average number of customers in the system (both queued and in-service)" },
+          { "sym": "λ", "meaning": "Arrival rate (customers per unit time), commonly in customers/min" },
+          { "sym": "W", "meaning": "Average time a customer spends in the system (queue + service)" },
+          { "sym": "·", "meaning": "Plain multiplication: three quantities multiply exactly, independent of any distributional assumption" }
+        ]
+      },
+      "ch2b": {
+        "equation": "ρ_R = (λ - RR) / μ",
+        "symbols": [
+          { "sym": "ρ_R", "meaning": "Dbeis 2024 corrected utilization, netted out of fake busyness from reneging" },
+          { "sym": "λ", "meaning": "Nominal arrival rate (customers walking in the door per unit time)" },
+          { "sym": "RR", "meaning": "Reneging rate: customers giving up per unit time" },
+          { "sym": "μ", "meaning": "Service rate: customers one server can finish per unit time" }
+        ]
+      }
+    }
+  }
 }

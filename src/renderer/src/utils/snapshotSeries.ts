@@ -16,7 +16,7 @@
  */
 
 import type { CafeState, ReplayContext } from './replay'
-import { replayUpTo } from './replay'
+import { applyEvent, initialState } from './replay'
 
 export interface Snapshot {
   /** Sim-minutes at which this snapshot was taken. */
@@ -63,6 +63,17 @@ function snapshotFromState(state: CafeState, simTime: number): Snapshot {
 /**
  * Precompute metric snapshots at `stepMin` resolution from 0 to
  * `duration`, inclusive. Called once when a simulation result loads.
+ *
+ * Single O(events + duration) pass: walk the running state forward
+ * through the event list, emitting a snapshot whenever the sampling
+ * clock catches up to the next step boundary. The previous O(events ×
+ * duration) implementation (which called `replayUpTo` from t=0 for
+ * every sample) melted the main thread on paper-sized runs — 750 min ×
+ * 4.6k events ≈ 3.5M reducer applications at Playback/Results mount.
+ *
+ * Snapshots only read counters + occupancy aggregates, so we skip the
+ * per-frame sweeps (customer fade, bubble TTL, pulse TTL, passive
+ * exposure flush) that `replayUpTo` does for rendering purposes.
  */
 export function buildSnapshotSeries(
   ctx: ReplayContext,
@@ -71,9 +82,15 @@ export function buildSnapshotSeries(
 ): SnapshotSeries {
   const out: Snapshot[] = []
   const step = Math.max(0.1, stepMin)
+  const state = initialState(ctx.config)
+  let eventIdx = 0
+  const events = ctx.events
   for (let t = 0; t <= duration + 1e-9; t += step) {
     const clamped = Math.min(t, duration)
-    const state = replayUpTo(ctx, clamped)
+    while (eventIdx < events.length && events[eventIdx].timestamp <= clamped) {
+      applyEvent(state, events[eventIdx], ctx)
+      eventIdx += 1
+    }
     out.push(snapshotFromState(state, clamped))
   }
   return out

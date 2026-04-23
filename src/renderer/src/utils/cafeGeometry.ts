@@ -27,7 +27,12 @@ import type { CafeState, CatSlot, CustomerRuntime } from './replay'
 
 // ── View ───────────────────────────────────────────────────
 
-export const VIEW_W = 1000
+// Total SVG canvas. FLOOR_W is the yellow café interior width; the
+// strip between FLOOR_W and VIEW_W is an off-canvas "outside" margin
+// where the entrance / queue info column lives, so those panels don't
+// crowd the floor plan.
+export const FLOOR_W = 1000
+export const VIEW_W = 1180
 export const VIEW_H = 780
 
 // ── Area partitions ────────────────────────────────────────
@@ -47,9 +52,9 @@ export interface AreaRect {
 export const AREAS: Record<CafeAreaId, AreaRect> = {
   // Upper café zone (tables, quieter side). Spans full width except
   // Cat Room, which sits to its right.
-  AREA_2: { id: 'AREA_2', x: 60,  y: 40,  w: 640, h: 280, labelX: 380, labelY: 60 },
+  AREA_2: { id: 'AREA_2', x: 60,  y: 40,  w: 640, h: 290, labelX: 380, labelY: 60 },
   // Lower lounge (sofas + round tables + cat tree).
-  AREA_1: { id: 'AREA_1', x: 60,  y: 440, w: 820, h: 320, labelX: 470, labelY: 460 },
+  AREA_1: { id: 'AREA_1', x: 60,  y: 402, w: 820, h: 358, labelX: 600, labelY: 418 },
   // Private cat retreat, top-right. Customers never cross the line.
   CAT_ROOM: { id: 'CAT_ROOM', x: 730, y: 40, w: 230, h: 260, labelX: 845, labelY: 60 },
 }
@@ -65,7 +70,13 @@ export const ENTRANCE = { x: 940, y: 310 } as const
 
 // Queue anchor — a few sim-minutes of waiting happen here, near the
 // bar's east end right after stepping in from the reception door.
-export const QUEUE_ANCHOR = { x: 710, y: 345, step: 22 } as const
+// Queue forms OUTSIDE the café door, in the right-side white margin
+// between FLOOR_W (yellow edge) and the entrance info card. Customers
+// stack downward from just below the door, like real patrons waiting
+// on the sidewalk. Previous anchor (710, 345) made them line up along
+// the counter's interior aisle, which read as "23 people crammed
+// inside the shop" instead of "23 people waiting to get in".
+export const QUEUE_ANCHOR = { x: 1005, y: 340, step: 19 } as const
 
 // Kitchen / staff positions — behind the bar.
 export const KITCHEN_STAFF_SLOTS = [
@@ -82,7 +93,13 @@ export const CAT_ROOM_INSIDE = { x: 860, y: 170 } as const
 
 // ── Furniture catalog ─────────────────────────────────────
 
-export type FurnitureType = 'round6' | 'round4' | 'table2' | 'sofa' | 'coffee'
+export type FurnitureType =
+  | 'round6'
+  | 'round4'
+  | 'table2'
+  | 'sofa'
+  | 'coffee'
+  | 'ottoman'
 
 export interface FurnitureItem {
   id: string
@@ -98,19 +115,33 @@ export interface FurnitureItem {
   h: number
 }
 
+// Furniture layout transcribed from Hirsch 2025 Figure 1 (Stockholm cat
+// café floor plan). AREA 2 mirrors the paper exactly: one 6-seat round
+// table, one 2-seat top-left table, and three 2-seat tables stacked
+// along the right wall. AREA 1 follows the paper's lounge arrangement:
+// two round 4-seat tables, a corner L-sofa, a long back-wall bench, a
+// smaller side bench, a cluster of three pouffe-style ottomans, and a
+// central coffee table (no seats). Total 35 cushions — matches the
+// paper's "14 observed capacity" while leaving headroom for experiments
+// with larger seatCount settings.
 export const FURNITURE: FurnitureItem[] = [
-  // ── AREA 2 (upper café) ────────────────────────────────
-  { id: 'A2-round', type: 'round6', area: 'AREA_2', x: 200, y: 210, seats: 6, w: 92, h: 92 },
-  { id: 'A2-t1',    type: 'table2', area: 'AREA_2', x: 380, y: 130, seats: 2, w: 52, h: 52 },
-  { id: 'A2-t2',    type: 'table2', area: 'AREA_2', x: 470, y: 130, seats: 2, w: 52, h: 52 },
-  { id: 'A2-t3',    type: 'table2', area: 'AREA_2', x: 570, y: 130, seats: 2, w: 52, h: 52 },
-  { id: 'A2-t4',    type: 'table2', area: 'AREA_2', x: 520, y: 240, seats: 2, w: 52, h: 52 },
-  // ── AREA 1 (lower lounge) ──────────────────────────────
-  { id: 'A1-round-L', type: 'round4', area: 'AREA_1', x: 260, y: 550, seats: 4, w: 86, h: 86 },
-  { id: 'A1-round-R', type: 'round4', area: 'AREA_1', x: 570, y: 550, seats: 4, w: 86, h: 86 },
-  { id: 'A1-sofa-L',  type: 'sofa',   area: 'AREA_1', x: 250, y: 700, seats: 3, w: 170, h: 42 },
-  { id: 'A1-coffee',  type: 'coffee', area: 'AREA_1', x: 430, y: 700, seats: 0, w: 90,  h: 42 },
-  { id: 'A1-sofa-R',  type: 'sofa',   area: 'AREA_1', x: 620, y: 700, seats: 2, w: 120, h: 42 },
+  // ── AREA 2 (upper café) ── 14 seats ────────────────────
+  { id: 'A2-t-top', type: 'table2', area: 'AREA_2', x: 310, y: 90,  seats: 2, w: 52, h: 52 },
+  { id: 'A2-round', type: 'round6', area: 'AREA_2', x: 200, y: 215, seats: 6, w: 92, h: 92 },
+  { id: 'A2-t-r1',  type: 'table2', area: 'AREA_2', x: 590, y: 85,  seats: 2, w: 52, h: 52 },
+  { id: 'A2-t-r2',  type: 'table2', area: 'AREA_2', x: 590, y: 180, seats: 2, w: 52, h: 52 },
+  { id: 'A2-t-r3',  type: 'table2', area: 'AREA_2', x: 590, y: 275, seats: 2, w: 52, h: 52 },
+  // ── AREA 1 (lower lounge) ── 21 seats ──────────────────
+  { id: 'A1-round-L', type: 'round4',  area: 'AREA_1', x: 210, y: 540, seats: 4, w: 86,  h: 86 },
+  { id: 'A1-round-R', type: 'round4',  area: 'AREA_1', x: 500, y: 540, seats: 4, w: 86,  h: 86 },
+  { id: 'A1-bench-L', type: 'sofa',    area: 'AREA_1', x: 115, y: 660, seats: 2, w: 86,  h: 38 },
+  { id: 'A1-ott-1',   type: 'ottoman', area: 'AREA_1', x: 295, y: 408, seats: 1, w: 30,  h: 30 },
+  { id: 'A1-ott-2',   type: 'ottoman', area: 'AREA_1', x: 355, y: 408, seats: 1, w: 30,  h: 30 },
+  { id: 'A1-ott-3',   type: 'ottoman', area: 'AREA_1', x: 415, y: 408, seats: 1, w: 30,  h: 30 },
+  { id: 'A1-coffee',  type: 'coffee',  area: 'AREA_1', x: 660, y: 680, seats: 0, w: 90,  h: 52 },
+  { id: 'A1-sofa-rs', type: 'sofa',    area: 'AREA_1', x: 810, y: 655, seats: 2, w: 110, h: 40 },
+  { id: 'A1-sofa-bt', type: 'sofa',    area: 'AREA_1', x: 440, y: 735, seats: 3, w: 150, h: 40 },
+  { id: 'A1-sofa-br', type: 'sofa',    area: 'AREA_1', x: 800, y: 735, seats: 3, w: 150, h: 40 },
 ]
 
 /** Max customers this café can seat (sum of FURNITURE[].seats). */
@@ -155,21 +186,96 @@ function cushionLinear(item: FurnitureItem, yOffset: number): Cushion[] {
   return seats
 }
 
-// Deterministic cushion pool — order drives which seats fill first.
-// Start with Area 1's sofas (most desirable / cat-friendly), then Area 2
-// tables, then Area 1 round tables. Matches the intuition that patrons
-// take the sofas first in a real cat café.
-const CUSHION_POOL: readonly Cushion[] = [
-  ...cushionLinear(FURNITURE.find((f) => f.id === 'A1-sofa-L')!, -22),
-  ...cushionLinear(FURNITURE.find((f) => f.id === 'A1-sofa-R')!, -22),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A1-round-L')!),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A1-round-R')!),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A2-round')!),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A2-t1')!),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A2-t2')!),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A2-t3')!),
-  ...cushionRing(FURNITURE.find((f) => f.id === 'A2-t4')!),
-]
+function cushionOnTop(item: FurnitureItem): Cushion[] {
+  // For ottomans / pouffes: the single cushion IS the furniture — sit
+  // directly on the center rather than around a ring.
+  if (item.seats <= 0) return []
+  return [{ furnitureId: item.id, x: item.x, y: item.y }]
+}
+
+function cushionHorizontal(item: FurnitureItem): Cushion[] {
+  // For small 2-seat square tables: seat customers on the left and
+  // right sides rather than top/bottom, so the three stacked tables
+  // along the right wall of AREA 2 don't squash their cushions into
+  // each other vertically.
+  const seats: Cushion[] = []
+  if (item.seats <= 0) return seats
+  const radius = Math.max(item.w, item.h) * 0.55 + 6
+  for (let i = 0; i < item.seats; i++) {
+    // Start at angle=π (left) then π/2 apart — so 2 seats go left/right.
+    const angle = Math.PI + (i / item.seats) * Math.PI * 2
+    seats.push({
+      furnitureId: item.id,
+      x: item.x + Math.cos(angle) * radius,
+      y: item.y + Math.sin(angle) * radius,
+    })
+  }
+  return seats
+}
+
+function cushionsFor(item: FurnitureItem): Cushion[] {
+  switch (item.type) {
+    case 'round6':
+    case 'round4':
+      return cushionRing(item)
+    case 'table2':
+      return cushionHorizontal(item)
+    case 'sofa':
+      return cushionLinear(item, -22)
+    case 'ottoman':
+      return cushionOnTop(item)
+    case 'coffee':
+      return []
+  }
+}
+
+// Deterministic cushion pool. Order drives which seats fill first.
+//
+// Strategy: tier-based fill. Within a tier we round-robin across the
+// pieces in that tier (one seat per piece per round), so the round
+// tables in AREA 1 and AREA 2 fill at the same rate. We only move to
+// the next tier once the previous tier's pieces are fully seated.
+//
+//   Tier 1  Round tables (6-seat + both 4-seat)      14 seats
+//   Tier 2  Sofas / benches (group seating)          10 seats
+//   Tier 3  Small 2-tops (pairs)                      8 seats
+//   Tier 4  Ottomans / pouffes (singles)              3 seats
+//
+// Why tiered instead of pure round-robin: Hirsch 2025's floor plan
+// shows round tables with 4-6 chairs around each, so a real café
+// seats groups around a table together. A naive "1 per piece" round-
+// robin scattered lone customers across every piece of furniture and
+// left round tables looking 5/6 empty even at saturation.
+function buildCushionPool(): Cushion[] {
+  const TIERS: FurnitureType[][] = [
+    ['round6', 'round4'],
+    ['sofa'],
+    ['table2'],
+    ['ottoman'],
+  ]
+  const out: Cushion[] = []
+  for (const tier of TIERS) {
+    const pieces = FURNITURE.filter(
+      (f) => f.seats > 0 && tier.includes(f.type),
+    )
+    // Stable area interleave so AREA 1 / AREA 2 fill in parallel.
+    pieces.sort((a, b) => {
+      if (a.area !== b.area) return a.area.localeCompare(b.area)
+      return a.id.localeCompare(b.id)
+    })
+    const perPiece: Cushion[][] = pieces.map(cushionsFor)
+    if (perPiece.length === 0) continue
+    const maxLen = Math.max(...perPiece.map((p) => p.length))
+    for (let i = 0; i < maxLen; i++) {
+      for (const piece of perPiece) {
+        if (i < piece.length) out.push(piece[i])
+      }
+    }
+  }
+  return out
+}
+
+const CUSHION_POOL: readonly Cushion[] = buildCushionPool()
 
 // ── Shelves (cat jump anchors) ─────────────────────────────
 
@@ -254,8 +360,47 @@ export const KITCHEN = {
 
 // Legacy resting-cat drift targets (reused by CafeScene restingCatTargetXY).
 // Point them at Cat Tree + a Area 1 shelf so behavior stays sensible.
-export const FOOD_CORNER = { x: 50, y: 580 } as const
-export const LITTER_CORNER = { x: 870, y: 500 } as const
+// Cat-room amenities: food bowl in the south-west corner, litter box
+// in the south-east corner. Positioned inside AREAS.CAT_ROOM (x=730-
+// 960, y=40-300) so they render as part of the cat-only retreat, not
+// out in the customer lounge.
+export const FOOD_CORNER = { x: 770, y: 260 } as const
+export const LITTER_CORNER = { x: 920, y: 260 } as const
+
+// Extra food bowls scattered around the customer areas. Real cat cafés
+// keep a feeding station or two in the lounge so cats don't have to
+// hike back to the cat room for a snack. Positions MUST avoid the x,y
+// of any SHELVES entry: cats with verticalLevel=SHELF teleport onto
+// the nearest shelf in their area, which visually reads as "cat
+// standing on the bowl" and made the old layout look like cats were
+// endlessly piling onto the food.
+export const CAFE_FOOD_BOWLS: readonly { x: number; y: number }[] = [
+  { x: 450, y: 465 }, // AREA 1 top-middle, between the two round tables
+  { x: 350, y: 300 }, // AREA 2 bottom-middle, under AREA_2 label row
+]
+
+// Ambient floor spots — quiet open-floor anchors where cats can chill
+// when they're in FLOOR verticalLevel but not actively visiting /
+// walking / resting-on-furniture. Gives the café that lived-in feel of
+// a cat randomly lying on a rug between tables instead of always being
+// glued to a shelf or sofa. Positions avoid furniture footprints,
+// shelf coordinates, and food-bowl placements.
+export interface AmbientCatSpot {
+  id: string
+  x: number
+  y: number
+  area: CafeAreaId
+}
+
+export const AMBIENT_CAT_SPOTS: readonly AmbientCatSpot[] = [
+  // AREA 1 open-floor spots
+  { id: 'a1-floor-center', x: 380, y: 615, area: 'AREA_1' },
+  { id: 'a1-floor-right',  x: 720, y: 575, area: 'AREA_1' },
+  { id: 'a1-floor-left',   x: 155, y: 600, area: 'AREA_1' },
+  // AREA 2 open-floor spots
+  { id: 'a2-floor-center', x: 410, y: 200, area: 'AREA_2' },
+  { id: 'a2-floor-south',  x: 460, y: 290, area: 'AREA_2' },
+]
 
 export const REST_WANDER_CYCLE_MIN = 6
 
@@ -324,8 +469,10 @@ export function staticCustomerPosition(
     case 'waitingSeat': {
       const idx = state.queueSeat.indexOf(c.id)
       const q = idx >= 0 ? idx : 0
-      // Queue stretches south from QUEUE_ANCHOR, along the right aisle.
-      const jitter = ((c.id * 7919) % 7) - 3
+      // Queue stretches south from the door into the right margin.
+      // Tiny jitter (±1) since the column is narrow; anything larger
+      // makes avatars overlap the entrance info card at x=1020.
+      const jitter = ((c.id * 7919) % 3) - 1
       return {
         x: QUEUE_ANCHOR.x + jitter,
         y: QUEUE_ANCHOR.y + q * QUEUE_ANCHOR.step,
@@ -380,6 +527,7 @@ export function detourAroundCounter(
 ): { x: number; y: number }[] {
   const COUNTER_TOP = COUNTER.y
   const COUNTER_BOT = COUNTER.y + COUNTER.h
+  const COUNTER_RIGHT = COUNTER.x + COUNTER.w
   const fromNorth = from.y < COUNTER_TOP
   const fromSouth = from.y > COUNTER_BOT
   const toNorth = to.y < COUNTER_TOP
@@ -387,6 +535,14 @@ export function detourAroundCounter(
 
   // Same side → straight line
   if ((fromNorth && toNorth) || (fromSouth && toSouth)) {
+    return [from, to]
+  }
+
+  // Both points are east of the counter's right edge → counter isn't
+  // physically in the way even if their y straddles it. Straight line
+  // avoids the ugly U-turn west-then-east when customers walk from the
+  // door to the outside queue column.
+  if (from.x > COUNTER_RIGHT && to.x > COUNTER_RIGHT) {
     return [from, to]
   }
 

@@ -11,5 +11,9 @@
     "name": "貓咪午睡模式",
     "description": "貓咪頻繁休息，互動資源嚴重不足，展示排隊瓶頸效果"
   },
+  "hirsch-paper": {
+    "name": "論文樣本（Hirsch 2025）",
+    "description": "對齊 Hirsch 等 (2025) 在 Stockholm 蹲點 227 小時的設定：27 隻貓、12 小時營業、含暖機。樣本量足夠讓驗證模式分數穩定在 80+。"
+  },
   "customDefaultDescription": "自訂情境"
 }

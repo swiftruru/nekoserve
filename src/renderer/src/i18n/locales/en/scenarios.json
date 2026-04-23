@@ -11,5 +11,9 @@
     "name": "Cat nap mode",
     "description": "Cats frequently rest, creating an interaction-resource bottleneck for demonstration."
   },
+  "hirsch-paper": {
+    "name": "Paper sample (Hirsch 2025)",
+    "description": "Mirrors Hirsch et al. (2025)'s Stockholm cat café setup: 27 cats, 12 operating hours, warm-up included. Sample size large enough for the validation score to stabilise above 80."
+  },
   "customDefaultDescription": "Custom preset"
 }

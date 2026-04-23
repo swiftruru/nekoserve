@@ -9,7 +9,7 @@ export const SCENARIOS: ScenarioPreset[] = [
     name: 'weekday',
     description: '',
     config: {
-      seatCount: 10,
+      seatCount: 35,
       staffCount: 2,
       catCount: 3,
       customerArrivalInterval: 8,
@@ -31,7 +31,7 @@ export const SCENARIOS: ScenarioPreset[] = [
     name: 'holiday-rush',
     description: '',
     config: {
-      seatCount: 10,
+      seatCount: 35,
       staffCount: 3,
       catCount: 5,
       customerArrivalInterval: 3,
@@ -53,7 +53,7 @@ export const SCENARIOS: ScenarioPreset[] = [
     name: 'cat-nap',
     description: '',
     config: {
-      seatCount: 10,
+      seatCount: 35,
       staffCount: 2,
       catCount: 3,
       customerArrivalInterval: 6,
@@ -68,6 +68,31 @@ export const SCENARIOS: ScenarioPreset[] = [
       simulationDuration: 240,
       randomSeed: 42,
       warmUpDuration: 0,
+    },
+  },
+  {
+    // Mirrors the Stockholm cat café setup observed in Hirsch et al. (2025):
+    // 27 cats, 227 hours of observation. Used as the validation-mode anchor
+    // — running this scenario should land the validator score in the 80s+.
+    id: 'hirsch-paper',
+    name: 'hirsch-paper',
+    description: '',
+    config: {
+      seatCount: 35,
+      staffCount: 3,
+      catCount: 27,
+      customerArrivalInterval: 4,
+      orderTime: 3,
+      preparationTime: 8,
+      diningTime: 30,
+      catInteractionTime: 10,
+      catIdleInterval: 4,
+      catRestProbability: 0.3,
+      catRestDuration: 15,
+      maxWaitTime: 20,
+      simulationDuration: 720,
+      randomSeed: 42,
+      warmUpDuration: 30,
     },
   },
 ]

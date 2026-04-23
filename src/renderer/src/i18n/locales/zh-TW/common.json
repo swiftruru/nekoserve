@@ -6,6 +6,15 @@
     "success": "模擬完成",
     "error": "模擬失敗"
   },
+  "runIndicator": {
+    "title": "模擬運算中，請稍候",
+    "batchTitle": "批次執行中（{{completed}} / {{total}}）",
+    "elapsed": "已耗時 {{elapsed}} 秒",
+    "simSubtitle": "模擬時間 {{cur}} / {{total}}",
+    "warmupBadge": "暖機中",
+    "renderingTitle": "正在套用結果到畫面",
+    "renderingSubtitle": "事件量大，渲染需要幾秒鐘"
+  },
   "button": {
     "confirm": "確定",
     "cancel": "取消",

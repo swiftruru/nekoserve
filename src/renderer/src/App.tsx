@@ -16,6 +16,7 @@ import { useSimulationStore } from './store/simulationStore'
 import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import PageTransition from './components/PageTransition'
+import GlobalRunIndicator from './components/GlobalRunIndicator'
 import CustomCursor from './components/CustomCursor'
 import UpdateModal from './components/UpdateModal'
 import { useUpdateCheck } from './hooks/useUpdateCheck'
@@ -88,8 +89,8 @@ export default function App() {
   const { toast } = useToast()
   const {
     status, result, error, elapsed, history,
-    batchResult, batchProgress, sweepResult,
-    run, runBatch, runSweep, cancel, reset, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
+    batchResult, batchProgress, simProgress, sweepResult,
+    run, runBatch, runSweep, cancel, reset, clearSimProgress, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
   } = useSimulation()
   const update = useUpdateCheck()
 
@@ -160,13 +161,30 @@ export default function App() {
     setPanelOpen((prev) => !prev)
   }
 
+  // After navigating to a result page following a run, the heavy
+  // mount cascade (PlaybackPage / CafeScene) freezes the renderer for
+  // a few seconds. We keep the global run indicator visible across
+  // that freeze, then dismiss it on the next idle window — by then
+  // the destination page has finished its initial paint.
+  function dismissIndicatorAfterPageSettle() {
+    const ric =
+      (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void })
+        .requestIdleCallback
+    if (ric) ric(() => clearSimProgress(), { timeout: 5000 })
+    else setTimeout(() => clearSimProgress(), 1500)
+  }
+
   function handleRunSimulation(cfg: SimulationConfig, label: string) {
     setConfig(cfg)
     run(cfg, label).then((succeeded) => {
-      if (!succeeded) return
+      if (!succeeded) {
+        clearSimProgress()
+        return
+      }
       setPlaybackTime(0)
       setPlaybackAutoStartPending(true)
       setPage('playback')
+      dismissIndicatorAfterPageSettle()
     })
   }
 
@@ -174,12 +192,16 @@ export default function App() {
     const start = Date.now()
     setConfig(cfg)
     runBatch(cfg, replicationCount, label).then((succeeded) => {
-      if (!succeeded) return
+      if (!succeeded) {
+        clearSimProgress()
+        return
+      }
       const secs = ((Date.now() - start) / 1000).toFixed(1)
       toast(t('settings:batch.complete', { count: replicationCount, seconds: secs }))
       setPlaybackTime(0)
       setPlaybackAutoStartPending(true)
       setPage('playback')
+      dismissIndicatorAfterPageSettle()
     })
   }
 
@@ -187,10 +209,14 @@ export default function App() {
     const start = Date.now()
     setConfig(cfg)
     runSweep(cfg, paramKey, from, to, step, replications).then((succeeded) => {
-      if (!succeeded) return
+      if (!succeeded) {
+        clearSimProgress()
+        return
+      }
       const secs = ((Date.now() - start) / 1000).toFixed(1)
       toast(t('settings:sweep.complete', { seconds: secs }))
       setPage('results')
+      dismissIndicatorAfterPageSettle()
     })
   }
 
@@ -485,8 +511,8 @@ export default function App() {
                 <PlaybackPageEmpty />
               ))}
             {page === 'howitworks' && <HowItWorksPage />}
-            {page === 'citations' && <CitationsPage />}
-            {page === 'validation' && <ValidationPage />}
+            {page === 'citations' && <CitationsPage onNavigate={setPage} />}
+            {page === 'validation' && <ValidationPage onNavigate={setPage} />}
             {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} updateChecking={update.status === 'checking'} />}
           </PageTransition>
           </ErrorBoundary>
@@ -506,6 +532,13 @@ export default function App() {
         </aside>
         )}
       </div>
+
+      <GlobalRunIndicator
+        isRunning={status === 'running'}
+        elapsed={elapsed}
+        batchProgress={batchProgress}
+        simProgress={simProgress}
+      />
     </div>
   )
 }

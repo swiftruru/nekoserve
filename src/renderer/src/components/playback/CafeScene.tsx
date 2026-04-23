@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SimulationConfig } from '../../types'
 import {
@@ -10,23 +10,26 @@ import {
   DOOR,
   ENTRANCE,
   EXIT,
+  AMBIENT_CAT_SPOTS,
+  CAFE_FOOD_BOWLS,
   FOOD_CORNER,
   FURNITURE,
   FURNITURE_SPOTS,
   KITCHEN,
   KITCHEN_STAFF_SLOTS,
   LITTER_CORNER,
-  QUEUE_ANCHOR,
   QUEUE_SEAT,
   REST_WANDER_CYCLE_MIN,
   SEAT_GRID,
   SHELVES,
   TOP_AISLE_Y,
+  FLOOR_W,
   VIEW_H,
   VIEW_W,
   catHomePos,
   catVisitingPosForSeat,
   detourAroundCounter,
+  seatFurnitureId,
   seatPos,
   staticCatPosition,
   staticCustomerPosition,
@@ -42,6 +45,7 @@ import {
   type CustomerStage,
   type PulseKind,
 } from '../../utils/replay'
+import { isAccumulatingPassiveExposure } from '../../utils/passiveExposure'
 
 /**
  * SVG floor plan that renders the current café state produced by the replay
@@ -101,9 +105,37 @@ function restingAvatar(id: number): string {
 // someone cranks `catCount` higher than 3.
 const CAT_EMOJI: readonly string[] = ['🐱', '🐈', '🐈‍⬛']
 
-function catEmoji(slotIdx: number, resting: boolean): string {
-  if (resting) return '💤'
+// The cat's main glyph always shows the per-slot cat face so the three
+// cats stay recognizable across the café. State information (resting /
+// grooming / alert / playing / hidden) is layered on as a small corner
+// badge instead of swapping the whole emoji, because replacing the face
+// with 💤 every time a cat enters RESTING (31.7% of observed time per
+// Hirsch 2025) made the playback look like a room full of sleep icons.
+function catEmoji(slotIdx: number): string {
   return CAT_EMOJI[slotIdx % CAT_EMOJI.length]
+}
+
+// Resting cats get NO badge — the indigo rect fill + stroke already
+// shout "sleepy" loud enough, and a 💤 icon on top of every resting
+// cat dominated the screen (RESTING is 31.7% of Hirsch 2025 observed
+// time, so roughly 1/3 of every cat's timeline would show zzz). Other
+// behavior states lack a distinct rect color, so those still get a
+// small corner badge.
+function catBehaviorBadge(
+  behaviorState: CatSlot['behaviorState'],
+): string | null {
+  switch (behaviorState) {
+    case 'GROOMING':
+      return '🧼'
+    case 'ALERT':
+      return '👀'
+    case 'PLAYING':
+      return '🎾'
+    case 'HIDDEN':
+      return '🫥'
+    default:
+      return null
+  }
 }
 
 // Very soft per-cat tint for the rounded square they sit in, so the
@@ -173,7 +205,12 @@ function restingCatTargetXY(
   state: CafeState,
 ): { x: number; y: number } {
   const home = catHomePos(cat.slotIdx)
-  const corner = cat.slotIdx % 2 === 0 ? FOOD_CORNER : LITTER_CORNER
+  // Most of the time a resting cat drifts toward the food bowl — real
+  // cats eat / drink often and rarely parade to the litter box. Only
+  // every sixth cat (slotIdx % 6 === 5) gets a litter trip, so with a
+  // typical catCount of 3-5 we usually see zero litter visits and the
+  // bowl stays the primary attractor.
+  const corner = cat.slotIdx % 6 === 5 ? LITTER_CORNER : FOOD_CORNER
   // Offset each cat so they don't all migrate in lockstep.
   const offset = cat.slotIdx * (REST_WANDER_CYCLE_MIN / 3)
   const phase = (((state.time + offset) % REST_WANDER_CYCLE_MIN) +
@@ -655,8 +692,32 @@ export default function CafeScene({
   })
 
   const seatOcc = state.seats.filter((s) => s.customerId !== null).length
-  const catsActive = state.cats.filter((c) => c.state !== 'idle').length
+  // "外出" = cats currently outside the cat room. Source of truth is
+  // the v2.1 behavior FSM's `area` field (updated by CAT_STATE_CHANGE
+  // events). A cat visiting a customer seat is also "out" even if a
+  // STATE_CHANGE hasn't fired yet for this frame, so we include the
+  // legacy visiting/walking states. Cats that haven't received any
+  // STATE_CHANGE yet (area === undefined, initial state) are treated
+  // as "in the cat room" since that's where they visually render.
+  const catsOutOfRoom = state.cats.filter((c) => {
+    if (c.state === 'visiting' || c.state === 'walking') return true
+    return c.area !== undefined && c.area !== 'CAT_ROOM'
+  }).length
   const seatsNearlyFull = config.seatCount > 0 && seatOcc / config.seatCount >= 0.8
+
+  // Only furniture that actually has active cushions within the current
+  // seatCount gets rendered. FURNITURE lists every piece the real café
+  // has (35 total, per Hirsch 2025 Figure 1), but seatCount caps how
+  // many cushions are in play; drawing sofas and small tables with no
+  // chairs on top made the floor plan look broken. Coffee tables stay
+  // visible since they're decor with seats=0.
+  const activeFurnitureIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (let i = 0; i < config.seatCount; i++) {
+      ids.add(seatFurnitureId(i))
+    }
+    return ids
+  }, [config.seatCount])
   const allCatsOut =
     config.catCount > 0 &&
     state.cats.every((c) => c.state === 'visiting')
@@ -763,11 +824,11 @@ export default function CafeScene({
   )
 
   return (
-    <div className="w-full">
+    <div className="w-full flex justify-center">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid meet"
-        className="w-full h-auto"
+        className="w-full h-auto max-h-[70vh]"
         role="img"
         aria-label={t('playback:title')}
         onClick={handleBackgroundClick}
@@ -779,7 +840,7 @@ export default function CafeScene({
             ))}
           </linearGradient>
         </defs>
-        <rect x="0" y="0" width={VIEW_W} height={VIEW_H} fill="url(#floor)" />
+        <rect x="0" y="0" width={FLOOR_W} height={VIEW_H} fill="url(#floor)" />
 
         {/* v2.1 Floor plan — replaces the v1.x abstract zone cards.
             Painted behind characters so sprites always read clearly
@@ -851,10 +912,13 @@ export default function CafeScene({
             rx="3"
             opacity="0.6"
           />
+          {/* Label parked in the counter's left margin so the chef
+              avatars (KITCHEN_STAFF_SLOTS start at x=250) don't sit on
+              top of it. */}
           <text
-            x={COUNTER.x + COUNTER.w / 2}
+            x={COUNTER.x + 12}
             y={COUNTER.y + COUNTER.h / 2 + 4}
-            textAnchor="middle"
+            textAnchor="start"
             style={{
               fontSize: 10,
               fontWeight: 600,
@@ -865,6 +929,25 @@ export default function CafeScene({
           >
             吧台 · COUNTER
           </text>
+          {/* Staff busy count lives inside the counter strip itself so
+              it reads as a property of the counter (not café floor). */}
+          <text
+            x={COUNTER.x + COUNTER.w - 12}
+            y={COUNTER.y + COUNTER.h / 2 + 4}
+            textAnchor="end"
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 1,
+              fill: '#fef3c7',
+              opacity: 0.85,
+            }}
+          >
+            {t('playback:labels.staffBusy', {
+              busy: state.staffBusyCount,
+              total: config.staffCount,
+            })}
+          </text>
 
           {/* Entrance door mark — right side, between Cat Room and Counter */}
           <g transform={`translate(${ENTRANCE.x - 18}, ${ENTRANCE.y - 25})`}>
@@ -872,6 +955,31 @@ export default function CafeScene({
               fill="#fef3c7" stroke="#d97706" strokeWidth="1.5" />
             <text x="18" y="30" textAnchor="middle" fontSize="20">🚪</text>
           </g>
+
+          {/* Cat Room amenities — food bowl (south-west corner) and
+              litter box (south-east corner) inside CAT_ROOM. Mirrors
+              the v1.x layout so the cat area feels like a real cat
+              retreat, not an empty dashed rectangle. */}
+          <g transform={`translate(${FOOD_CORNER.x - 16}, ${FOOD_CORNER.y - 16})`}>
+            <rect x="0" y="0" width="32" height="32" rx="6"
+              fill="#fff7ed" stroke="#d97706" strokeWidth="1.2" opacity="0.9" />
+            <text x="16" y="22" textAnchor="middle" fontSize="18">🥣</text>
+          </g>
+          <g transform={`translate(${LITTER_CORNER.x - 16}, ${LITTER_CORNER.y - 16})`}>
+            <rect x="0" y="0" width="32" height="32" rx="6"
+              fill="#fff7ed" stroke="#d97706" strokeWidth="1.2" opacity="0.9" />
+            <text x="16" y="22" textAnchor="middle" fontSize="18">🚽</text>
+          </g>
+
+          {/* Extra food bowls in the customer lounge. Small, unlabelled
+              so they read as decor rather than another UI element. */}
+          {CAFE_FOOD_BOWLS.map((bowl, i) => (
+            <g key={`bowl-${i}`} transform={`translate(${bowl.x - 12}, ${bowl.y - 12})`}>
+              <circle cx="12" cy="13" r="11"
+                fill="#fff7ed" stroke="#d97706" strokeWidth="1" opacity="0.85" />
+              <text x="12" y="18" textAnchor="middle" fontSize="14">🥣</text>
+            </g>
+          ))}
 
           {/* Cat Tree — tall vertical furniture on the left wall of AREA_1 */}
           <g transform="translate(42, 540)">
@@ -905,11 +1013,19 @@ export default function CafeScene({
             </g>
           ))}
 
-          {/* Furniture: sofas, round tables, two-tops, coffee table */}
+          {/* Furniture: sofas, round tables, two-tops, coffee table.
+              Every piece from the Hirsch 2025 floor plan is drawn so
+              the café always matches the paper. Pieces whose cushions
+              aren't in use at the current seatCount are dimmed via a
+              group-level opacity — the layout stays recognizable while
+              making it clear which seats the current run can actually
+              fill. */}
           {FURNITURE.map((f) => {
+            const inactive = f.seats > 0 && !activeFurnitureIds.has(f.id)
+            const dim = inactive ? 0.35 : 1
             if (f.type === 'sofa') {
               return (
-                <g key={f.id}>
+                <g key={f.id} style={{ opacity: dim }}>
                   {/* sofa backrest */}
                   <rect
                     x={f.x - f.w / 2}
@@ -967,13 +1083,14 @@ export default function CafeScene({
                   fill="#78350f"
                   stroke="#431407"
                   strokeWidth="1.5"
+                  style={{ opacity: dim }}
                 />
               )
             }
             if (f.type === 'round6' || f.type === 'round4') {
               const r = Math.max(f.w, f.h) / 2 - 2
               return (
-                <g key={f.id}>
+                <g key={f.id} style={{ opacity: dim }}>
                   <circle
                     cx={f.x}
                     cy={f.y}
@@ -994,9 +1111,37 @@ export default function CafeScene({
                 </g>
               )
             }
+            if (f.type === 'ottoman') {
+              // Small pouffe — a stuffed round cushion customers sit
+              // directly on. Rendered underneath the customer cushion
+              // layer so the seated avatar overlaps it cleanly.
+              const r = Math.max(f.w, f.h) / 2
+              return (
+                <g key={f.id} style={{ opacity: dim }}>
+                  <circle
+                    cx={f.x}
+                    cy={f.y + 2}
+                    r={r}
+                    fill="#fdba74"
+                    stroke="#9a3412"
+                    strokeWidth="1.2"
+                    opacity="0.9"
+                  />
+                  <circle
+                    cx={f.x}
+                    cy={f.y + 1}
+                    r={r - 4}
+                    fill="none"
+                    stroke="#c2410c"
+                    strokeWidth="0.6"
+                    opacity="0.45"
+                  />
+                </g>
+              )
+            }
             // table2 (two-top square table)
             return (
-              <g key={f.id}>
+              <g key={f.id} style={{ opacity: dim }}>
                 <rect
                   x={f.x - f.w / 2}
                   y={f.y - f.h / 2}
@@ -1144,58 +1289,92 @@ export default function CafeScene({
           </g>
         )}
 
-        {/* Entrance mini-card — shows arrived / served / abandoned
-            counts near the right-middle door. The door graphic itself
-            is already painted in the floor-plan overlay above. */}
-        <g
-          transform={`translate(${ENTRANCE.x - 52}, ${ENTRANCE.y + 40})`}
-          className={doorFlashing ? 'neko-door-flash' : undefined}
-        >
-          <rect
-            x="0"
-            y="0"
-            width="96"
-            height="60"
-            rx="8"
-            fill="#ffffff"
-            stroke="#fb923c"
-            strokeWidth="1.2"
-            opacity="0.85"
+        {/* Entrance + queue column — a dedicated zone that sits OUTSIDE
+            the yellow floor plan, in the white margin between FLOOR_W
+            and VIEW_W. Mirrors v1.x's explicit "entrance" and "wait-for-
+            seat" fields. A short connector line links the ENTRANCE door
+            (painted inside the floor plan) to this off-canvas column so
+            the spatial relationship stays clear. Always rendered so the
+            queue reading is legible even when empty. */}
+        <g>
+          {/* Connector: ENTRANCE door (inside yellow) -> column (outside) */}
+          <line
+            x1={ENTRANCE.x + 10} y1={ENTRANCE.y}
+            x2={FLOOR_W + 20} y2={ENTRANCE.y}
+            stroke="#fb923c" strokeWidth="1.2" strokeDasharray="3 3"
+            opacity="0.55"
           />
-          <text x="48" y="16" textAnchor="middle" fontSize="9"
-            fontWeight="700" fill="#9a3412">
-            {t('playback:zones.door')}
-          </text>
-          <text x="48" y="32" textAnchor="middle" fontSize="10" fill="#2563eb">
-            {t('playback:labels.arrived')} {state.counters.arrived}
-          </text>
-          <text x="48" y="45" textAnchor="middle" fontSize="10" fill="#16a34a">
-            {t('playback:labels.served')} {state.counters.served}
-          </text>
-          <text x="48" y="56" textAnchor="middle" fontSize="10" fill="#dc2626">
-            {t('playback:labels.abandoned')} {state.counters.abandoned}
-          </text>
-        </g>
 
-        {/* Queue indicator — sits in the right aisle south of counter.
-            Displays count + warn pulse when building up. */}
-        {state.queueSeat.length > 0 && (
+          {/* Entrance sub-card: counters for arrived / served / abandoned.
+              The avatar-stack on the queue card was removed because it
+              duplicated the physical queue drawn along the right aisle
+              (same 22 customers rendered twice confused readers). The
+              card is now a pure stat panel. */}
           <g
-            transform={`translate(${QUEUE_ANCHOR.x - 30}, ${QUEUE_ANCHOR.y + 100})`}
-            className={state.queueSeat.length > 5 ? 'neko-warn-pulse' : undefined}
+            transform={`translate(${FLOOR_W + 20}, 260)`}
+            className={doorFlashing ? 'neko-door-flash' : undefined}
           >
             <rect
-              x="0" y="0" width="60" height="22" rx="11"
-              fill={state.queueSeat.length > 5 ? '#fee2e2' : '#fff7ed'}
-              stroke={state.queueSeat.length > 5 ? '#ef4444' : '#fb923c'}
-              strokeWidth="1"
+              x="0" y="0" width="140" height="150" rx="12"
+              fill="#ffffff"
+              stroke="#fb923c"
+              strokeWidth="1.8"
+              opacity="1"
             />
-            <text x="30" y="15" textAnchor="middle" fontSize="11"
-              fontWeight="700" fill="#9a3412">
-              🪑 × {state.queueSeat.length}
+            <text x="70" y="28" textAnchor="middle" fontSize="17"
+              fontWeight="800" fill="#7c2d12">
+              🚪 {t('playback:zones.door')}
+            </text>
+            <line x1="14" y1="40" x2="126" y2="40" stroke="#fed7aa" strokeWidth="1.2" />
+            <text x="70" y="66" textAnchor="middle" fontSize="13"
+              fontWeight="600" fill="#2563eb">
+              {t('playback:labels.arrived')} {state.counters.arrived}
+            </text>
+            <text x="70" y="93" textAnchor="middle" fontSize="13"
+              fontWeight="600" fill="#16a34a">
+              {t('playback:labels.served')} {state.counters.served}
+            </text>
+            <text x="70" y="120" textAnchor="middle" fontSize="13"
+              fontWeight="600" fill="#dc2626">
+              {t('playback:labels.abandoned')} {state.counters.abandoned}
             </text>
           </g>
-        )}
+
+          {/* Queue sub-card: always-visible "等座位" count. The actual
+              queuing customers are rendered along the right aisle inside
+              the floor plan (staticCustomerPosition for stage='waitingSeat'
+              at QUEUE_ANCHOR), so this card just shows the total and a
+              one-line hint so the two visuals stay linked. */}
+          <g transform={`translate(${FLOOR_W + 20}, 430)`}>
+            {/* Pulse is applied to the border rect only — putting it
+                on the wrapping <g> made SVG inherit `stroke` onto the
+                <text> children too, so "等座位" and "×8" got a yellow/
+                red outline that washed them out. */}
+            <rect
+              x="0" y="0" width="140" height="130" rx="12"
+              fill={state.queueSeat.length > 5 ? '#fef2f2' : '#fffbeb'}
+              stroke={state.queueSeat.length > 5 ? '#ef4444' : '#fb923c'}
+              strokeWidth="1.8"
+              strokeDasharray="5 3"
+              opacity="1"
+              className={state.queueSeat.length > 5 ? 'neko-warn-pulse' : undefined}
+            />
+            <text x="70" y="28" textAnchor="middle" fontSize="17"
+              fontWeight="800" fill="#7c2d12" stroke="none">
+              ⏰ {t('playback:zones.queueSeat')}
+            </text>
+            <line x1="14" y1="40" x2="126" y2="40" stroke="#fed7aa" strokeWidth="1.2" />
+            <text x="70" y="82" textAnchor="middle" fontSize="30"
+              fontWeight="800" stroke="none"
+              fill={state.queueSeat.length > 5 ? '#b91c1c' : '#9a3412'}>
+              × {state.queueSeat.length}
+            </text>
+            <text x="70" y="112" textAnchor="middle" fontSize="11"
+              fill="#9a3412" stroke="none" opacity="0.85">
+              {t('playback:labels.queueHint')}
+            </text>
+          </g>
+        </g>
 
         {/* Seats — distributed across the FURNITURE catalog. Each seat
             is still an interactive rect with focus + pop animation +
@@ -1354,18 +1533,27 @@ export default function CafeScene({
           )}
         </g>
 
-        {/* Stats strip — staff busy count + cat visits, pinned below
-            counter in the AREA_1 north edge. */}
-        <g transform={`translate(${COUNTER.x + COUNTER.w / 2 - 70}, ${COUNTER.y + COUNTER.h + 6})`}>
-          <rect x="0" y="0" width="140" height="22" rx="11"
-            fill="#ffffff" stroke="#fb923c" strokeWidth="0.8" opacity="0.85" />
-          <text x="70" y="15" textAnchor="middle" fontSize="10" fill="#9a3412">
-            {t('playback:labels.staffBusy', {
-              busy: state.staffBusyCount,
-              total: config.staffCount,
+        {/* Cumulative cat-visit counter, parked just below the CAT_ROOM
+            rectangle so it reads as a cat-related stat rather than a
+            counter-area stat. */}
+        <g
+          transform={`translate(${AREAS.CAT_ROOM.x + AREAS.CAT_ROOM.w / 2 - 60}, ${AREAS.CAT_ROOM.y + AREAS.CAT_ROOM.h + 6})`}
+        >
+          <rect
+            x="0"
+            y="0"
+            width="120"
+            height="22"
+            rx="11"
+            fill="#ffffff"
+            stroke="#fb923c"
+            strokeWidth="0.8"
+            opacity="0.85"
+          />
+          <text x="60" y="15" textAnchor="middle" fontSize="10" fill="#9a3412">
+            {t('playback:labels.catVisitsTotal', {
+              count: state.counters.catVisits,
             })}
-            {'  ·  '}
-            {t('playback:labels.catVisitsTotal', { count: state.counters.catVisits })}
           </text>
         </g>
 
@@ -1375,7 +1563,7 @@ export default function CafeScene({
         <g transform={`translate(${AREAS.CAT_ROOM.x + AREAS.CAT_ROOM.w / 2}, ${AREAS.CAT_ROOM.y + AREAS.CAT_ROOM.h - 20})`}>
           <text textAnchor="middle" fontSize="10" fill="#9a3412">
             {t('playback:labels.catsBusy', {
-              busy: catsActive,
+              busy: catsOutOfRoom,
               total: config.catCount,
             })}
           </text>
@@ -1436,6 +1624,12 @@ export default function CafeScene({
           const leaving = c.leftAt !== undefined
           const badge = stageBadge(c)
           const hasCat = c.visitingCats.size > 0 && !leaving
+          // 👀 hint: customer is currently accruing passive-exposure
+          // minutes (seated + at least one eligible cat in same AREA that
+          // isn't already visiting them). Suppressed while they already
+          // have an active visitor, since the contact channel takes over.
+          const accruingPassive =
+            !leaving && !hasCat && isAccumulatingPassiveExposure(c, state.cats)
           const facing = facingFromPrevX(`cust-${c.id}`, x)
           const walking = customerIsWalking(c, state, speed)
 
@@ -1553,6 +1747,21 @@ export default function CafeScene({
                   </text>
                 )}
 
+                {/* 👀 passive-exposure hint: customer is accumulating
+                    the second-channel satisfaction right now. Placed on
+                    the left so it doesn't clash with the stage badge. */}
+                {accruingPassive && (
+                  <text
+                    x="-12"
+                    y="-10"
+                    textAnchor="middle"
+                    fontSize="10"
+                    className="neko-passive-hint"
+                  >
+                    👀
+                  </text>
+                )}
+
                 {/* Food bowl while dining, OR a sparkle burst for the
                     brief window after FINISH_DINING, so the transition
                     "I'm eating → I'm done" has a visible flourish
@@ -1623,28 +1832,45 @@ export default function CafeScene({
                     </g>
                   )}
 
-                {/* Floating hearts while any cat is visiting */}
+                {/* Floating hearts + pulsing glow while any cat is
+                    visiting. Hirsch 2025 observed cats spend only a
+                    small fraction of time actually socializing with
+                    customers, so the UI amplifies each visit hard:
+                    three heart emojis at staggered delays, a glow ring
+                    behind the avatar, and a sparkle halo — otherwise
+                    the moment blinks by. */}
                 {decor && hasCat && (
                   <g>
+                    {/* Glow ring behind the avatar */}
+                    <circle
+                      cx="0" cy="0" r="22"
+                      fill="#fce7f3"
+                      stroke="#ec4899"
+                      strokeWidth="1.5"
+                      opacity="0.5"
+                      className="neko-visit-glow"
+                    />
+                    {/* Three rising hearts with staggered delays */}
                     <text
-                      x="4"
-                      y="0"
-                      textAnchor="middle"
-                      fontSize="10"
+                      x="4" y="0" textAnchor="middle" fontSize="13"
                       className="neko-heart"
                       style={heartStyleA}
                     >
                       💕
                     </text>
                     <text
-                      x="-2"
-                      y="0"
-                      textAnchor="middle"
-                      fontSize="9"
+                      x="-6" y="0" textAnchor="middle" fontSize="12"
                       className="neko-heart neko-heart--delayed"
                       style={heartStyleB}
                     >
                       💖
+                    </text>
+                    <text
+                      x="10" y="0" textAnchor="middle" fontSize="11"
+                      className="neko-heart neko-heart--delayed2"
+                      style={heartStyleA}
+                    >
+                      💗
                     </text>
                   </g>
                 )}
@@ -1760,22 +1986,17 @@ export default function CafeScene({
               y = anchor.y + 6
             }
           } else if (onShelf && !visiting) {
-            // Pick the nearest shelf in the cat's current area and
-            // teleport the y coordinate up to the shelf height. The arc
-            // hop animation adds the "jump up" feel via CSS below.
+            // Pick a stable shelf per cat using slotIdx so the sprite
+            // doesn't oscillate between two equidistant shelves every
+            // frame (AREA 1 has shelves at far left AND far right, and
+            // the old "nearest shelf" heuristic flipped constantly when
+            // the cat's walk animation straddled the midpoint — cats
+            // looked like they were frantically ping-ponging).
             const areaShelves = SHELVES.filter((s) => s.area === cat.area)
             if (areaShelves.length > 0) {
-              let best = areaShelves[0]
-              let bestDist = Number.POSITIVE_INFINITY
-              for (const s of areaShelves) {
-                const d = Math.hypot(s.x - x, s.y - y)
-                if (d < bestDist) {
-                  bestDist = d
-                  best = s
-                }
-              }
-              x = best.x
-              y = best.y - 4
+              const shelf = areaShelves[cat.slotIdx % areaShelves.length]
+              x = shelf.x
+              y = shelf.y - 4
             }
           } else if (onFurniture && !visiting && cat.area !== 'CAT_ROOM') {
             const areaSpots = FURNITURE_SPOTS.filter(
@@ -1785,6 +2006,26 @@ export default function CafeScene({
               const spot = areaSpots[cat.slotIdx % areaSpots.length]
               x = spot.x
               y = spot.y - 8
+            }
+          } else if (
+            !visiting &&
+            !walking &&
+            (cat.area === 'AREA_1' || cat.area === 'AREA_2') &&
+            cat.verticalLevel === 'FLOOR'
+          ) {
+            // Floor-level cats in the customer lounge that aren't
+            // actively visiting a seat or walking a path chill at one
+            // of the AMBIENT_CAT_SPOTS — quiet patches of rug between
+            // furniture. Selection is deterministic per cat slot so
+            // each cat has its own "usual spot" and doesn't wander into
+            // the middle of an aisle when idle.
+            const areaAmbient = AMBIENT_CAT_SPOTS.filter(
+              (s) => s.area === cat.area,
+            )
+            if (areaAmbient.length > 0) {
+              const spot = areaAmbient[cat.slotIdx % areaAmbient.length]
+              x = spot.x
+              y = spot.y
             }
           }
 
@@ -1822,10 +2063,10 @@ export default function CafeScene({
               style={{
                 transition: `${transformTransition}${transformTransition ? ', ' : ''}opacity 400ms ease-out`,
                 willChange: 'transform',
-                // v2.1: cats in the cat room fade to 35% — they're still
-                // visible as a hint but clearly off-duty. Cats on shelves
-                // get a tiny elevation hint via drop-shadow.
-                opacity: inCatRoom ? 0.35 : 1,
+                // Cats in the cat room render at full opacity; their
+                // position inside the dashed CAT_ROOM rectangle is
+                // already enough of a visual cue that they're off-duty.
+                opacity: 1,
                 filter: onShelf
                   ? 'drop-shadow(0 3px 2px rgba(0,0,0,0.18))'
                   : undefined,
@@ -1859,11 +2100,32 @@ export default function CafeScene({
                   transform={faceTransform}
                   style={{ transition: 'transform 220ms ease-out' }}
                 >
-                  {catEmoji(cat.slotIdx, resting)}
+                  {catEmoji(cat.slotIdx)}
                 </text>
                 {visiting && (
-                  <text x="30" y="10" textAnchor="middle" fontSize="11">💖</text>
+                  <g>
+                    {/* Big heart on the cat's head corner */}
+                    <text x="30" y="10" textAnchor="middle" fontSize="15">💖</text>
+                    {/* Twinkling sparkles around the cat to sell the
+                        short interaction moment. Three instances with
+                        staggered delays so at any given frame at least
+                        one sparkle is visible. */}
+                    <text x="-2" y="4" textAnchor="middle" fontSize="10"
+                      className="neko-sparkle">✨</text>
+                    <text x="38" y="30" textAnchor="middle" fontSize="9"
+                      className="neko-sparkle neko-sparkle--b">✨</text>
+                    <text x="18" y="-6" textAnchor="middle" fontSize="9"
+                      className="neko-sparkle neko-sparkle--c">💕</text>
+                  </g>
                 )}
+                {!visiting && !resting && (() => {
+                  const badge = catBehaviorBadge(cat.behaviorState)
+                  return badge ? (
+                    <text x="30" y="10" textAnchor="middle" fontSize="11">
+                      {badge}
+                    </text>
+                  ) : null
+                })()}
                 <text
                   textAnchor="middle"
                   x="18"

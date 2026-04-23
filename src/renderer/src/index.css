@@ -220,6 +220,18 @@
 }
 .neko-bob { animation: neko-bob 2.2s ease-in-out infinite; }
 
+/* 👀 passive-exposure hint: gentle opacity pulse so "this customer is
+   currently enjoying the ambient-cat channel" reads as ambient, not an
+   urgent alert. Slow and low-contrast on purpose. */
+@keyframes neko-passive-hint {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.95; }
+}
+.neko-passive-hint {
+  animation: neko-passive-hint 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
 /* Bouncy entrance: customers popping in at the door. */
 @keyframes neko-pop-in {
   0%   { transform: scale(0.2); opacity: 0; }
@@ -243,13 +255,33 @@
 
 /* Floating hearts above a customer with a cat on their lap. */
 @keyframes neko-heart-rise {
-  0%   { transform: translate(0, -6px);  opacity: 0; }
-  20%  { transform: translate(0, -14px); opacity: 1; }
-  80%  { transform: translate(-4px, -32px); opacity: 0.75; }
-  100% { transform: translate(-8px, -44px); opacity: 0; }
+  0%   { transform: translate(0, -4px)   scale(0.6); opacity: 0; }
+  15%  { transform: translate(0, -14px)  scale(1);   opacity: 1; }
+  55%  { transform: translate(6px, -30px) scale(1.1); opacity: 0.95; }
+  85%  { transform: translate(-4px, -46px) scale(1); opacity: 0.55; }
+  100% { transform: translate(0, -60px)  scale(0.85); opacity: 0; }
 }
 .neko-heart { animation: neko-heart-rise 2.4s linear infinite; }
-.neko-heart--delayed { animation-delay: 1.2s; }
+.neko-heart--delayed { animation-delay: 0.8s; }
+.neko-heart--delayed2 { animation-delay: 1.6s; }
+
+/* Pulsing glow ring around a customer being visited — bigger visual
+   anchor for the "cat is here!" moment so short visits still read. */
+@keyframes neko-visit-glow {
+  0%,100% { transform: scale(1);    opacity: 0.35; }
+  50%     { transform: scale(1.15); opacity: 0.65; }
+}
+.neko-visit-glow { animation: neko-visit-glow 1.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+
+/* Tiny sparkles that twinkle around the visiting cat itself. */
+@keyframes neko-sparkle-twinkle {
+  0%,100% { opacity: 0;   transform: scale(0.4); }
+  40%     { opacity: 1;   transform: scale(1); }
+  70%     { opacity: 0.5; transform: scale(0.8); }
+}
+.neko-sparkle { animation: neko-sparkle-twinkle 1.4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.neko-sparkle--b { animation-delay: 0.5s; }
+.neko-sparkle--c { animation-delay: 0.9s; }
 
 /* Steam wisps rising above the kitchen when staff are busy. */
 @keyframes neko-steam {
@@ -782,8 +814,20 @@
 }
 
 /* Custom scrollbar for learning panel */
+.learn-panel-scroll {
+  /* Kill horizontal overflow: with `overflow-y: auto` the CSS spec
+     promotes overflow-x to auto too, which produced a fat system-height
+     horizontal scrollbar whenever a long <code> string pushed the
+     content wider than the panel. We only ever want vertical scroll. */
+  overflow-x: hidden;
+  /* Long identifiers / formulas inside <code> should wrap instead of
+     forcing horizontal overflow in the first place. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .learn-panel-scroll::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 .learn-panel-scroll::-webkit-scrollbar-track {
   background: transparent;
@@ -867,4 +911,138 @@
 
   /* Restore native cursor */
   * { cursor: auto !important; }
+}
+
+/* ── Citations story page animations ──────────────────────
+   Used by components/citations/* for ambient (always-on) micro
+   animations. Keep all of these inside the reduce-motion gate so
+   visitors with prefers-reduced-motion: reduce don't see anything
+   jump. Scripted animations live in their own components using
+   ScriptedAnim.tsx + requestAnimationFrame. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Dashed connector that slowly flows toward the arrowhead. Used on
+     every line/path between landscape nodes and the capstone. */
+  @keyframes neko-arrow-flow {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: -18; }
+  }
+  .neko-arrow-flow {
+    animation: neko-arrow-flow 2.4s linear infinite;
+  }
+
+  /* Staggered drop-in for citation nodes on the landscape map. Pure
+     opacity only: the nodes carry an SVG transform="translate(x, y)"
+     attribute, and CSS `transform` would overwrite that positioning
+     (SVG attribute loses to CSS), collapsing every node to (0,0). */
+  @keyframes neko-node-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .neko-node-fade-in {
+    animation: neko-node-fade-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Customer emoji dropping onto the ground (ArrivalDropper). Each
+     sprite's own animation-delay + animation-duration are tuned per
+     Poisson sample inline. */
+  @keyframes neko-poisson-drop {
+    0%   { transform: translateY(-24px) scale(0.9); opacity: 0; }
+    30%  { opacity: 1; }
+    70%  { transform: translateY(4px) scale(1.05); opacity: 1; }
+    100% { transform: translateY(0) scale(1);      opacity: 1; }
+  }
+  .neko-poisson-drop {
+    animation: neko-poisson-drop 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* Queue dot reneging out: greys and slides off to the right with a
+     soft fade. Used by BalkReneQueue and RenegingFader ambient. */
+  @keyframes neko-queue-fade {
+    0%   { opacity: 1; filter: grayscale(0);   transform: translateX(0); }
+    50%  { opacity: 0.6; filter: grayscale(1); transform: translateX(6px); }
+    100% { opacity: 0;   filter: grayscale(1); transform: translateX(18px); }
+  }
+  .neko-queue-fade {
+    animation: neko-queue-fade 1.4s ease-in forwards;
+  }
+
+  /* Balk: a customer peeking at the queue and turning around before
+     joining. Slightly different from renege (no grey, just a hop-back). */
+  @keyframes neko-balk-turn {
+    0%   { transform: translateX(0);   opacity: 1; }
+    40%  { transform: translateX(6px); opacity: 0.9; }
+    100% { transform: translateX(-22px); opacity: 0; }
+  }
+  .neko-balk-turn {
+    animation: neko-balk-turn 900ms ease-in forwards;
+  }
+
+  /* Bar chart bars growing from 0 to their target height. AttributeBars
+     and (later) WelfareBars both reuse this. */
+  @keyframes neko-bar-grow {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+  }
+  .neko-bar-grow {
+    transform-origin: bottom;
+    animation: neko-bar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* L = λW gauge dial pulse: the value bubble pulses softly to signal
+     it's a live reading. */
+  @keyframes neko-dial-pulse {
+    0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(251,146,60,0)); }
+    50%      { transform: scale(1.05); filter: drop-shadow(0 0 4px rgba(251,146,60,0.45)); }
+  }
+  .neko-dial-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: neko-dial-pulse 1.8s ease-in-out infinite;
+  }
+
+  /* Ethogram wheel pointer: continuous smooth rotation through nine
+     sectors. The ambient wheel just spins; scripted uses inline
+     transform so we can stop on specific states.
+     transform-origin: 0 0 because the consumer wraps the pointer in an
+     outer <g transform="translate(CX, CY)">, so rotation should pivot
+     on that local (0, 0) which is the wheel hub. */
+  @keyframes neko-wheel-tick {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .neko-wheel-tick {
+    transform-origin: 0 0;
+    animation: neko-wheel-tick 18s linear infinite;
+  }
+
+  /* Cat hopping between vertical shelves: small up-arc applied to the
+     cat sprite group. Used on the VerticalLevelBounce ambient. */
+  @keyframes neko-shelf-hop {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .neko-shelf-hop {
+    animation: neko-shelf-hop 1.6s ease-in-out infinite;
+  }
+
+  /* Interaction-matrix cell flicker: subtle opacity pulse so cells with
+     high probability feel "active." Inline animation-duration tunes
+     per-cell intensity. */
+  @keyframes neko-matrix-flicker {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+  .neko-matrix-flicker {
+    animation: neko-matrix-flicker 2.4s ease-in-out infinite;
+  }
+
+  /* Pipeline arrow marching between stages: dash offset moves opposite
+     to arrow-flow above so the finale reads as forward motion. */
+  @keyframes neko-pipeline-flow {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: -24; }
+  }
+  .neko-pipeline-flow {
+    animation: neko-pipeline-flow 1.8s linear infinite;
+  }
 }

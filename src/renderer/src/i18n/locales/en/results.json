@@ -256,6 +256,26 @@
       "agentBased": {
         "label": "Agent-based modeling",
         "def": "Modeling each individual (customer, cat) as an autonomous agent whose interactions produce system behavior. NekoServe's cats are agents: each cat is its own SimPy process that decides when to visit customers and when to rest — not a passive queue resource."
+      },
+      "maxWaitTime": {
+        "label": "maxWaitTime (patience threshold parameter)",
+        "def": "How many minutes a queued customer will wait before giving up. Cumulative wait above this triggers reneging (leaving the queue). NekoServe's hard-threshold simplification of the patience distribution from Ancker & Gafarian (1963) and Dbeis (2024)."
+      },
+      "customerArrivalInterval": {
+        "label": "customerArrivalInterval (arrival-gap parameter)",
+        "def": "Average inter-arrival time (minutes) used to sample customer arrival times. Actual gaps are drawn from Exp(1 / customerArrivalInterval), producing a Poisson arrival process. Justified by Hasugian et al. (2020)."
+      },
+      "ethogram": {
+        "label": "Ethogram (behavior catalog)",
+        "def": "Animal-behavior tool that lists every observed behavior with its time share. Hirsch 2025's 9-state ethogram compresses 227 hours of observation into percentages (resting 31.7%, socializing 12.8%, playing 0.3%, and so on). NekoServe's cat FSM reuses this distribution as its state-transition probability table."
+      },
+      "catWelfareScore": {
+        "label": "CatWelfareScore (composite welfare index)",
+        "def": "NekoServe's home-grown 0–5 score that blends the five welfare sub-indicators suggested by Hirsch 2025 (play / explore / maintenance = higher is better; hiding / alert = lower is better). Plotted beside customer satisfaction to make the human/cat trade-off visible."
+      },
+      "paretoFrontier": {
+        "label": "Pareto frontier",
+        "def": "The set of multi-objective solutions no other solution dominates on both axes simultaneously. NekoServe plots customer satisfaction vs cat welfare as a 2D scatter; green-ringed dots are on the Pareto frontier, meaning you can't improve one without giving up the other."
       }
     }
   },
@@ -579,6 +599,42 @@
     "furniture": "Furniture",
     "shelf": "Shelf",
     "shelfHint": "Hirsch 2025 Figure 4b: more customers → cats flee to shelves. A shelf-heavy bar here means the scenario is stressing cats."
+  },
+  "passive": {
+    "title": "Passive Exposure: seeing a cat counts too",
+    "tagline": "Hirsch 2025 only measured contact — this is my second channel",
+    "intro": "Even if a cat never jumps on you, watching one stroll past, lounge on a shelf, or play with someone nearby still feels good. I accumulate that \"cat-visible\" time as a weighted score, reported independently so the contact-based customerSatisfactionScore stays untouched. Formula: cat and customer in the same AREA, weighted by inverse distance, with bonuses for shelf/playing cats.",
+    "kpi": {
+      "avgMinutes": "Avg passive exposure",
+      "minutes": "min",
+      "avgMinutesHint": "Weighted mean across {{count}} served customers",
+      "ratio": "Passive / Active",
+      "ratioUnit": "×",
+      "ratioHint": "Active contact avg {{active}} min, passive avg {{passive}} min",
+      "score": "Saturated score",
+      "scoreHint": "1 − exp(−avg/15), so it aligns with other 0–1 metrics"
+    },
+    "caveat": "⚠️ This metric is a hypothesis-driven model extension: Hirsch 2025 didn't measure passive exposure. Future empirical work (customer survey + regression) can validate the active/passive weighting."
+  },
+  "passiveSweep": {
+    "title": "Passive-channel sensitivity: catCount sweep",
+    "tagline": "how does each channel scale when you add more cats?",
+    "intro": "Runs eight background simulations (catCount = 1..8), keeping everything else identical to the current scenario, then plots the two cat-time channels against catCount. The active curve saturates once cats are visit-bound; the passive curve keeps climbing with ambient visibility. The crossover tells you the catCount at which the ambient channel starts dominating the measured one.",
+    "run": "Run catCount sweep",
+    "rerun": "Re-run sweep",
+    "running": "Running... ({{done}}/{{total}})",
+    "error": "Sweep failed: {{message}}",
+    "xLabel": "catCount",
+    "yLabel": "Avg minutes per served customer",
+    "seriesActive": "Active contact (measured)",
+    "seriesPassive": "Passive exposure (proposed)",
+    "crossoverLabel": "Crossover",
+    "readingTitle": "Reading the chart",
+    "readingWithCrossover": "Passive exposure overtakes active contact at about catCount ≈ {{catCount}} ({{value}} min). Below that threshold the measured channel dominates; above it, ambient visibility is the bigger share of the experience.",
+    "readingNoCrossover": "The two channels don't cross within 1..8 cats in this scenario. Either the active channel stays ahead (low-occupancy, cats always find visitors) or the passive channel is already dominant at catCount = 1 (high-occupancy, cats rarely free for contact).",
+    "marginalTitle": "Marginal return per extra cat",
+    "marginalRow": "{{from}} → {{to}}: active {{dActive}}, passive {{dPassive}} min/customer",
+    "caveat": "⚠️ This sweep runs single-replication simulations for speed. Marginal differences under ~0.5 min/customer are noisy; re-run to see whether the pattern is stable."
   },
   "pareto": {
     "title": "Customer satisfaction vs Cat welfare (Pareto frontier)",

@@ -6,6 +6,15 @@
     "success": "Simulation complete",
     "error": "Simulation failed"
   },
+  "runIndicator": {
+    "title": "Running simulation, please hold on",
+    "batchTitle": "Batch running ({{completed}} / {{total}})",
+    "elapsed": "Elapsed {{elapsed}} s",
+    "simSubtitle": "Sim time {{cur}} / {{total}}",
+    "warmupBadge": "Warm-up",
+    "renderingTitle": "Applying results to UI",
+    "renderingSubtitle": "Large event log, rendering takes a few seconds"
+  },
   "button": {
     "confirm": "OK",
     "cancel": "Cancel",

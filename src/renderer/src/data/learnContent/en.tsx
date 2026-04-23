@@ -831,6 +831,55 @@ export const LEARN_CONTENT_EN: LearnContent = {
         </div>
       ),
     },
+    {
+      id: 'passive-exposure',
+      icon: '👀',
+      title: 'Passive exposure: the channel the paper missed',
+      content: (
+        <div>
+          <P>
+            Hirsch et al. (2025) only measured <B>contact</B> time (cat physically visiting
+            a customer). The paper never touches another obvious source of enjoyment:
+            <B> a customer just seeing a cat nearby is already a good time</B>.
+            Watching a cat jump onto a shelf, play with someone at the next table,
+            or stroll across the aisle all contribute to satisfaction, but traditional
+            contact-rate metrics throw those moments away.
+          </P>
+          <P>
+            This simulator adds a second channel called <B>Passive Exposure</B> to fill
+            that gap. The rate formula has two hard filters (customer must be seated,
+            at least one cat in the same AREA) multiplied by three weights:
+          </P>
+          <UL>
+            <LI><B>Distance decay</B>: further from the seat, lower weight: <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">1 / (1 + d/150)</code></LI>
+            <LI><B>Visibility</B>: on a shelf 1.2, on furniture 1.1, on the floor 1.0</LI>
+            <LI><B>Behavior</B>: PLAYING 1.3, MOVING/EXPLORING/ALERT/SOCIALIZING 1.1, others 1.0</LI>
+          </UL>
+          <P>
+            Summed across cats that is an exposure <B>rate</B> per minute; integrated
+            over time it becomes accumulated exposure minutes. The Results page cat
+            section reports three new KPIs:
+            <B> average passive exposure minutes</B>, <B>passive / active ratio</B>,
+            and a saturated <B>0–1 score</B>.
+          </P>
+          <Note>
+            ⚠️ This is a <B>simulator-proposed research framework</B>, not a
+            validated empirical model. Hirsch 2025 did not measure passive exposure,
+            so the weights (1.2, 1.3 etc.) are reasoned estimates, not measurements.
+            Future empirical work could collect customer satisfaction surveys and
+            regress <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">satisfaction ~ β·active + γ·passive</code> to
+            estimate real β and γ coefficients.
+          </Note>
+          <P>
+            To keep this new metric from contaminating the existing validation baseline,
+            I <B>deliberately kept passive exposure out of the existing
+            customerSatisfactionScore formula</B> and surfaced it as a separate side
+            KPI. That way validation-mode scores don't silently degrade just because
+            I bolted on a new model.
+          </P>
+        </div>
+      ),
+    },
   ],
 
   // ══════════════════════════════════════════════════════════
@@ -980,7 +1029,7 @@ export const LEARN_CONTENT_EN: LearnContent = {
           <UL>
             <LI><B>🚪 Door</B>: where customers arrive</LI>
             <LI><B>Seat queue</B>: where they wait when all seats are full</LI>
-            <LI><B>🪑 Seats</B>: N cells, matching the `seatCount` parameter</LI>
+            <LI><B>🪑 Seats</B>: N cells, matching the <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">seatCount</code> parameter</LI>
             <LI><B>👩‍🍳 Kitchen</B>: M staff dots that light up orange when busy</LI>
             <LI><B>🐱 Cat zone</B>: home base for K cats; each wanders out to a seat when it decides to visit</LI>
             <LI><B>🏁 Exit</B>: served or abandoned customers fade out here</LI>
@@ -1000,7 +1049,15 @@ export const LEARN_CONTENT_EN: LearnContent = {
             zone, waits an exponential idle interval, then picks a random
             seated customer and walks over. A customer may be visited by
             multiple cats at once, and must wait for all of them to leave
-            before standing up — so "clingy cats" directly inflate total stay time.
+            before standing up, so "clingy cats" directly inflate total stay time.
+          </Note>
+          <Note>
+            🏠 <B>Why is the cat room empty most of the time?</B> Hirsch et al.
+            (2025) measured cats spending about 31.7% of observed time in the
+            cat room (out of sight), and the remaining ~2/3 roaming, resting,
+            or being visited in customer areas. My sim reuses that paper's
+            behavior probabilities, so an often-empty cat room is expected,
+            not a bug.
           </Note>
         </div>
       ),
@@ -1079,20 +1136,20 @@ export const LEARN_CONTENT_EN: LearnContent = {
               resting or already visiting other customers).
             </LI>
             <LI>
-              <B>Tune cat friendliness</B>: drop `catIdleInterval` to 2 and
+              <B>Tune cat friendliness</B>: drop <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">catIdleInterval</code> to 2 and
               watch cats become hyper-clingy (almost every customer has a
-              cat on them); raise it to 20 and see `noCatVisitRate` climb
+              cat on them); raise it to 20 and see <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">noCatVisitRate</code> climb
               as customers leave untouched.
             </LI>
             <LI>
-              <B>Provoke abandons</B>: lower `maxWaitTime` (say, 2 minutes),
+              <B>Provoke abandons</B>: lower <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">maxWaitTime</code> (say, 2 minutes),
               raise arrival rate, and you'll see a wave of 😿. Use the step
               buttons to walk through each abandoning customer one event at
               a time.
             </LI>
             <LI>
               <B>"Cats keep people seated" effect</B>: raise
-              `catInteractionTime` and `avgTotalStayTime` rises even though
+              <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">catInteractionTime</code> and <code className="px-1 rounded bg-orange-100 dark:bg-bark-600 font-mono text-[0.9em]">avgTotalStayTime</code> rises even though
               dining time is unchanged — direct evidence that cats inflate
               occupancy.
             </LI>
