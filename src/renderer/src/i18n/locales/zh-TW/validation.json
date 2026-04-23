@@ -1,5 +1,182 @@
 {
   "pageTitle": "✅ 驗證模式",
+  "formula": {
+    "expand": "更多說明 ▼",
+    "collapse": "收合 ▲"
+  },
+  "formulaParts": {
+    "score": {
+      "label": "最終驗證分數",
+      "desc": "三個互補指標加權平均後、再映射到 0-100 的整數分數。80 分以上算通過（依 Sargent 2013 的 face validity 閾值）。",
+      "unit": "0-100",
+      "example": "χ²=93、KS=74、KL=93 → 0.4×93 + 0.3×74 + 0.3×93 = 87 分"
+    },
+    "chiNorm": {
+      "label": "子分數（normalised）",
+      "desc": "卡方統計量經過 soft-cap 轉換為 0-100 分。χ² = 0 → 100 分、χ² ≥ 0.5 → 0 分。權重佔 40%，是三個指標裡最重的。",
+      "unit": "0-100",
+      "example": "χ² = 0.036 的原始值 → 映射到 93 分"
+    },
+    "ksNorm": {
+      "label": "子分數（normalised）",
+      "desc": "KS D 值經過 soft-cap 轉換為 0-100 分。D = 0 → 100 分、D ≥ 0.3 → 0 分。",
+      "unit": "0-100",
+      "example": "D = 0.079 的原始值 → 映射到 74 分"
+    },
+    "klNorm": {
+      "label": "子分數（normalised）",
+      "desc": "KL 相對熵（nats）經過 soft-cap 轉換為 0-100 分。KL = 0 → 100 分、KL ≥ 0.3 nats → 0 分。",
+      "unit": "0-100",
+      "example": "KL = 0.020 → 映射到 93 分"
+    },
+    "weightChi": {
+      "label": "權重：卡方的比重",
+      "desc": "卡方的權重是 40%，比另外兩個指標（各 30%）稍高。因為 χ² goodness-of-fit 就是 Hirsch 2025 論文本身使用的方法，方法學同源最可信。",
+      "example": "如果三個權重相等（0.33 / 0.33 / 0.33），合成分數會變成 86 分（降 1 分）"
+    },
+    "weightOthers": {
+      "label": "KS 與 KL 的權重",
+      "desc": "KS 和 KL 各占 30%。它們在 χ² 看不到的 mismatch 型態上互補：KS 抓整體形狀偏移、KL 抓機率塞錯類別。",
+      "example": "權重合計必須為 1.0（0.4 + 0.3 + 0.3 = 1.0）"
+    },
+    "stat": {
+      "label": "原始統計量",
+      "desc": "χ²、KS D、KL 三者之一的原始數值。分別從對應的公式計算得到。",
+      "example": "χ² = 0.036、D = 0.079、KL = 0.020"
+    },
+    "cap": {
+      "label": "Soft-cap 上限",
+      "desc": "把 stat 當作「0 分」的閾值。stat 到達這個值時分數歸零，超過也維持 0 分。我們刻意設寬以免 Monte Carlo 雜訊觸發誤判。",
+      "example": "χ² 的 cap = 0.5；KS 的 cap = 0.3；KL 的 cap = 0.3"
+    },
+    "maxFn": {
+      "label": "max(0, ·) 取較大",
+      "desc": "保護用的 max 運算：當 1 - stat/cap 變成負數時強制歸零，避免分數跑到負數。",
+      "example": "若 stat = 0.8、cap = 0.5 → 1 - 1.6 = -0.6 → max(0, -0.6) = 0"
+    },
+    "hundredScale": {
+      "label": "百分制縮放",
+      "desc": "把 [0, 1] 映射乘到 [0, 100] 方便使用者用「滿分 100 分」的直覺來解讀。",
+      "example": "max(0, 1 - stat/cap) × 100 = 0 到 100 的整數分"
+    },
+    "chiStat": {
+      "label": "卡方統計量",
+      "desc": "衡量觀察分布和期望分布「類別差異」的總和。Pearson (1900) 首次提出，至今是類別型分布比對的預設方法。",
+      "unit": "無單位（dimensionless）",
+      "example": "χ² = 0.036 → 兩分布幾乎重合"
+    },
+    "obsO": {
+      "label": "第 i 類的觀察比例",
+      "desc": "模擬器跑出來的分布：每一類佔總觀察的比例。九類加總必須等於 1。",
+      "unit": "0 ~ 1",
+      "example": "RESTING 類觀察到 0.354（35.4%）"
+    },
+    "expE": {
+      "label": "第 i 類的期望比例",
+      "desc": "實證（Hirsch 2025）的目標分布：每一類應該是多少。九類加總也必須等於 1。",
+      "unit": "0 ~ 1",
+      "example": "RESTING 實證 0.317（31.7%）"
+    },
+    "residualSquared": {
+      "label": "平方殘差",
+      "desc": "觀察減去期望的差距平方。平方讓正負殘差都變成懲罰（偏多偏少都算偏離）。",
+      "example": "O=0.354、E=0.317 → (0.037)² = 0.001369"
+    },
+    "sigmaSum": {
+      "label": "對所有類別加總",
+      "desc": "把每一類算出的 (Oᵢ−Eᵢ)²/Eᵢ 全部相加。i 從 1 跑到 k（k 是類別總數）。",
+      "example": "9 類相加 = 0.005 + 0.004 + ... = 0.036"
+    },
+    "kCategories": {
+      "label": "類別總數",
+      "desc": "卡方拿來比的類別有幾個。NekoServe 的 cat behavior 分布是 9 類，所以 k = 9。自由度 df = k − 1 = 8。",
+      "example": "k = 9（OUT_OF_LOUNGE、RESTING、... 共九類）"
+    },
+    "ksD": {
+      "label": "KS 統計量",
+      "desc": "兩條累積分布之間的最大垂直距離。Kolmogorov (1933) 與 Smirnov (1948) 提出的非參數檢定。",
+      "unit": "0 ~ 1",
+      "example": "D = 0.079 → 最大差距 7.9 個百分點"
+    },
+    "fSim": {
+      "label": "模擬累積分布",
+      "desc": "把模擬的 9 類佔比依序加總，變成「累積到第 i 類為止」的階梯型曲線。永遠從 0 跑到 1。",
+      "example": "F_sim(SOCIALIZING) = OUT_OF_LOUNGE + RESTING + SOCIALIZING 三類佔比加總"
+    },
+    "fEmp": {
+      "label": "實證累積分布",
+      "desc": "Hirsch 2025 的 9 類期望佔比依序加總。和 F_sim 用同樣順序，才能逐點比較。",
+      "example": "F_emp(SOCIALIZING) = 0.316 + 0.317 + 0.128 = 0.761"
+    },
+    "maxOp": {
+      "label": "找最大值",
+      "desc": "掃過所有類別點 x，挑出兩條 CDF 差距最大的那一點，當成整體距離的代表。",
+      "example": "遍歷 9 類，發現 SHELF 那點差距最大 0.079 → D = 0.079"
+    },
+    "absValue": {
+      "label": "絕對值",
+      "desc": "只管差距大小不管方向。模擬 > 實證或模擬 < 實證都一樣算「偏離」。",
+      "example": "|0.354 − 0.317| = |0.037| = 0.037"
+    },
+    "dkl": {
+      "label": "KL 相對熵",
+      "desc": "用資訊理論度量「P 作為 Q 的近似有多差」。Kullback & Leibler (1951)。越大代表資訊量損失越多。",
+      "unit": "nats 或 bits",
+      "example": "D_KL = 0.020 nats → 保真度 exp(-0.020) ≈ 98.1%"
+    },
+    "pDist": {
+      "label": "模擬分布",
+      "desc": "我們要驗證的那個分布（NekoServe 模擬跑出來的九類佔比）。用來作為「被評估的近似」放在 KL 的第一參數。",
+      "example": "P = (0.358, 0.354, 0.089, ...)"
+    },
+    "qDist": {
+      "label": "實證分布",
+      "desc": "當作 ground truth 的分布（Hirsch 2025 的九類佔比）。放在 KL 的第二參數當「基準」，決定 KL 的不對稱方向。",
+      "example": "Q = (0.316, 0.317, 0.128, ...)"
+    },
+    "pi": {
+      "label": "模擬的第 i 類機率",
+      "desc": "P 的某一類機率（例如 RESTING 模擬 35.4% → p_RESTING = 0.354）。每個 pᵢ 落在 [0, 1]，總和等於 1。",
+      "example": "p_RESTING = 0.354"
+    },
+    "qi": {
+      "label": "實證的第 i 類機率",
+      "desc": "Q 的某一類機率（例如 RESTING 實證 31.7% → q_RESTING = 0.317）。公式裡在分母，不能為零，程式碼用 ε = 1e-9 保護。",
+      "example": "q_RESTING = 0.317"
+    },
+    "logRatio": {
+      "label": "對數比",
+      "desc": "模擬比實證「多幾倍」取自然對數。pᵢ > qᵢ 時為正、pᵢ < qᵢ 時為負、pᵢ = qᵢ 時為 0。這才是 KL 不對稱的源頭。",
+      "unit": "nats",
+      "example": "p=0.354、q=0.317 → log(0.354/0.317) = log(1.117) ≈ 0.110 nats"
+    },
+    "phat": {
+      "label": "樣本比例",
+      "desc": "觀察到的成功次數佔樣本的比例（例如 SHELF = 4209 次 / 8547 次 = 0.492）。Wilson CI 的中心估計值。",
+      "unit": "0 ~ 1",
+      "example": "p̂ = 4209 / 8547 = 0.4924"
+    },
+    "nSize": {
+      "label": "樣本數",
+      "desc": "總觀察次數。n 越大信賴區間越窄、越精確。Hirsch 2025 的 vertical level 用了 n = 8547 次 in-lounge 觀察。",
+      "example": "n = 8547"
+    },
+    "zValue": {
+      "label": "信心水準臨界值",
+      "desc": "標準常態分布的分位點。95% CI 對應 z = 1.96（左右各留 2.5% 尾部）；99% CI 會改成 z = 2.576。",
+      "example": "z = 1.96 for 95% confidence interval"
+    },
+    "biasTerm": {
+      "label": "偏差校正",
+      "desc": "Wilson 相對於 Wald 多加的 shrinkage 項。作用是把極端比例（p̂ 接近 0 或 1）往中央拉一點，避免 CI 崩潰。",
+      "example": "n = 8547、z = 1.96 → z²/(2n) = 3.84 / 17094 ≈ 0.000225"
+    },
+    "plusMinus": {
+      "label": "加減兩側",
+      "desc": "信賴區間同時往左右兩邊伸展：CI 下界 = 中心 - margin、CI 上界 = 中心 + margin。",
+      "example": "SHELF：中心 0.4924、margin 0.0106 → [0.482, 0.503]"
+    }
+  },
   "intro": "跑完模擬後，這頁會把貓咪行為分布拿去跟 Hirsch 等 (2025) 的 227 小時觀察資料對照。合成分數 80 分以上算通過，代表這次模擬情境足夠貼近文獻實證。",
   "needsRun": "還沒跑過模擬。請先到「模擬設定」按下開始模擬。",
   "benchmark": "比對基準",
@@ -40,6 +217,133 @@
   "rightColumnTitle": "分布對照",
   "behaviorCompare": "行為九類分布（Hirsch Figure 3 vs 模擬）",
   "verticalCompare": "垂直層級分布（Hirsch Figure 4）",
+  "methodology": {
+    "title": "驗證方法學",
+    "expand": "展開 ▼",
+    "collapse": "收起 ▲",
+    "framework": {
+      "heading": "1. 驗證框架（Verification & Validation）",
+      "intro": "我用的是模擬研究裡標準的「multi-metric composite validation」做法：一個指標有盲點，三個互補指標合成一個分數能把盲點互相補起來。這不是我自己發明的，是下面這三篇經典 V&V 論文的核心建議：",
+      "sargent": "<cite>Sargent (2013)</cite>：在 2013 Winter Simulation Conference 的 V&V 指引裡指出，單一統計量容易被 outlier 或分布形狀欺騙，建議 face validity 分數以「多指標加權平均」方式呈現。我的 0.4·χ² + 0.3·KS + 0.3·KL 就是這個原則的實作。",
+      "kleijnen": "<cite>Kleijnen (1995)</cite>：類別型分布的比對預設用 χ² goodness-of-fit。我的 χ² 就是直接照這篇做。",
+      "rubner": "<cite>Rubner 等 (2000)</cite>：討論分布距離時 KL 和 EMD / KS 各有偏好的失效模式，不同指標會在不同類型的 mismatch 上敏感，所以互補。",
+      "alignmentLabel": "重要的方法學對齊點",
+      "alignmentBody": "Hirsch 2025 論文本身也是用 χ² goodness-of-fit test 驗證他們的觀察資料（χ²(2) = 1234.2 for vertical level；詳見下方「實證資料提取紀錄」裡列出的四個檢定）。我不是憑空挑 χ² 來用，是跟論文同源的方法。",
+      "compositeFormulaLabel": "合成分數公式",
+      "compositeFormulaHint": "最後的驗證分數是三個子指標加權平均：卡方占 40%、KS 占 30%、KL 占 30%。權重是我參考 Sargent 2013 的建議定的，不是隨便拍腦袋。",
+      "compositeFormulaLong": "χ²_norm、KS_norm、KL_norm 分別是 soft-cap 之後的 0-100 子分數。χ² 權重稍高（40% vs 30% vs 30%）是因為它跟 Hirsch 2025 論文使用的 goodness-of-fit 方法同源，最具方法學正當性。如果換成 Rubner 2000 建議的 EMD，權重會重新調整。"
+    },
+    "complementarity": {
+      "heading": "2. 三個指標為什麼互補",
+      "intro": "每個指標有自己擅長抓的 mismatch 型態，也各有盲區。把三個加起來當合成分數，可以避免單一指標誤判通過或誤判失敗：",
+      "colMetric": "指標",
+      "colStrength": "擅長偵測",
+      "colWeakness": "盲區",
+      "colPaired": "互補",
+      "rows": {
+        "chi": {
+          "metric": "χ² 卡方",
+          "strength": "某一類整體偏多／偏少",
+          "weakness": "對分布形狀偏移不敏感",
+          "paired": "KS"
+        },
+        "ks": {
+          "metric": "KS 累積差距",
+          "strength": "整條分布形狀在哪一點偏差最大",
+          "weakness": "小類別的差異被累積吃掉",
+          "paired": "χ²"
+        },
+        "kl": {
+          "metric": "KL 相對熵",
+          "strength": "機率質量塞錯類別（資訊量損失）",
+          "weakness": "不對稱，方向敏感",
+          "paired": "χ²"
+        }
+      }
+    },
+    "thresholds": {
+      "heading": "3. 80 分閾值和 soft-cap 怎麼定的",
+      "intro": "每個指標的原始數字經過 soft-cap 映射到 0-100。閾值來源：",
+      "chi": "χ² 的 hard critical value 在 df=8、α=0.05 時為 15.51（<cite>Agresti 2013</cite> 標準表）。我們的 soft-cap 設在 0.5，比 hard 臨界值寬約 30 倍。這是刻意的：我們跑在機率空間（proportion）而不是計數空間（count），臨界值要換算；寬鬆 soft-cap 也避免 simulator 的蒙地卡羅雜訊誤判為失敗。",
+      "ks": "KS 在 n = 8547 下的 α=0.05 臨界 D ≈ 0.0147（Massey 1951 近似公式 D₀.₀₅ = 1.36/√n）。我們的 soft-cap 0.3 比臨界值寬 20 倍，同理避免雜訊誤判。",
+      "kl": "KL 無 well-defined 臨界值，soft-cap 0.3 nats 對應 exp(-0.3) ≈ 74% 的近似保真度，接近業界「可接受近似」的下限。",
+      "composite": "80 分閾值採用 <cite>Sargent (2013)</cite> 建議的「face validity ≥ 0.8」為業界慣例。達到 80 表示三個角度都落在「近似可接受」區間。",
+      "caveat": "以上 soft-cap 的選擇是工程近似，不是嚴謹假設檢定。嚴格的統計顯著性判斷應看原始 p-value，不是最後的 0-100 分。我會在指標卡片下方另外列 p-value 供參考。",
+      "softCapLabel": "Soft-cap 映射公式",
+      "softCapHint": "把原始統計量（χ²、KS D、KL nats）轉換成 0-100 分：stat = 0 時得滿分 100，stat 到達 cap 時得 0 分，中間線性過渡。"
+    }
+  },
+  "breakdown": {
+    "expand": "展開計算過程 ▼",
+    "collapse": "收起 ▲",
+    "chi": {
+      "heading": "卡方適合度：每一類的貢獻拆解",
+      "intro": "卡方統計量是九類各自的 (O−E)²/E 加總。下表列出每一類的觀察值 O、期望值 E、原始殘差 O−E、標準化殘差（O−E）/√E，以及對總卡方的貢獻和相對佔比。某一類殘差偏大，整個卡方就會被拉高。",
+      "formulaLabel": "Pearson 卡方統計量",
+      "formulaHint": "對每一類的「殘差平方 / 期望值」取總和。平方讓正負殘差都變成懲罰；除以 E 才不會讓期望值大的類別天生就貢獻大。",
+      "formulaLong": "O_i 是第 i 類的觀察比例，E_i 是期望（實證）比例，k 是類別總數。自由度 df = k − 1（少 1 是因為總機率必須為 1 的約束）。在 NekoServe 裡我們用的是 proportion 空間的卡方，不是 count 空間，因此臨界值要另外換算。",
+      "colCategory": "類別",
+      "colObserved": "觀察 O",
+      "colExpected": "期望 E",
+      "colResidual": "殘差 O−E",
+      "colStdResidual": "標準化殘差",
+      "colContribution": "貢獻 (O−E)²/E",
+      "colShare": "佔總卡方比例",
+      "totalRow": "合計",
+      "interpretLabel": "統計解讀",
+      "interpretBody": "χ² = {{chi}}，df = {{df}}，查 Agresti 2013 表 α=0.05 的臨界值為 {{crit}}。在這個閾值下，原始 p-value 粗分類為「{{pBucket}}」。我們在 proportion 空間下另外套 soft-cap（0.5 → 0 分）以避免蒙地卡羅雜訊誤判。"
+    },
+    "ks": {
+      "heading": "KS 累積分布差距：兩條 CDF 的最大垂直落差",
+      "intro": "KS D 值是「累積到某一類為止，模擬 CDF 和實證 CDF 之間的最大垂直距離」。下面 SVG 疊圖上紅色標記就是那個最大落差的位置，右邊表格列出每一類的累積值。",
+      "formulaLabel": "Kolmogorov-Smirnov D 統計量",
+      "formulaHint": "取兩條 CDF 的最大垂直距離。F_sim 是模擬的累積分布、F_emp 是實證的累積分布。D = 0 表示兩條線完全重疊，D 越大表示有某個 x 讓兩邊差異最大。",
+      "formulaLong": "KS 是非參數方法，不用假設分布形狀，因此適合對任意型態的分布比對。它對「整體形狀偏移」很敏感，但對「單一小類別的差異」相對不敏感（因為 CDF 累積過程會平滑掉小類別的差）。KS α = 0.05 的臨界值近似是 1.36/√n（Massey 1951）。",
+      "svgAlt": "SVG 累積分布疊圖，實證 vs 模擬",
+      "colCategory": "類別",
+      "colCumObserved": "累積 O（模擬）",
+      "colCumExpected": "累積 E（實證）",
+      "colGap": "差距 |O−E|",
+      "legendEmpirical": "實證 CDF",
+      "legendSimulation": "模擬 CDF",
+      "legendMaxGap": "最大差距 D",
+      "interpretLabel": "統計解讀",
+      "interpretBody": "D = {{d}}，n = {{n}}，KS α = 0.05 臨界值 D₀.₀₅ = {{crit}}（Massey 1951 近似公式 1.36/√n）。原始 p-value 粗分類「{{pBucket}}」。最大差距出現在 {{maxCategory}} 那一類。大 n 會讓嚴格 KS 很容易拒絕，所以我們刻意套 soft-cap（0.3 → 0 分）避免雜訊誤判失敗。這是 face-validity 設計的一部分，不是在隱藏失敗。"
+    },
+    "kl": {
+      "heading": "KL 相對熵：機率質量塞錯類別的資訊量",
+      "intro": "每一類對 KL 的貢獻是 p·log(p/q)，其中 p 是模擬佔比、q 是實證佔比。正貢獻（橘）代表模擬把太多機率放在那一類；負貢獻（藍）代表放得太少。全部加起來就是總 KL（以 nats 為單位）。",
+      "formulaLabel": "Kullback-Leibler 相對熵",
+      "formulaHint": "p_i 是模擬分布的第 i 類機率、q_i 是實證分布。每一類貢獻 p·log(p/q)：p > q 時為正、p < q 時為負。加總永遠 ≥ 0（由 Jensen 不等式保證），等於 0 時兩分布相同。",
+      "formulaLong": "KL 的直觀解讀：「把模擬分布 P 當成實證分布 Q 的近似來編碼觀察資料時，每個觀察平均會多花 D_KL(P‖Q) 個 nats」。不對稱性（D_KL(P‖Q) ≠ D_KL(Q‖P)）意味著「方向」重要：NekoServe 總是以實證 Q 為分母、模擬 P 為分子，因此懲罰的是「模擬把質量塞到實證沒有的地方」。對稱替代品可以選 Jensen-Shannon divergence 或 EMD（Rubner 2000）。",
+      "totalRow": "合計 Σ",
+      "legendOver": "模擬過度（p > q）",
+      "legendUnder": "模擬不足（p < q）",
+      "interpretLabel": "統計解讀",
+      "interpretBody": "KL = {{kl}} nats，對應保真度 exp(-KL) ≈ {{fidelity}}%，相當於模擬作為實證分布的近似只損失了約 {{loss}}% 的資訊量。"
+    }
+  },
+  "provenance": {
+    "title": "實證資料提取紀錄",
+    "expand": "展開 ▼",
+    "collapse": "收起 ▲",
+    "intro": "比對基準裡每個百分比都附上論文的原始 n、95% Wilson score 信賴區間，以及它在論文裡的位置，方便交叉查核。Wilson CI 的方法出處：",
+    "wilsonFormulaLabel": "Wilson score 95% CI",
+    "wilsonFormulaHint": "p̂ 是樣本比例、n 是樣本數、z = 1.96（對應 95% CI）。這個公式在 p 接近 0 或 1、以及 n 很小時都不會退化成零寬度，比 Wald interval 穩健很多。",
+    "wilsonFormulaLong": "Wald interval 只是 p̂ ± 1.96·√(p̂(1−p̂)/n)，簡單但在 p → 0 或 1 時會崩潰（區間寬度變成 0）。Wilson 1927 用 score test 推出了這個修正版：加上 z²/(2n) 作為 bias correction、並把分母除以 (1 + z²/n) 做 shrinkage。Agresti & Coull (1998) 證明 Wilson 在小 n 和極端比例下仍保持接近 95% 的實際覆蓋率，因此當代統計教科書都以此為標準。",
+    "behaviorTitle": "行為九類分布（Figure 3）",
+    "verticalTitle": "垂直層級分布（Figure 3 右圖 / in-lounge）",
+    "colCategory": "類別",
+    "colProportion": "實證 %",
+    "colCI": "95% Wilson CI",
+    "colObserved": "模擬 %",
+    "colInCI": "落在 CI 內",
+    "colSource": "論文來源",
+    "inCIYes": "模擬值落在 95% CI 內",
+    "inCINo": "模擬值在 95% CI 外（⚠ 偏離實證）",
+    "paperStatsTitle": "論文原本就使用的統計檢定",
+    "paperStatsIntro": "Hirsch 2025 自己就對這些分布做了 χ² goodness-of-fit 檢定。我們的驗證方法跟論文同源，不是我們自己新發明的。"
+  },
   "suggest": {
     "behavior": {
       "out_of_lounge": {

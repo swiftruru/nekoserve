@@ -276,6 +276,82 @@
       "paretoFrontier": {
         "label": "Pareto frontier",
         "def": "The set of multi-objective solutions no other solution dominates on both axes simultaneously. NekoServe plots customer satisfaction vs cat welfare as a 2D scatter; green-ringed dots are on the Pareto frontier, meaning you can't improve one without giving up the other."
+      },
+      "goodnessOfFit": {
+        "label": "Goodness-of-fit",
+        "def": "A family of statistical tests that check whether observed data match a theoretical probability distribution. Chi-square goodness-of-fit (χ² GoF) is the most common: compare observed counts vs expected counts; larger disparity = worse fit. Hirsch 2025 uses it to validate cat vertical-level preferences (χ²(2) = 1234.2)."
+      },
+      "ksDivergence": {
+        "label": "Kolmogorov-Smirnov (KS)",
+        "def": "A non-parametric distribution comparison: the D statistic is the max vertical distance between two CDFs. Advantage: no distributional assumption. Disadvantage: insensitive to differences in small-probability categories. Critical value D₀.₀₅ ≈ 1.36/√n (Massey 1951)."
+      },
+      "klDivergence": {
+        "label": "Kullback-Leibler divergence (KL)",
+        "def": "An information-theoretic distance: D_KL(P‖Q) = Σ p·log(p/q). Interpretation: how many extra nats (or bits) you pay per observation when encoding P using a code optimised for Q. Zero means identical distributions; larger means P puts probability mass on the wrong categories."
+      },
+      "wilsonCI": {
+        "label": "Wilson score confidence interval",
+        "def": "A 95% confidence interval for a binomial proportion (like '49.2% of time on SHELF'). More stable than the naive Wald interval p̂ ± 1.96·√(p̂(1-p̂)/n): doesn't collapse at p near 0 or 1, behaves well at small n. Wilson (1927) is the original; current standard (Agresti 2013)."
+      },
+      "cdf": {
+        "label": "Cumulative distribution function (CDF)",
+        "def": "F(x) = P(X ≤ x). Turns a point-density view of a distribution into a running-total view. Always non-decreasing, runs from 0 to 1. KS test compares two CDFs' maximum vertical gap."
+      },
+      "pValue": {
+        "label": "p-value",
+        "def": "The probability of observing this-much-or-more deviation if H₀ is true. p < 0.05 is the conventional 'statistically significant' threshold. Caveat: p-values amplify with n, so any small difference becomes significant in a large sample — 'p < 0.001' alone doesn't mean 'substantively important'."
+      },
+      "criticalValue": {
+        "label": "Critical value",
+        "def": "The threshold a test statistic must exceed to reach significance at a chosen α (usually 0.05). Chi-square at df = 8, α = 0.05 has critical value 15.51; observed χ² larger than that rejects H₀."
+      },
+      "degreesOfFreedom": {
+        "label": "Degrees of freedom (df)",
+        "def": "The number of truly-free parameters behind a test statistic. For a 9-category chi-square goodness-of-fit, df = 9 - 1 = 8 (subtract 1 because total probability must equal 1). Critical values vary with df."
+      },
+      "stdResidual": {
+        "label": "Standardized residual",
+        "def": "(O − E) / √E. More informative than raw residuals because it removes the scale effect (big-E categories naturally have bigger raw residuals). Rule of thumb: |std residual| ≥ 2 is worth attention; ≥ 3 is notable deviation."
+      },
+      "residual": {
+        "label": "Residual",
+        "def": "Observed minus expected (O − E). In chi-square analysis tells you which category deviates most and in which direction. Pearson residual is a stricter-standardised variant (divides by √(1-E) on top of √E)."
+      },
+      "nats": {
+        "label": "nats",
+        "def": "The natural-log unit of information. 1 nat = log₂(e) ≈ 1.443 bits. Whether KL reports nats or bits is a convention choice; both are equivalent up to a constant factor."
+      },
+      "monteCarlo": {
+        "label": "Monte Carlo",
+        "def": "Simulation of complex systems by drawing many random samples. Every NekoServe run is a Monte Carlo trial; running the same config with different seeds produces slightly different numbers, and that variation is Monte Carlo sampling error."
+      },
+      "bonferroni": {
+        "label": "Bonferroni correction",
+        "def": "Conservative correction for multiple comparisons: testing m hypotheses simultaneously, change each test's α to α/m, avoiding 'test 20 times and by chance 1 will look significant'. Hirsch 2025's padj = 0.013 is α/m after this adjustment."
+      },
+      "faceValidity": {
+        "label": "Face validity",
+        "def": "First-pass V&V check: 'does this simulation look like the real system it's meant to represent?' Sargent (2013) lists it as the first gate — if face validity fails, fancier statistical tests are moot. Our 80-point threshold follows Sargent's face validity ≥ 0.8 convention."
+      },
+      "compositeScore": {
+        "label": "Composite score",
+        "def": "A weighted average of complementary indicators collapsed into a single comparable number. Strength: cancels single-metric blind spots (χ² misses shape shifts; KS misses small categories). Weakness: weight selection is subjective. NekoServe uses 0.4·χ² + 0.3·KS + 0.3·KL; χ² weighted higher because it's the same method the paper uses."
+      },
+      "softCap": {
+        "label": "Soft-cap",
+        "def": "Linear mapping of a raw statistic to 0-100: score = 100·max(0, 1 - stat/cap). stat = 0 → 100 points; stat ≥ cap → 0 points. Smoother than a hard threshold, so 'slight deviation' and 'large deviation' produce different scores."
+      },
+      "typeIError": {
+        "label": "Type I error",
+        "def": "Hypothesis-testing false positive: H₀ is actually true but gets rejected. α (significance level) controls it. We deliberately loosen our soft-cap to prevent simulator Monte Carlo noise from triggering Type I errors (false-failure reports)."
+      },
+      "outlier": {
+        "label": "Outlier",
+        "def": "A single observation far from the rest. Single statistics get dragged by outliers (e.g. arithmetic mean); medians and composite indicators are more robust. Sargent (2013) recommends multi-indicator composites precisely to resist outlier influence."
+      },
+      "verificationValidation": {
+        "label": "Verification & Validation (V&V)",
+        "def": "Two independent checks in simulation research. Verification: 'did we code the spec correctly' (internal correctness). Validation: 'does the spec match reality' (external validity). The validation page tests the Validation side; whether simpy runs to spec is Verification."
       }
     }
   },

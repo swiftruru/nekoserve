@@ -276,6 +276,82 @@
       "paretoFrontier": {
         "label": "Pareto frontier（柏拉圖前沿）",
         "def": "多目標取捨下「沒有任何一個方案在兩個指標上都完勝」的集合。在 NekoServe 裡我用顧客滿意度 vs 貓咪福祉畫二維散布圖，被綠圈框住的點就是 Pareto frontier：那些方案代表你不犧牲一邊就動不了另一邊。"
+      },
+      "goodnessOfFit": {
+        "label": "Goodness-of-fit（適合度檢定）",
+        "def": "檢定「觀察資料是否符合某個理論機率分布」的統計方法總稱。卡方適合度檢定（χ² GoF）是其中最常見的一種：把觀察次數和理論期望次數比一比，差越大就越不適合。Hirsch 2025 用它驗證貓咪垂直層級偏好（χ²(2) = 1234.2）。"
+      },
+      "ksDivergence": {
+        "label": "Kolmogorov-Smirnov（KS 檢定）",
+        "def": "比較兩個分布的非參數方法：取「兩條 CDF 之間的最大垂直距離 D」當統計量。優點是不需要假設分布形狀，對小類別差異反而較不敏感。臨界值 D₀.₀₅ ≈ 1.36/√n（Massey 1951）。"
+      },
+      "klDivergence": {
+        "label": "KL 相對熵（Kullback-Leibler divergence）",
+        "def": "資訊理論裡的「分布距離」：D_KL(P‖Q) = Σ p·log(p/q)。直觀解讀：P 作為 Q 的近似，每個觀察會多花多少 bits / nats 才能編碼。等於 0 表示兩分布相同，越大代表 P 把機率質量塞錯類別越嚴重。"
+      },
+      "wilsonCI": {
+        "label": "Wilson score 信賴區間（Wilson CI）",
+        "def": "計算二項比例（如「49.2% 的時間在 SHELF」）的 95% 信賴區間方法。比天真的 Wald 區間 p̂ ± 1.96·√(p̂(1-p̂)/n) 更穩定：在 p 接近 0 或 1、或 n 很小時都不會崩潰。Wilson (1927) 原始論文，當代統計教科書（Agresti 2013）的標準推薦。"
+      },
+      "cdf": {
+        "label": "CDF（累積分布函數）",
+        "def": "Cumulative Distribution Function：F(x) = P(X ≤ x)，把機率分布從「點密度」變成「累積到此為止有多少」的曲線。永遠是非遞減函數、從 0 走到 1。KS 檢定就是比兩條 CDF 的最大垂直差。"
+      },
+      "pValue": {
+        "label": "p-value（顯著性 p 值）",
+        "def": "「假設兩分布實際上相同的話，觀察到目前這麼大差異或更大的機率」。p < 0.05 通常被視為「差異統計顯著」。但要注意：p 值會被 n 放大，在大樣本下任何小差異都會顯著，所以單看 p < 0.001 不等於「差異實質重要」。"
+      },
+      "criticalValue": {
+        "label": "Critical value（臨界值）",
+        "def": "在指定的顯著水準（通常 α = 0.05）下，統計量需要超過多少才算「達顯著」的閾值。例如卡方在 df = 8、α = 0.05 的臨界值是 15.51；觀察到的 χ² 大於這個值就拒絕 H₀。"
+      },
+      "degreesOfFreedom": {
+        "label": "Degrees of freedom（自由度 df）",
+        "def": "統計量背後「真正可以自由變動的參數個數」。對 9 類別的卡方適合度，df = 9 - 1 = 8（少 1 是因為「總機率必須等於 1」這個約束）。臨界值會隨 df 改變。"
+      },
+      "stdResidual": {
+        "label": "Standardized residual（標準化殘差）",
+        "def": "原始殘差 (O - E) 除以 √E。比起原始殘差更有意義，因為消除了「期望值大的類別本來殘差就大」的尺度效應。經驗法則：絕對值 ≥ 2 代表這一類值得關注、≥ 3 屬於明顯偏離。"
+      },
+      "residual": {
+        "label": "Residual（殘差）",
+        "def": "觀察值減去期望值（O − E）。在卡方分析裡，殘差告訴你「哪一類偏離預期最多」、偏向哪邊。Pearson residual 是另一個版本，把標準化做更嚴謹（比 std residual 多除一個 √(1-E)）。"
+      },
+      "nats": {
+        "label": "nats（奈特）",
+        "def": "用自然對數 ln 計算的資訊量單位。1 nat = log₂(e) ≈ 1.443 bits。KL 用 nats 還是 bits 是傳統選擇，數學上等價（差個常數倍率）。"
+      },
+      "monteCarlo": {
+        "label": "Monte Carlo（蒙地卡羅）",
+        "def": "用大量隨機抽樣模擬複雜系統行為的方法。NekoServe 每次跑都是一次 Monte Carlo trial：同一組參數換不同 seed 會得到略不同的結果，這個變動本身就是 Monte Carlo 的「估計誤差」。"
+      },
+      "bonferroni": {
+        "label": "Bonferroni 校正",
+        "def": "做多重比較時的保守校正：如果你同時測 m 個假設，把每個的顯著水準從 α 改成 α/m，避免「測 20 次總有 1 次會誤判顯著」的累積錯誤。Hirsch 2025 用 padj = 0.013 即代表 α/m 已經調過。"
+      },
+      "faceValidity": {
+        "label": "Face validity（表面效度）",
+        "def": "「這個模擬看起來像不像它要模擬的真實系統」的最初步驗證。Sargent (2013) 把它列為 V&V 的第一道關卡：如果連表面看起來都不像，後面的精細統計檢定意義不大。我們的 80 分閾值就是基於 Sargent 的 face validity ≥ 0.8 慣例。"
+      },
+      "compositeScore": {
+        "label": "Composite score（合成分數）",
+        "def": "把多個互補指標加權平均成單一可比較的分數。優點是抵消單一指標盲區（例如 χ² 對形狀偏移不敏感、KS 對小類別不敏感），缺點是權重選擇會引入主觀判斷。NekoServe 用 0.4·χ² + 0.3·KS + 0.3·KL，χ² 權重稍高因為它跟論文方法同源。"
+      },
+      "softCap": {
+        "label": "Soft-cap（軟封頂）",
+        "def": "把原始統計量映射到 0-100 分的線性轉換：score = 100·max(0, 1 - stat/cap)。stat = 0 → 100 分；stat ≥ cap → 0 分。比 hard threshold（過了就 0 分、沒過就滿分）平滑，能反映「稍微偏離」和「嚴重偏離」的差別。"
+      },
+      "typeIError": {
+        "label": "Type I error（型一錯誤）",
+        "def": "假設檢定的偽陽性：H₀ 實際上是對的，但被誤判為拒絕。控制型一錯誤的方法就是設定 α（顯著水準）。我們刻意把 soft-cap 設寬就是要避免 simulator 的 Monte Carlo 雜訊觸發型一錯誤（誤報模擬失敗）。"
+      },
+      "outlier": {
+        "label": "Outlier（離群值）",
+        "def": "和其他觀察值偏離很遠的單點。單一統計量容易被 outlier 帶歪（例如平均數），但中位數、合成指標相對穩健。Sargent (2013) 推薦多指標就是為了抵抗 outlier 影響。"
+      },
+      "verificationValidation": {
+        "label": "Verification & Validation（V&V）",
+        "def": "模擬研究的兩個獨立驗證概念：Verification 是「程式有沒有照規格寫對」（內部正確性），Validation 是「規格本身有沒有對到真實世界」（外部效度）。NekoServe 的驗證頁面測的是 Validation，模擬器有沒有照 simpy 規範跑則是 Verification。"
       }
     }
   },

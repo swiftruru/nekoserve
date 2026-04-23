@@ -1,5 +1,182 @@
 {
   "pageTitle": "✅ Validation mode",
+  "formula": {
+    "expand": "More details ▼",
+    "collapse": "Collapse ▲"
+  },
+  "formulaParts": {
+    "score": {
+      "label": "Final validation score",
+      "desc": "Weighted average of three complementary indicators, mapped to an integer 0-100. 80+ is a pass (Sargent 2013's face-validity threshold).",
+      "unit": "0-100",
+      "example": "χ²=93, KS=74, KL=93 → 0.4×93 + 0.3×74 + 0.3×93 = 87"
+    },
+    "chiNorm": {
+      "label": "sub-score (normalised)",
+      "desc": "The chi-square statistic after soft-cap mapping to 0-100. χ² = 0 → 100 points; χ² ≥ 0.5 → 0. Weighted at 40%, the heaviest of the three.",
+      "unit": "0-100",
+      "example": "raw χ² = 0.036 → 93"
+    },
+    "ksNorm": {
+      "label": "sub-score (normalised)",
+      "desc": "The KS D statistic after soft-cap mapping. D = 0 → 100; D ≥ 0.3 → 0.",
+      "unit": "0-100",
+      "example": "raw D = 0.079 → 74"
+    },
+    "klNorm": {
+      "label": "sub-score (normalised)",
+      "desc": "KL divergence (in nats) after soft-cap mapping. KL = 0 → 100; KL ≥ 0.3 nats → 0.",
+      "unit": "0-100",
+      "example": "KL = 0.020 → 93"
+    },
+    "weightChi": {
+      "label": "weight (chi-square)",
+      "desc": "Chi-square carries 40% weight, slightly higher than the other two (each 30%), because χ² goodness-of-fit is exactly the method Hirsch 2025 itself uses — strongest methodological alignment.",
+      "example": "Equal weights (0.33/0.33/0.33) would give 86 instead of 87."
+    },
+    "weightOthers": {
+      "label": "weight (KS & KL)",
+      "desc": "KS and KL carry 30% each. They cover blind spots χ² misses: KS catches shape shifts, KL catches probability mass on wrong categories.",
+      "example": "Weights must sum to 1 (0.4 + 0.3 + 0.3 = 1.0)."
+    },
+    "stat": {
+      "label": "Raw statistic",
+      "desc": "The raw value of χ², KS D, or KL, each computed by its own formula before this soft-cap stage.",
+      "example": "χ² = 0.036, D = 0.079, KL = 0.020"
+    },
+    "cap": {
+      "label": "Soft-cap threshold",
+      "desc": "The stat value at which the score reaches 0. Deliberately loose to avoid Monte Carlo noise triggering false failures.",
+      "example": "χ² cap = 0.5; KS cap = 0.3; KL cap = 0.3"
+    },
+    "maxFn": {
+      "label": "max(0, ·) guard",
+      "desc": "Clamp to prevent the score from going negative when stat exceeds cap.",
+      "example": "stat = 0.8, cap = 0.5 → 1 - 1.6 = -0.6 → max(0, -0.6) = 0"
+    },
+    "hundredScale": {
+      "label": "Percent-scale factor",
+      "desc": "Multiplying by 100 maps the [0, 1] range to a familiar 0-100 score.",
+      "example": "max(0, 1 - stat/cap) × 100 = 0 to 100 integer"
+    },
+    "chiStat": {
+      "label": "chi-square statistic",
+      "desc": "Measures the total categorical deviation between observed and expected distributions. Pearson (1900)'s original formulation, still the default for categorical goodness-of-fit.",
+      "unit": "dimensionless",
+      "example": "χ² = 0.036 → distributions nearly overlap"
+    },
+    "obsO": {
+      "label": "observed proportion in category i",
+      "desc": "The simulation's share for each category. The 9 categories must sum to 1.",
+      "unit": "0 ~ 1",
+      "example": "RESTING observed at 0.354 (35.4%)"
+    },
+    "expE": {
+      "label": "expected proportion in category i",
+      "desc": "The empirical target distribution (Hirsch 2025): what each category should be. Also sums to 1.",
+      "unit": "0 ~ 1",
+      "example": "RESTING expected 0.317 (31.7%)"
+    },
+    "residualSquared": {
+      "label": "squared residual",
+      "desc": "The difference squared. Squaring turns both too-high and too-low residuals into penalties (direction doesn't matter).",
+      "example": "O=0.354, E=0.317 → (0.037)² = 0.001369"
+    },
+    "sigmaSum": {
+      "label": "sum over all categories",
+      "desc": "Add up each category's (Oᵢ−Eᵢ)²/Eᵢ. i runs from 1 to k (total number of categories).",
+      "example": "9-category sum = 0.005 + 0.004 + ... = 0.036"
+    },
+    "kCategories": {
+      "label": "number of categories",
+      "desc": "How many categories are being compared. NekoServe's cat behavior has 9 categories, so k = 9. Degrees of freedom df = k − 1 = 8.",
+      "example": "k = 9 (OUT_OF_LOUNGE, RESTING, ...)"
+    },
+    "ksD": {
+      "label": "KS statistic",
+      "desc": "Maximum vertical distance between two CDFs. Kolmogorov (1933) and Smirnov (1948)'s non-parametric test.",
+      "unit": "0 ~ 1",
+      "example": "D = 0.079 → largest gap is 7.9 percentage points"
+    },
+    "fSim": {
+      "label": "simulation CDF",
+      "desc": "Running total of the simulation's 9 category shares, producing a step-function that runs from 0 to 1.",
+      "example": "F_sim(SOCIALIZING) = sum of OUT_OF_LOUNGE + RESTING + SOCIALIZING shares"
+    },
+    "fEmp": {
+      "label": "empirical CDF",
+      "desc": "Running total of Hirsch 2025's 9 expected shares, in the same category order for apples-to-apples comparison.",
+      "example": "F_emp(SOCIALIZING) = 0.316 + 0.317 + 0.128 = 0.761"
+    },
+    "maxOp": {
+      "label": "maximum over x",
+      "desc": "Scan all category points x; pick the one where the two CDFs' distance is largest. That worst-case gap is the global KS distance.",
+      "example": "Across 9 categories, SHELF has the largest gap 0.079 → D = 0.079"
+    },
+    "absValue": {
+      "label": "absolute value",
+      "desc": "Magnitude only, ignore sign. Over and under-sampling in either direction count equally.",
+      "example": "|0.354 − 0.317| = |0.037| = 0.037"
+    },
+    "dkl": {
+      "label": "Kullback-Leibler divergence",
+      "desc": "Information-theoretic distance measuring 'how bad is P as an approximation to Q'. Kullback & Leibler (1951). Larger = more information lost.",
+      "unit": "nats or bits",
+      "example": "D_KL = 0.020 nats → fidelity exp(-0.020) ≈ 98.1%"
+    },
+    "pDist": {
+      "label": "simulation distribution",
+      "desc": "The distribution under test (NekoServe's simulated 9-category shares). Goes in the first KL argument as 'the approximation being evaluated'.",
+      "example": "P = (0.358, 0.354, 0.089, ...)"
+    },
+    "qDist": {
+      "label": "empirical distribution",
+      "desc": "The ground-truth distribution (Hirsch 2025's 9 shares). Goes in the second KL argument as the 'baseline', which sets KL's directionality.",
+      "example": "Q = (0.316, 0.317, 0.128, ...)"
+    },
+    "pi": {
+      "label": "simulation probability (category i)",
+      "desc": "P's probability for one specific category (e.g. simulation RESTING 35.4% → p_RESTING = 0.354). Each pᵢ in [0, 1]; sum = 1.",
+      "example": "p_RESTING = 0.354"
+    },
+    "qi": {
+      "label": "empirical probability (category i)",
+      "desc": "Q's probability for one specific category (e.g. empirical RESTING 31.7% → q_RESTING = 0.317). Appears in the denominator, so code clamps it with ε = 1e-9.",
+      "example": "q_RESTING = 0.317"
+    },
+    "logRatio": {
+      "label": "log-ratio",
+      "desc": "Natural log of 'how many times pᵢ is bigger than qᵢ'. Positive when pᵢ > qᵢ, negative when pᵢ < qᵢ, zero when equal. This is the source of KL's asymmetry.",
+      "unit": "nats",
+      "example": "p=0.354, q=0.317 → log(0.354/0.317) = log(1.117) ≈ 0.110 nats"
+    },
+    "phat": {
+      "label": "sample proportion",
+      "desc": "Successes / total trials (e.g. SHELF = 4209 / 8547 = 0.492). The centre of the Wilson CI estimate.",
+      "unit": "0 ~ 1",
+      "example": "p̂ = 4209 / 8547 = 0.4924"
+    },
+    "nSize": {
+      "label": "sample size",
+      "desc": "Total number of observations. Larger n → narrower, more precise CI. Hirsch 2025 uses n = 8547 in-lounge scans for vertical levels.",
+      "example": "n = 8547"
+    },
+    "zValue": {
+      "label": "confidence critical value",
+      "desc": "Standard normal quantile. 95% CI uses z = 1.96 (2.5% tail each side); 99% CI would use z = 2.576.",
+      "example": "z = 1.96 for 95% CI"
+    },
+    "biasTerm": {
+      "label": "bias correction",
+      "desc": "Wilson's extra shrinkage over Wald. Pulls extreme proportions (p̂ near 0 or 1) toward the middle so the CI doesn't collapse.",
+      "example": "n = 8547, z = 1.96 → z²/(2n) = 3.84 / 17094 ≈ 0.000225"
+    },
+    "plusMinus": {
+      "label": "two-sided CI width",
+      "desc": "Confidence interval extends equally in both directions: lower = centre − margin, upper = centre + margin.",
+      "example": "SHELF: centre 0.4924, margin 0.0106 → [0.482, 0.503]"
+    }
+  },
   "intro": "After a simulation run, this page compares the observed cat-behavior distribution against Hirsch et al. (2025)'s 227 hours of direct observation. A composite score of 80 or higher means the scenario closely matches the empirical baseline.",
   "needsRun": "No simulation has run yet. Go to Settings and press Run first.",
   "benchmark": "Benchmark",
@@ -40,6 +217,133 @@
   "rightColumnTitle": "Distribution comparison",
   "behaviorCompare": "Nine-state behavior distribution (Hirsch Figure 3 vs simulation)",
   "verticalCompare": "Vertical-level distribution (Hirsch Figure 4)",
+  "methodology": {
+    "title": "Validation methodology",
+    "expand": "Expand ▼",
+    "collapse": "Collapse ▲",
+    "framework": {
+      "heading": "1. Verification & validation framework",
+      "intro": "I use the simulation field's standard multi-metric composite validation approach: any single statistic has blind spots, and three complementary indicators cover each other's weaknesses. This isn't something I invented — the V&V literature is explicit about it:",
+      "sargent": "<cite>Sargent (2013)</cite>: in the 2013 Winter Simulation Conference V&V guidelines, recommends that face-validity scores use a weighted composite of multiple indicators, since single statistics are fooled by outliers or distribution shape shifts. My 0.4·χ² + 0.3·KS + 0.3·KL is a direct implementation of that principle.",
+      "kleijnen": "<cite>Kleijnen (1995)</cite>: the default for categorical-distribution comparison is χ² goodness-of-fit. My χ² test follows this paper.",
+      "rubner": "<cite>Rubner et al. (2000)</cite>: KL divergence, EMD, and KS-style max gaps each have different failure modes; using multiple is how you avoid those failure modes compounding.",
+      "alignmentLabel": "Methodological alignment point",
+      "alignmentBody": "Hirsch 2025 itself uses χ² goodness-of-fit tests to validate their observation data (χ²(2) = 1234.2 for vertical level; see the four tests listed under \"benchmark provenance\" below). I'm not picking χ² out of thin air — it's the same method the paper uses.",
+      "compositeFormulaLabel": "Composite score formula",
+      "compositeFormulaHint": "Final validation score is a weighted average of three sub-metrics: chi-square 40%, KS 30%, KL 30%. Weights follow Sargent 2013's guidance, not arbitrary.",
+      "compositeFormulaLong": "χ²_norm, KS_norm, KL_norm are the 0-100 soft-capped sub-scores. χ² gets a slightly heavier weight (40% vs 30% vs 30%) because it's the same goodness-of-fit method Hirsch 2025 uses, which gives it the strongest methodological pedigree. Switching to Rubner 2000's EMD would require re-tuning these weights."
+    },
+    "complementarity": {
+      "heading": "2. Why three indicators, not one",
+      "intro": "Each indicator has its own specialty and its own blind spot. Combining three as a composite avoids both false-positive and false-negative judgments:",
+      "colMetric": "Indicator",
+      "colStrength": "Detects",
+      "colWeakness": "Blind spot",
+      "colPaired": "Paired with",
+      "rows": {
+        "chi": {
+          "metric": "χ² chi-square",
+          "strength": "One category over- or under-weighted",
+          "weakness": "Insensitive to shape shifts",
+          "paired": "KS"
+        },
+        "ks": {
+          "metric": "KS max gap",
+          "strength": "Where in the CDF the largest deviation sits",
+          "weakness": "Small categories get drowned out",
+          "paired": "χ²"
+        },
+        "kl": {
+          "metric": "KL divergence",
+          "strength": "Probability mass on wrong category (information loss)",
+          "weakness": "Asymmetric, direction-dependent",
+          "paired": "χ²"
+        }
+      }
+    },
+    "thresholds": {
+      "heading": "3. How the 80-point cutoff and soft-caps were chosen",
+      "intro": "Each raw statistic is soft-capped into a 0-100 score. Thresholds:",
+      "chi": "The hard χ² critical value at df = 8, α = 0.05 is 15.51 (<cite>Agresti 2013</cite> standard tables). Our soft-cap sits at 0.5, about 30× looser than the hard critical value. Deliberate choice: we're operating in proportion space, not count space, so the critical value needs rescaling; and a loose soft-cap avoids Monte Carlo noise tripping a false-failure.",
+      "ks": "KS critical D at n = 8547 is D₀.₀₅ ≈ 0.0147 (Massey 1951 approximation D₀.₀₅ = 1.36/√n). Our soft-cap 0.3 is about 20× looser — same noise-tolerance rationale.",
+      "kl": "KL has no well-defined critical value. The soft-cap 0.3 nats corresponds to exp(-0.3) ≈ 74% approximation fidelity, near the industry-accepted lower bound.",
+      "composite": "The 80-point pass threshold follows <cite>Sargent (2013)</cite>'s recommended ≥ 0.8 face-validity threshold. Passing means all three angles land in the \"acceptable approximation\" band.",
+      "caveat": "These soft-cap choices are engineering heuristics, not rigorous hypothesis tests. For strict statistical significance, consult the raw p-values (surfaced below each indicator card), not the 0-100 score.",
+      "softCapLabel": "Soft-cap mapping formula",
+      "softCapHint": "Converts a raw statistic (χ², KS D, KL in nats) to a 0-100 score: stat = 0 gives 100 points; stat ≥ cap gives 0; linear in between."
+    }
+  },
+  "breakdown": {
+    "expand": "Show breakdown ▼",
+    "collapse": "Hide ▲",
+    "chi": {
+      "heading": "Chi-square: per-category contribution breakdown",
+      "intro": "The chi-square statistic is the sum of (O−E)²/E across all 9 categories. The table lists each category's observed (O), expected (E), raw residual (O−E), standardised residual (O−E)/√E, and its contribution to the total chi-square. A large residual in one category pulls the whole chi-square up.",
+      "formulaLabel": "Pearson chi-square statistic",
+      "formulaHint": "Sum, over every category, of (residual² / expected). Squaring makes both positive and negative residuals count as a penalty; dividing by E prevents large-E categories from dominating by default.",
+      "formulaLong": "O_i is the observed proportion in category i, E_i the expected (empirical) proportion, k the category count. Degrees of freedom df = k − 1 (minus 1 for the constraint that total probability must sum to 1). NekoServe works in proportion space rather than count space, so critical values need rescaling accordingly.",
+      "colCategory": "Category",
+      "colObserved": "Observed O",
+      "colExpected": "Expected E",
+      "colResidual": "Residual O−E",
+      "colStdResidual": "Std residual",
+      "colContribution": "Contribution (O−E)²/E",
+      "colShare": "Share of total",
+      "totalRow": "Total",
+      "interpretLabel": "Interpretation",
+      "interpretBody": "χ² = {{chi}}, df = {{df}}. Agresti 2013's table gives critical value {{crit}} at α = 0.05; the raw p-value bucket is \"{{pBucket}}\". In proportion space we also apply a soft-cap (0.5 → 0 points) to avoid Monte Carlo noise triggering a false-failure."
+    },
+    "ks": {
+      "heading": "KS cumulative gap: the largest vertical distance between two CDFs",
+      "intro": "The KS D statistic is the maximum vertical distance between the simulation's cumulative distribution and the empirical one, scanning category-by-category. The red marker on the overlay is that maximum; the table below lists the running cumulative values.",
+      "formulaLabel": "Kolmogorov-Smirnov D statistic",
+      "formulaHint": "Max vertical distance between two CDFs. F_sim is the simulation cumulative distribution, F_emp the empirical one. D = 0 means the lines overlap perfectly; larger D means there's some x where the gap is biggest.",
+      "formulaLong": "KS is non-parametric: no distributional assumption, so it handles arbitrary shapes. It's sensitive to global shape shifts but less so to single-small-category differences (cumulation smooths small categories out). The α = 0.05 critical value is approximately 1.36/√n (Massey 1951).",
+      "svgAlt": "SVG cumulative distribution overlay: empirical vs simulation",
+      "colCategory": "Category",
+      "colCumObserved": "Cum O (sim)",
+      "colCumExpected": "Cum E (empirical)",
+      "colGap": "|O−E|",
+      "legendEmpirical": "Empirical CDF",
+      "legendSimulation": "Simulation CDF",
+      "legendMaxGap": "Max gap D",
+      "interpretLabel": "Interpretation",
+      "interpretBody": "D = {{d}}, n = {{n}}, critical D₀.₀₅ = {{crit}} (Massey 1951 approximation 1.36/√n). Raw p-value bucket: \"{{pBucket}}\". The largest gap sits at {{maxCategory}}. Large n makes strict KS reject easily; we soft-cap deliberately (0.3 → 0 points) to absorb noise. This is a face-validity design choice, not hiding a failure."
+    },
+    "kl": {
+      "heading": "KL divergence: information cost of mass on wrong categories",
+      "intro": "Each category contributes p·log(p/q) nats to the total KL, where p is the simulation share and q is the empirical share. Positive (orange) means the simulation puts too much mass on that category; negative (blue) means too little. The sum is the total KL in nats.",
+      "formulaLabel": "Kullback-Leibler divergence",
+      "formulaHint": "p_i is the simulation probability for category i, q_i the empirical. Each term p·log(p/q) is positive when p > q, negative when p < q. The total is always ≥ 0 (by Jensen's inequality), zero only when the distributions are identical.",
+      "formulaLong": "KL's intuitive reading: 'when encoding observations using P as an approximation of Q, each observation costs D_KL(P‖Q) extra nats on average.' Asymmetry (D_KL(P‖Q) ≠ D_KL(Q‖P)) means direction matters: NekoServe always puts the empirical Q in the denominator and the simulation P in the numerator, so the penalty targets 'mass where the empirical distribution has none'. A symmetric alternative is Jensen-Shannon divergence or EMD (Rubner 2000).",
+      "totalRow": "Total Σ",
+      "legendOver": "Over-weighted (p > q)",
+      "legendUnder": "Under-weighted (p < q)",
+      "interpretLabel": "Interpretation",
+      "interpretBody": "KL = {{kl}} nats, corresponding to a fidelity of exp(-KL) ≈ {{fidelity}}%. The simulation, treated as an approximation to the empirical distribution, loses about {{loss}}% of information."
+    }
+  },
+  "provenance": {
+    "title": "Benchmark provenance",
+    "expand": "Expand ▼",
+    "collapse": "Collapse ▲",
+    "intro": "Every proportion in the benchmark carries the paper's original n, a 95% Wilson score confidence interval, and its exact location in the paper for cross-checking. Wilson CI method source:",
+    "wilsonFormulaLabel": "Wilson score 95% CI",
+    "wilsonFormulaHint": "p̂ is the sample proportion, n the sample size, z = 1.96 for a 95% CI. This expression stays well-behaved even when p̂ is near 0 or 1 or n is small — unlike Wald, which collapses to zero width.",
+    "wilsonFormulaLong": "The Wald interval p̂ ± 1.96·√(p̂(1−p̂)/n) is simple but fails when p approaches 0 or 1 (width goes to zero). Wilson (1927) derived this score-test-based correction: add a z²/(2n) bias term, divide by a shrinkage factor (1 + z²/n). Agresti & Coull (1998) showed Wilson keeps actual coverage near the nominal 95% even for small n and extreme proportions, so it's the standard in modern statistics texts.",
+    "behaviorTitle": "Nine-state behavior distribution (Figure 3)",
+    "verticalTitle": "Vertical-level distribution (Figure 3 right / in-lounge)",
+    "colCategory": "Category",
+    "colProportion": "Empirical %",
+    "colCI": "95% Wilson CI",
+    "colObserved": "Simulation %",
+    "colInCI": "In CI",
+    "colSource": "Source",
+    "inCIYes": "Simulation inside 95% CI",
+    "inCINo": "Simulation outside 95% CI (deviates from empirical)",
+    "paperStatsTitle": "Statistical tests used in the paper itself",
+    "paperStatsIntro": "Hirsch 2025 runs χ² goodness-of-fit tests on exactly these distributions. Our validation method is aligned with the paper's own analytical approach, not a new invention."
+  },
   "suggest": {
     "behavior": {
       "out_of_lounge": {

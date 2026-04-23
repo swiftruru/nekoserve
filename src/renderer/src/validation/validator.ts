@@ -18,7 +18,24 @@
  */
 
 import type { MetricSummary } from '../types'
-import type { ValidationBenchmark } from './benchmarks'
+import type {
+  CategoryBenchmark,
+  ValidationBenchmark,
+} from './benchmarks'
+
+/**
+ * Unwrap a `Record<string, CategoryBenchmark>` into the bare proportion
+ * map the statistical primitives consume. benchmarks.ts v2.1 stores
+ * provenance alongside the point estimate; the chi-square / KS / KL
+ * functions only need the numeric share.
+ */
+function proportionMap(
+  source: Record<string, CategoryBenchmark>,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const key of Object.keys(source)) out[key] = source[key].proportion
+  return out
+}
 
 export interface ValidationScores {
   /** Chi-square statistic (lower is better). */
@@ -172,7 +189,8 @@ export function validateAgainst(
     'SHELF',
   ])
 
-  const chi = chiSquareGoodnessOfFit(behaviorObs, benchmark.catBehavior)
+  const behaviorExpected = proportionMap(benchmark.catBehavior)
+  const chi = chiSquareGoodnessOfFit(behaviorObs, behaviorExpected)
   const behaviorKeys = [
     'OUT_OF_LOUNGE',
     'RESTING',
@@ -184,8 +202,8 @@ export function validateAgainst(
     'EXPLORING',
     'PLAYING',
   ]
-  const ks = ksMaxGap(behaviorObs, benchmark.catBehavior, behaviorKeys)
-  const kl = klDivergence(behaviorObs, benchmark.catBehavior)
+  const ks = ksMaxGap(behaviorObs, behaviorExpected, behaviorKeys)
+  const kl = klDivergence(behaviorObs, behaviorExpected)
 
   const subScores = {
     chiSquare: chiSquareToScore(chi),
@@ -202,7 +220,7 @@ export function validateAgainst(
   const issues: ValidationIssue[] = []
   const SIGNIFICANT_GAP = 0.06
   for (const key of behaviorKeys) {
-    const e = benchmark.catBehavior[key] ?? 0
+    const e = benchmark.catBehavior[key]?.proportion ?? 0
     const o = behaviorObs[key] ?? 0
     if (Math.abs(o - e) >= SIGNIFICANT_GAP) {
       issues.push({
@@ -216,7 +234,7 @@ export function validateAgainst(
 
   // Vertical issues (re-normalized)
   for (const key of ['FLOOR', 'FURNITURE', 'SHELF'] as const) {
-    const e = benchmark.catVerticalLevel[key] ?? 0
+    const e = benchmark.catVerticalLevel[key]?.proportion ?? 0
     const o = verticalRenorm[key] ?? 0
     if (Math.abs(o - e) >= 0.1) {
       issues.push({

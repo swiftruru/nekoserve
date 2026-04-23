@@ -32,6 +32,8 @@ export interface Citation {
     | 'classical-balking-reneging'
     | 'customer-psychology'
     | 'animal-welfare'
+    | 'methodology-validation'
+    | 'methodology-statistics'
 }
 
 /**
@@ -178,6 +180,77 @@ export const CITATIONS: Record<string, Citation> = {
     publisher: 'INFORMS',
     openAccess: false,
     role: 'classical-queueing',
+  },
+
+  // Simulation V&V methodology: backs our multi-metric composite score
+  sargent2013vv: {
+    key: 'sargent2013vv',
+    doi: '10.1109/WSC.2013.6721420',
+    authors: ['Sargent, R. G.'],
+    year: 2013,
+    title: 'Verification and validation of simulation models',
+    journal: 'Proceedings of the 2013 Winter Simulation Conference',
+    pages: '321-327',
+    publisher: 'IEEE',
+    openAccess: false,
+    role: 'methodology-validation',
+  },
+
+  kleijnen1995vv: {
+    key: 'kleijnen1995vv',
+    doi: '10.1016/0377-2217(94)00016-6',
+    authors: ['Kleijnen, J. P. C.'],
+    year: 1995,
+    title: 'Verification and validation of simulation models',
+    journal: 'European Journal of Operational Research',
+    volume: 82,
+    issue: 1,
+    pages: '145-162',
+    publisher: 'Elsevier',
+    openAccess: false,
+    role: 'methodology-validation',
+  },
+
+  rubner2000emd: {
+    key: 'rubner2000emd',
+    doi: '10.1023/A:1026543900054',
+    authors: ['Rubner, Y.', 'Tomasi, C.', 'Guibas, L. J.'],
+    year: 2000,
+    title: 'The Earth Mover\'s Distance as a Metric for Image Retrieval',
+    journal: 'International Journal of Computer Vision',
+    volume: 40,
+    issue: 2,
+    pages: '99-121',
+    publisher: 'Springer',
+    openAccess: false,
+    role: 'methodology-validation',
+  },
+
+  agresti2013cda: {
+    key: 'agresti2013cda',
+    doi: '10.1002/9780470594001',
+    authors: ['Agresti, A.'],
+    year: 2013,
+    title: 'Categorical Data Analysis',
+    publisher: 'Wiley',
+    pages: '752',
+    openAccess: false,
+    role: 'methodology-statistics',
+  },
+
+  wilson1927ci: {
+    key: 'wilson1927ci',
+    doi: '10.1080/01621459.1927.10502953',
+    authors: ['Wilson, E. B.'],
+    year: 1927,
+    title: 'Probable Inference, the Law of Succession, and Statistical Inference',
+    journal: 'Journal of the American Statistical Association',
+    volume: 22,
+    issue: 158,
+    pages: '209-212',
+    publisher: 'Taylor & Francis',
+    openAccess: false,
+    role: 'methodology-statistics',
   },
 }
 

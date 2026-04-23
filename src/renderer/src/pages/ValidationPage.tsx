@@ -1,10 +1,31 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSimulationStore } from '../store/simulationStore'
-import { HIRSCH_2025_BENCHMARK } from '../validation/benchmarks'
+import {
+  HIRSCH_2025_BENCHMARK,
+  type CategoryBenchmark,
+} from '../validation/benchmarks'
 import { validateAgainst, type ValidationReport } from '../validation/validator'
 import { citationShort, citationUrl } from '../data/citations'
+import MethodologySection from '../components/validation/MethodologySection'
+import BenchmarkProvenance from '../components/validation/BenchmarkProvenance'
+import ChiSquareBreakdown from '../components/validation/ChiSquareBreakdown'
+import KSCumulativePlot from '../components/validation/KSCumulativePlot'
+import KLContributionBars from '../components/validation/KLContributionBars'
 import type { Page } from '../types'
+
+/**
+ * Convert a benchmark's {category -> CategoryBenchmark} record into
+ * the {category -> proportion} shape the distribution compare bars
+ * and the bare-number visualisations expect.
+ */
+function toProportionMap(
+  record: Record<string, CategoryBenchmark>,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const key of Object.keys(record)) out[key] = record[key].proportion
+  return out
+}
 
 /**
  * v2.0 Epic F: validation mode page.
@@ -61,6 +82,8 @@ export default function ValidationPage({
         </p>
       </header>
 
+      <MethodologySection />
+
       {!result && (
         <div className="rounded-lg ring-1 ring-inset ring-amber-300 dark:ring-amber-700 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
           {t('needsRun')}
@@ -108,12 +131,26 @@ export default function ValidationPage({
               )}
             </div>
           </div>
+
+          <BenchmarkProvenance
+            benchmark={benchmark}
+            observedBehavior={result.metrics.catBehaviorShare ?? {}}
+            observedVertical={renormalizeVertical(
+              result.metrics.catVerticalLevelShare ?? {},
+            )}
+          />
         </section>
       )}
 
       {report && (
         <>
-          <ScoreCard report={report} />
+          <ScoreCard
+            report={report}
+            observedBehavior={result?.metrics.catBehaviorShare ?? {}}
+            expectedBehavior={toProportionMap(benchmark.catBehavior)}
+            orderedBehaviorKeys={orderedBehaviorKeys}
+            sampleN={benchmark.catBehaviorTotalN}
+          />
           {result && <SmallSampleWarning config={result.config} />}
           <FitNoteCard />
 
@@ -125,13 +162,13 @@ export default function ValidationPage({
               <DistributionCompare
                 title={t('behaviorCompare')}
                 keys={orderedBehaviorKeys}
-                expected={benchmark.catBehavior}
+                expected={toProportionMap(benchmark.catBehavior)}
                 observed={result?.metrics.catBehaviorShare ?? {}}
               />
               <DistributionCompare
                 title={t('verticalCompare')}
                 keys={orderedVerticalKeys}
-                expected={benchmark.catVerticalLevel}
+                expected={toProportionMap(benchmark.catVerticalLevel)}
                 observed={renormalizeVertical(
                   result?.metrics.catVerticalLevelShare ?? {},
                 )}
@@ -189,9 +226,24 @@ function FitNoteCard() {
   )
 }
 
-function ScoreCard({ report }: { report: ValidationReport }) {
+type MetricKey = 'chi' | 'ks' | 'kl'
+
+function ScoreCard({
+  report,
+  observedBehavior,
+  expectedBehavior,
+  orderedBehaviorKeys,
+  sampleN,
+}: {
+  report: ValidationReport
+  observedBehavior: Record<string, number>
+  expectedBehavior: Record<string, number>
+  orderedBehaviorKeys: string[]
+  sampleN: number
+}) {
   const { t } = useTranslation('validation')
   const { scores } = report
+  const [expanded, setExpanded] = useState<MetricKey | null>(null)
   const color =
     scores.total >= 80
       ? 'text-emerald-700 dark:text-emerald-400'
@@ -203,6 +255,10 @@ function ScoreCard({ report }: { report: ValidationReport }) {
   const badgeColor = scores.passed
     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
     : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+
+  function toggle(metric: MetricKey) {
+    setExpanded((cur) => (cur === metric ? null : metric))
+  }
 
   return (
     <section className="rounded-xl ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-white/70 dark:bg-bark-700/60 p-4">
@@ -227,20 +283,56 @@ function ScoreCard({ report }: { report: ValidationReport }) {
           score={scores.subScores.chiSquare}
           raw={scores.chiSquare}
           rawLabel="χ²"
+          expanded={expanded === 'chi'}
+          onToggle={() => toggle('chi')}
         />
         <SubScoreCell
           label={t('subScoreKs')}
           score={scores.subScores.ksGap}
           raw={scores.ksGap}
           rawLabel="D"
+          expanded={expanded === 'ks'}
+          onToggle={() => toggle('ks')}
         />
         <SubScoreCell
           label={t('subScoreKl')}
           score={scores.subScores.klDivergence}
           raw={scores.klDivergence}
           rawLabel="D_KL"
+          expanded={expanded === 'kl'}
+          onToggle={() => toggle('kl')}
         />
       </div>
+
+      {expanded && (
+        <div className="mt-3 rounded-lg ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-cream-50/70 dark:bg-bark-800/60 p-3">
+          {expanded === 'chi' && (
+            <ChiSquareBreakdown
+              observed={observedBehavior}
+              expected={expectedBehavior}
+              orderedKeys={orderedBehaviorKeys}
+              chiSquare={scores.chiSquare}
+            />
+          )}
+          {expanded === 'ks' && (
+            <KSCumulativePlot
+              observed={observedBehavior}
+              expected={expectedBehavior}
+              orderedKeys={orderedBehaviorKeys}
+              ksGap={scores.ksGap}
+              sampleN={sampleN}
+            />
+          )}
+          {expanded === 'kl' && (
+            <KLContributionBars
+              observed={observedBehavior}
+              expected={expectedBehavior}
+              orderedKeys={orderedBehaviorKeys}
+              klDivergence={scores.klDivergence}
+            />
+          )}
+        </div>
+      )}
     </section>
   )
 }
@@ -250,18 +342,31 @@ function SubScoreCell({
   score,
   raw,
   rawLabel,
+  expanded,
+  onToggle,
 }: {
   label: string
   score: number
   raw: number
   rawLabel: string
+  expanded: boolean
+  onToggle: () => void
 }) {
   const { t } = useTranslation('validation')
   const pct = Math.max(0, Math.min(100, score))
   const barColor =
     pct >= 80 ? 'bg-emerald-500' : pct >= 60 ? 'bg-amber-500' : 'bg-red-500'
   return (
-    <div className="rounded-md bg-cream-50 dark:bg-bark-800/60 ring-1 ring-inset ring-orange-100 dark:ring-bark-600 px-3 py-2">
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      className={`text-left rounded-md px-3 py-2 ring-1 ring-inset transition-colors ${
+        expanded
+          ? 'bg-orange-50 dark:bg-bark-700 ring-orange-300 dark:ring-orange-500'
+          : 'bg-cream-50 dark:bg-bark-800/60 ring-orange-100 dark:ring-bark-600 hover:bg-orange-50/60 dark:hover:bg-bark-700/60'
+      }`}
+    >
       <div className="flex items-baseline justify-between">
         <span className="text-[11px] font-semibold text-gray-600 dark:text-bark-300">
           {label}
@@ -276,10 +381,15 @@ function SubScoreCell({
           style={{ width: `${pct}%`, transition: 'width 300ms ease-out' }}
         />
       </div>
-      <div className="mt-1 text-[10px] text-gray-500 dark:text-bark-400 tabular-nums">
-        {t('rawStat')}: {rawLabel} = {raw}
+      <div className="mt-1 flex items-center justify-between">
+        <span className="text-[10px] text-gray-500 dark:text-bark-400 tabular-nums">
+          {t('rawStat')}: {rawLabel} = {raw}
+        </span>
+        <span className="text-[10px] font-semibold text-orange-600 dark:text-orange-400">
+          {expanded ? t('breakdown.collapse') : t('breakdown.expand')}
+        </span>
       </div>
-    </div>
+    </button>
   )
 }
 

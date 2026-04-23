@@ -154,6 +154,88 @@ export const TERMS: TermDef[] = [
     key: 'paretoFrontier',
     keywords: ['Pareto frontier', 'Pareto 前沿', 'Pareto'],
   },
+  // ── v2.1 validation page jargon ────────────────────────────
+  {
+    key: 'goodnessOfFit',
+    keywords: ['goodness-of-fit', 'goodness of fit', '適合度檢定'],
+  },
+  {
+    key: 'ksDivergence',
+    keywords: ['Kolmogorov-Smirnov', 'KS 檢定', 'KS test', 'KS'],
+  },
+  {
+    key: 'klDivergence',
+    keywords: ['KL divergence', 'Kullback-Leibler', 'KL 相對熵', 'KL'],
+  },
+  {
+    key: 'wilsonCI',
+    keywords: ['Wilson score', 'Wilson 信賴區間', 'Wilson CI'],
+  },
+  {
+    key: 'cdf',
+    keywords: ['CDF', '累積分布', 'cumulative distribution'],
+  },
+  {
+    key: 'pValue',
+    keywords: ['p-value', 'p 值'],
+  },
+  {
+    key: 'criticalValue',
+    keywords: ['critical value', '臨界值'],
+  },
+  {
+    key: 'degreesOfFreedom',
+    keywords: ['degrees of freedom', '自由度', 'df'],
+  },
+  {
+    key: 'stdResidual',
+    keywords: ['standardized residual', '標準化殘差', 'std residual'],
+  },
+  {
+    key: 'residual',
+    keywords: ['Pearson residual', 'residual', '殘差'],
+  },
+  {
+    key: 'nats',
+    keywords: ['nats', '奈特'],
+  },
+  {
+    key: 'monteCarlo',
+    keywords: ['Monte Carlo', '蒙地卡羅', 'Monte-Carlo'],
+  },
+  {
+    key: 'bonferroni',
+    keywords: ['Bonferroni', '邦弗朗尼校正'],
+  },
+  {
+    key: 'faceValidity',
+    keywords: ['face validity', 'face-validity', '表面效度'],
+  },
+  {
+    key: 'compositeScore',
+    keywords: [
+      'multi-metric composite',
+      'composite score',
+      'multi-indicator composite',
+      '合成分數',
+    ],
+  },
+  {
+    key: 'softCap',
+    keywords: ['soft-cap', 'soft cap', '軟封頂'],
+  },
+  {
+    key: 'typeIError',
+    keywords: ['Type I error', 'Type-I error', '型一錯誤'],
+  },
+  {
+    key: 'outlier',
+    keywords: ['outlier', '離群值'],
+  },
+  {
+    key: 'verificationValidation',
+    keywords: ['Verification & Validation', 'V&V'],
+  },
 ]
 
 /**
