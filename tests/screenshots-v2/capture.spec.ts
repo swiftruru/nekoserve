@@ -55,7 +55,7 @@ test('capture NekoServe v2 screenshots with real SimPy data', async () => {
     await shot(page, '01-settings-overview')
 
     // 02 Switch to holiday-rush
-    await page.locator('[data-testid="scenario-button-holiday-rush"]').click()
+    await page.locator('[data-testid="scenario-button-paper-holiday-rush"]').click()
     await page.waitForTimeout(400)
     await shot(page, '02-settings-scenario-holiday-rush')
 

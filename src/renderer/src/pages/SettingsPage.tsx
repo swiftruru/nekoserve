@@ -12,6 +12,7 @@ import {
   deleteCustomScenario,
   isBuiltInScenarioId,
 } from '../data/scenarios'
+import { useSimulationStore } from '../store/simulationStore'
 
 interface SettingsPageProps {
   initialConfig: SimulationConfig
@@ -43,7 +44,7 @@ export default function SettingsPage({
   const { t } = useTranslation(['settings', 'common', 'errors', 'scenarios'])
   const { toast } = useToast()
   const [config, setConfig] = useState<SimulationConfig>(initialConfig)
-  const [activeScenario, setActiveScenario] = useState<string | null>('weekday')
+  const [activeScenario, setActiveScenario] = useState<string | null>('hirsch-paper')
   const [showErrorDetail, setShowErrorDetail] = useState(false)
   const [batchMode, setBatchMode] = useState(false)
   const [replicationCount, setReplicationCount] = useState(10)
@@ -89,7 +90,7 @@ export default function SettingsPage({
 
   function handleReset() {
     setConfig(initialConfig)
-    setActiveScenario('weekday')
+    setActiveScenario('hirsch-paper')
     onReset()
   }
 
@@ -105,6 +106,8 @@ export default function SettingsPage({
     }
   }
 
+  const setLastRunScenarioId = useSimulationStore((s) => s.setLastRunScenarioId)
+
   function handleRun() {
     validateConfig()
     const fallback = t('settings:scenario.defaultRunLabel')
@@ -116,6 +119,7 @@ export default function SettingsPage({
         label = customScenarios.find((s) => s.id === activeScenario)?.name ?? fallback
       }
     }
+    setLastRunScenarioId(activeScenario)
     if (sweepMode && onRunSweep) {
       onRunSweep(config, sweepParam, sweepFrom, sweepTo, sweepStep, sweepReplications)
     } else if (batchMode && onRunBatch) {

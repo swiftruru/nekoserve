@@ -400,6 +400,16 @@ export const AMBIENT_CAT_SPOTS: readonly AmbientCatSpot[] = [
   // AREA 2 open-floor spots
   { id: 'a2-floor-center', x: 410, y: 200, area: 'AREA_2' },
   { id: 'a2-floor-south',  x: 460, y: 290, area: 'AREA_2' },
+  // CAT ROOM open-floor spots. Cat room bounds: x=730-960, y=40-300.
+  // Avoids the shelf anchors at y=60, the food bowl at (770, 260), the
+  // litter corner at (920, 260), and the door at (740, 295). Cats
+  // currently "at home" in the cat room bunched up at CAT_ROOM_INSIDE;
+  // these spots let them spread out across the mid-band instead.
+  { id: 'cr-floor-center',  x: 845, y: 170, area: 'CAT_ROOM' },
+  { id: 'cr-floor-left',    x: 780, y: 160, area: 'CAT_ROOM' },
+  { id: 'cr-floor-right',   x: 915, y: 160, area: 'CAT_ROOM' },
+  { id: 'cr-floor-top',     x: 845, y: 110, area: 'CAT_ROOM' },
+  { id: 'cr-floor-bottom',  x: 845, y: 225, area: 'CAT_ROOM' },
 ]
 
 export const REST_WANDER_CYCLE_MIN = 6

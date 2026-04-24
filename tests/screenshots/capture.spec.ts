@@ -53,9 +53,9 @@ test('capture NekoServe screenshots for slide deck', async () => {
     await page.locator('[data-testid="settings-run-button"]').waitFor({ state: 'visible' })
     await shot(page, '01-settings-overview')
 
-    // 2. Pick the holiday-rush scenario for a more dramatic demo (fallback to weekday)
-    if (!(await safeClick(page, '[data-testid="scenario-button-holiday-rush"]'))) {
-      await safeClick(page, '[data-testid="scenario-button-weekday"]')
+    // 2. Pick the holiday-rush scenario for a more dramatic demo (fallback to paper baseline)
+    if (!(await safeClick(page, '[data-testid="scenario-button-paper-holiday-rush"]'))) {
+      await safeClick(page, '[data-testid="scenario-button-hirsch-paper"]')
     }
     await shot(page, '02-settings-scenario-selected')
 

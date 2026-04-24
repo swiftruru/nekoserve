@@ -1975,9 +1975,12 @@ export default function CafeScene({
           const inCatRoom = cat.area === 'CAT_ROOM'
           const onShelf = cat.verticalLevel === 'SHELF'
           const onFurniture = cat.verticalLevel === 'FURNITURE'
-          if (inCatRoom && !visiting) {
-            // Override position: put the cat deep inside the cat room at
-            // a slotIdx-based anchor so cats don't stack on each other.
+          if (inCatRoom && !visiting && onShelf) {
+            // Cat-room cats that happen to be on the SHELF level snap
+            // to one of the two in-room shelves. Floor-level cat-room
+            // cats fall through to the AMBIENT_CAT_SPOTS branch below
+            // so they spread across the 5 open-floor spots instead of
+            // piling on just the two shelves.
             const anchor = SHELVES.filter((s) => s.area === 'CAT_ROOM')[
               cat.slotIdx % 2
             ]
@@ -2010,15 +2013,18 @@ export default function CafeScene({
           } else if (
             !visiting &&
             !walking &&
-            (cat.area === 'AREA_1' || cat.area === 'AREA_2') &&
+            (cat.area === 'AREA_1' ||
+              cat.area === 'AREA_2' ||
+              cat.area === 'CAT_ROOM') &&
             cat.verticalLevel === 'FLOOR'
           ) {
-            // Floor-level cats in the customer lounge that aren't
-            // actively visiting a seat or walking a path chill at one
-            // of the AMBIENT_CAT_SPOTS — quiet patches of rug between
-            // furniture. Selection is deterministic per cat slot so
-            // each cat has its own "usual spot" and doesn't wander into
-            // the middle of an aisle when idle.
+            // Floor-level cats in the customer lounge OR the cat room
+            // that aren't actively visiting a seat or walking a path
+            // chill at one of the AMBIENT_CAT_SPOTS — quiet patches of
+            // rug between furniture (or open floor in the cat room,
+            // away from food / litter / door). Selection is
+            // deterministic per cat slot so each cat has its own
+            // "usual spot" and doesn't wander into an aisle when idle.
             const areaAmbient = AMBIENT_CAT_SPOTS.filter(
               (s) => s.area === cat.area,
             )

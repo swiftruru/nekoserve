@@ -24,27 +24,36 @@ import FormulaBox from './FormulaBox'
  * …"); the surrounding first-person narration stays in Ruru's voice
  * ("I picked three complementary indicators because …").
  */
-export default function MethodologySection() {
+export default function MethodologySection({
+  forceOpen = false,
+}: {
+  /** v2.2: when true, ignore internal open state (used by print layout). */
+  forceOpen?: boolean
+} = {}) {
   const { t } = useTranslation('validation')
   const [open, setOpen] = useState(false)
+  const isOpen = open || forceOpen
 
   return (
     <section className="mb-4 rounded-xl ring-1 ring-inset ring-indigo-200 dark:ring-indigo-700/60 bg-indigo-50/70 dark:bg-indigo-900/20">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
-        aria-expanded={open}
+        className="w-full flex items-center justify-between px-4 py-3 text-left print:hidden"
+        aria-expanded={isOpen}
       >
         <span className="text-sm font-bold text-indigo-800 dark:text-indigo-200">
           🎓 {t('methodology.title')}
         </span>
         <span className="text-indigo-600 dark:text-indigo-400 text-xs">
-          {open ? t('methodology.collapse') : t('methodology.expand')}
+          {isOpen ? t('methodology.collapse') : t('methodology.expand')}
         </span>
       </button>
+      <div className="hidden print:block px-4 pt-3 pb-1 text-sm font-bold text-indigo-800">
+        🎓 {t('methodology.title')}
+      </div>
 
-      {open && (
+      {isOpen && (
         <div className="px-4 pb-4 pt-1 space-y-5 text-xs text-gray-700 dark:text-bark-200 leading-relaxed">
           <FrameworkBlock />
           <ComplementarityBlock />

@@ -19,6 +19,7 @@ import {
   deleteRun as dbDelete,
   clearAll as dbClearAll,
   updateLabel as dbUpdateLabel,
+  togglePin as dbTogglePin,
 } from '../utils/historyStore'
 import type { PersistedHistoryEntry } from '../utils/historyStore'
 
@@ -27,6 +28,7 @@ export interface HistoryEntry {
   timestamp: number
   result: SimulationResult
   label: string
+  pinned: boolean
 }
 
 interface SimulationState {
@@ -65,6 +67,7 @@ interface UseSimulationReturn extends SimulationState {
   clearHistory: () => void
   deleteHistoryEntry: (id: number) => void
   renameHistoryEntry: (id: number, label: string) => void
+  togglePinHistoryEntry: (id: number) => void
   loadHistoryResult: (entry: HistoryEntry) => void
 }
 
@@ -81,7 +84,13 @@ const INITIAL_STATE: SimulationState = {
 }
 
 function toHistoryEntry(p: PersistedHistoryEntry): HistoryEntry {
-  return { id: p.id, timestamp: p.timestamp, result: p.result, label: p.label }
+  return {
+    id: p.id,
+    timestamp: p.timestamp,
+    result: p.result,
+    label: p.label,
+    pinned: p.pinned ?? false,
+  }
 }
 
 const METRIC_KEYS: (keyof MetricSummary)[] = [
@@ -184,7 +193,9 @@ export function useSimulation(): UseSimulationReturn {
         requestAnimationFrame(() => requestAnimationFrame(() => r())),
       )
 
-      const persisted = await dbSave(result, runLabel).catch(() => null)
+      const saveResult = await dbSave(result, runLabel).catch(() => null)
+      const persisted = saveResult?.entry ?? null
+      const evictedIds = saveResult?.evictedIds ?? []
 
       // Phase B: apply the heavy result. status flips to 'success'
       // but simProgress stays set, so the indicator stays mounted
@@ -194,11 +205,15 @@ export function useSimulation(): UseSimulationReturn {
           label ?? i18n.t('results:runLabelFallback', { index: prev.history.length + 1 })
         const newEntry: HistoryEntry = persisted
           ? toHistoryEntry({ ...persisted, label: actualLabel })
-          : { id: Date.now(), timestamp: Date.now(), result, label: actualLabel }
+          : { id: Date.now(), timestamp: Date.now(), result, label: actualLabel, pinned: false }
 
         if (persisted && actualLabel !== runLabel) {
           dbUpdateLabel(persisted.id, actualLabel).catch(() => {})
         }
+
+        const survivingHistory = evictedIds.length > 0
+          ? prev.history.filter((e) => !evictedIds.includes(e.id))
+          : prev.history
 
         return {
           ...prev,
@@ -206,7 +221,7 @@ export function useSimulation(): UseSimulationReturn {
           result,
           error: null,
           elapsed: finalElapsed,
-          history: [...prev.history, newEntry],
+          history: [...survivingHistory, newEntry],
         }
       })
 
@@ -314,18 +329,24 @@ export function useSimulation(): UseSimulationReturn {
     // Persist to history
     const runLabel =
       label ?? i18n.t('results:runLabelFallback', { index: '?' })
-    const persisted = await dbSave(representativeResult, runLabel).catch(() => null)
+    const saveResult = await dbSave(representativeResult, runLabel).catch(() => null)
+    const persisted = saveResult?.entry ?? null
+    const evictedIds = saveResult?.evictedIds ?? []
 
     setState((prev) => {
       const actualLabel =
         label ?? i18n.t('results:runLabelFallback', { index: prev.history.length + 1 })
       const newEntry: HistoryEntry = persisted
         ? toHistoryEntry({ ...persisted, label: actualLabel })
-        : { id: Date.now(), timestamp: Date.now(), result: representativeResult, label: actualLabel }
+        : { id: Date.now(), timestamp: Date.now(), result: representativeResult, label: actualLabel, pinned: false }
 
       if (persisted && actualLabel !== runLabel) {
         dbUpdateLabel(persisted.id, actualLabel).catch(() => {})
       }
+
+      const survivingHistory = evictedIds.length > 0
+        ? prev.history.filter((e) => !evictedIds.includes(e.id))
+        : prev.history
 
       return {
         ...prev,
@@ -333,7 +354,7 @@ export function useSimulation(): UseSimulationReturn {
         result: representativeResult,
         error: null,
         elapsed: finalElapsed,
-        history: [...prev.history, newEntry],
+        history: [...survivingHistory, newEntry],
         batchResult,
         batchProgress: null,
       }
@@ -485,6 +506,19 @@ export function useSimulation(): UseSimulationReturn {
     }))
   }, [])
 
+  const togglePinHistoryEntry = useCallback((id: number) => {
+    setState((prev) => {
+      const current = prev.history.find((e) => e.id === id)
+      if (!current) return prev
+      const nextPinned = !current.pinned
+      dbTogglePin(id, nextPinned).catch(() => {})
+      return {
+        ...prev,
+        history: prev.history.map((e) => (e.id === id ? { ...e, pinned: nextPinned } : e)),
+      }
+    })
+  }, [])
+
   const loadHistoryResult = useCallback((entry: HistoryEntry) => {
     setState((prev) => ({
       ...prev,
@@ -511,6 +545,7 @@ export function useSimulation(): UseSimulationReturn {
     clearHistory,
     deleteHistoryEntry,
     renameHistoryEntry,
+    togglePinHistoryEntry,
     loadHistoryResult,
   }
 }

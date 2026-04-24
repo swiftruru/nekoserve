@@ -462,7 +462,11 @@
     "compareSelected": "Compare ({{count}})",
     "configBrief": "{{seats}} seats · {{staff}} staff · {{cats}} cats · seed {{seed}}",
     "abandonRateBrief": "abandon {{rate}}%",
-    "servedBrief": "served {{count}}"
+    "servedBrief": "served {{count}}",
+    "capHint": "History keeps the most recent 20 runs. Each new run evicts the oldest unpinned entry; press 📍 to pin a run so it survives.",
+    "pin": "Pin (protect from auto-eviction)",
+    "unpin": "Unpin",
+    "pinnedBadge": "Pinned, will not be auto-evicted"
   },
   "comparison": {
     "title": "Comparison view",

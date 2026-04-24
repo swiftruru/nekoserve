@@ -6,12 +6,14 @@ import {
   type CategoryBenchmark,
 } from '../validation/benchmarks'
 import { validateAgainst, type ValidationReport } from '../validation/validator'
+import { generateValidationNarrative } from '../validation/narrative'
 import { citationShort, citationUrl } from '../data/citations'
 import MethodologySection from '../components/validation/MethodologySection'
 import BenchmarkProvenance from '../components/validation/BenchmarkProvenance'
 import ChiSquareBreakdown from '../components/validation/ChiSquareBreakdown'
 import KSCumulativePlot from '../components/validation/KSCumulativePlot'
 import KLContributionBars from '../components/validation/KLContributionBars'
+import { isBuiltInScenarioId } from '../data/scenarios'
 import type { Page } from '../types'
 
 /**
@@ -40,9 +42,12 @@ export default function ValidationPage({
 }: {
   onNavigate?: (page: Page) => void
 } = {}) {
-  const { t } = useTranslation(['validation', 'results'])
+  const { t } = useTranslation(['validation', 'results', 'scenarios'])
   const result = useSimulationStore((s) => s.result)
+  const lastRunScenarioId = useSimulationStore((s) => s.lastRunScenarioId)
   const [report, setReport] = useState<ValidationReport | null>(null)
+  /** v2.2: briefly force all collapsed sections open during a print window. */
+  const [printMode, setPrintMode] = useState(false)
 
   const benchmark = HIRSCH_2025_BENCHMARK
   const orderedBehaviorKeys = useMemo(
@@ -53,7 +58,13 @@ export default function ValidationPage({
 
   function runValidation() {
     if (!result) return
-    setReport(validateAgainst(result.metrics, benchmark))
+    const scenarioId = lastRunScenarioId ?? 'custom'
+    setReport(
+      validateAgainst(result.metrics, benchmark, {
+        scenarioId,
+        config: result.config,
+      }),
+    )
   }
 
   function downloadReport() {
@@ -71,6 +82,36 @@ export default function ValidationPage({
     URL.revokeObjectURL(url)
   }
 
+  function printReport() {
+    setPrintMode(true)
+    // Two rAFs so the force-opened sections commit to the DOM before
+    // we sample the font list. Then await document.fonts.ready so the
+    // print snapshot picks up every KaTeX subset — otherwise large
+    // operators like Σ (KaTeX_Size2) can race and render as empty.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        try {
+          if (document.fonts && typeof document.fonts.ready?.then === 'function') {
+            await document.fonts.ready
+          }
+        } catch {
+          // fonts API unavailable — proceed anyway
+        }
+        window.print()
+        // Small tail timeout so the print dialog gets a chance to finish
+        // rendering before we collapse back. The user can always re-print.
+        setTimeout(() => setPrintMode(false), 500)
+      })
+    })
+  }
+
+  /** Turn a scenarioId into its translated display name. */
+  function scenarioLabel(id: string): string {
+    if (id === 'custom') return t('validation:runContext.customScenario')
+    if (isBuiltInScenarioId(id)) return t(`scenarios:${id}.name` as const)
+    return id
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">
       <header className="mb-4">
@@ -82,7 +123,22 @@ export default function ValidationPage({
         </p>
       </header>
 
-      <MethodologySection />
+      {/* v2.2: printed-page header, only visible in print output. */}
+      {report?.runContext && (
+        <div className="hidden print:block mb-3 pb-2 border-b border-gray-300 text-xs text-gray-600">
+          NekoServe Validation Report · {scenarioLabel(report.runContext.scenarioId)} · {new Date(report.ranAt).toLocaleString()}
+        </div>
+      )}
+
+      {report?.runContext && (
+        <RunContextCard
+          ctx={report.runContext}
+          ranAt={report.ranAt}
+          scenarioLabel={scenarioLabel(report.runContext.scenarioId)}
+        />
+      )}
+
+      <MethodologySection forceOpen={printMode} />
 
       {!result && (
         <div className="rounded-lg ring-1 ring-inset ring-amber-300 dark:ring-amber-700 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
@@ -121,13 +177,22 @@ export default function ValidationPage({
                 ▶ {t('runValidation')}
               </button>
               {report && (
-                <button
-                  type="button"
-                  onClick={downloadReport}
-                  className="rounded-lg ring-1 ring-inset ring-orange-300 text-orange-700 dark:text-orange-400 px-3 py-2 text-xs font-semibold hover:bg-orange-50 dark:hover:bg-bark-600"
-                >
-                  {t('downloadJson')}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={downloadReport}
+                    className="rounded-lg ring-1 ring-inset ring-orange-300 text-orange-700 dark:text-orange-400 px-3 py-2 text-xs font-semibold hover:bg-orange-50 dark:hover:bg-bark-600 print:hidden"
+                  >
+                    {t('downloadJson')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={printReport}
+                    className="rounded-lg ring-1 ring-inset ring-orange-300 text-orange-700 dark:text-orange-400 px-3 py-2 text-xs font-semibold hover:bg-orange-50 dark:hover:bg-bark-600 print:hidden"
+                  >
+                    🖨️ {t('printButton')}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -138,6 +203,7 @@ export default function ValidationPage({
             observedVertical={renormalizeVertical(
               result.metrics.catVerticalLevelShare ?? {},
             )}
+            forceOpen={printMode}
           />
         </section>
       )}
@@ -150,7 +216,9 @@ export default function ValidationPage({
             expectedBehavior={toProportionMap(benchmark.catBehavior)}
             orderedBehaviorKeys={orderedBehaviorKeys}
             sampleN={benchmark.catBehaviorTotalN}
+            forceOpenAll={printMode}
           />
+          <NarrativeCard report={report} />
           {result && <SmallSampleWarning config={result.config} />}
           <FitNoteCard />
 
@@ -234,12 +302,15 @@ function ScoreCard({
   expectedBehavior,
   orderedBehaviorKeys,
   sampleN,
+  forceOpenAll = false,
 }: {
   report: ValidationReport
   observedBehavior: Record<string, number>
   expectedBehavior: Record<string, number>
   orderedBehaviorKeys: string[]
   sampleN: number
+  /** v2.2: when true, render all three drilldowns at once (for print). */
+  forceOpenAll?: boolean
 }) {
   const { t } = useTranslation('validation')
   const { scores } = report
@@ -304,17 +375,17 @@ function ScoreCard({
         />
       </div>
 
-      {expanded && (
-        <div className="mt-3 rounded-lg ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-cream-50/70 dark:bg-bark-800/60 p-3">
-          {expanded === 'chi' && (
+      {forceOpenAll ? (
+        <div className="mt-3 space-y-3">
+          <div className="rounded-lg ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-cream-50/70 dark:bg-bark-800/60 p-3">
             <ChiSquareBreakdown
               observed={observedBehavior}
               expected={expectedBehavior}
               orderedKeys={orderedBehaviorKeys}
               chiSquare={scores.chiSquare}
             />
-          )}
-          {expanded === 'ks' && (
+          </div>
+          <div className="rounded-lg ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-cream-50/70 dark:bg-bark-800/60 p-3">
             <KSCumulativePlot
               observed={observedBehavior}
               expected={expectedBehavior}
@@ -322,17 +393,178 @@ function ScoreCard({
               ksGap={scores.ksGap}
               sampleN={sampleN}
             />
-          )}
-          {expanded === 'kl' && (
+          </div>
+          <div className="rounded-lg ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-cream-50/70 dark:bg-bark-800/60 p-3">
             <KLContributionBars
               observed={observedBehavior}
               expected={expectedBehavior}
               orderedKeys={orderedBehaviorKeys}
               klDivergence={scores.klDivergence}
             />
-          )}
+          </div>
         </div>
+      ) : (
+        expanded && (
+          <div className="mt-3 rounded-lg ring-1 ring-inset ring-orange-100 dark:ring-bark-600 bg-cream-50/70 dark:bg-bark-800/60 p-3">
+            {expanded === 'chi' && (
+              <ChiSquareBreakdown
+                observed={observedBehavior}
+                expected={expectedBehavior}
+                orderedKeys={orderedBehaviorKeys}
+                chiSquare={scores.chiSquare}
+              />
+            )}
+            {expanded === 'ks' && (
+              <KSCumulativePlot
+                observed={observedBehavior}
+                expected={expectedBehavior}
+                orderedKeys={orderedBehaviorKeys}
+                ksGap={scores.ksGap}
+                sampleN={sampleN}
+              />
+            )}
+            {expanded === 'kl' && (
+              <KLContributionBars
+                observed={observedBehavior}
+                expected={expectedBehavior}
+                orderedKeys={orderedBehaviorKeys}
+                klDivergence={scores.klDivergence}
+              />
+            )}
+          </div>
+        )
       )}
+    </section>
+  )
+}
+
+function RunContextCard({
+  ctx,
+  ranAt,
+  scenarioLabel,
+}: {
+  ctx: NonNullable<ValidationReport['runContext']>
+  ranAt: string
+  scenarioLabel: string
+}) {
+  const { t } = useTranslation('validation')
+  const catMinutes = ctx.catCount * ctx.simulationDuration
+  const rows: { label: string; value: string }[] = [
+    { label: t('runContext.scenario'), value: scenarioLabel },
+    { label: t('runContext.seed'), value: String(ctx.seed) },
+    {
+      label: t('runContext.duration'),
+      value:
+        ctx.warmUpDuration > 0
+          ? t('runContext.durationWithWarmUp', {
+              main: ctx.simulationDuration,
+              warmUp: ctx.warmUpDuration,
+            })
+          : t('runContext.durationMinutes', { main: ctx.simulationDuration }),
+    },
+    {
+      label: t('runContext.effectiveSample'),
+      value: t('runContext.effectiveSampleValue', {
+        catCount: ctx.catCount,
+        duration: ctx.simulationDuration,
+        total: catMinutes.toLocaleString(),
+      }),
+    },
+    {
+      label: t('runContext.ranAt'),
+      value: new Date(ranAt).toLocaleString(),
+    },
+  ]
+  return (
+    <section
+      aria-label={t('runContext.title')}
+      className="mb-4 rounded-xl ring-1 ring-inset ring-slate-200 dark:ring-bark-600 bg-slate-50/70 dark:bg-bark-700/50 px-4 py-3"
+    >
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-bark-400 mb-2">
+        {t('runContext.title')}
+      </div>
+      <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5 text-xs">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-baseline gap-2">
+            <dt className="text-slate-500 dark:text-bark-400 shrink-0">
+              {r.label}
+            </dt>
+            <dd className="font-semibold text-slate-800 dark:text-bark-100 tabular-nums truncate">
+              {r.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
+function NarrativeCard({ report }: { report: ValidationReport }) {
+  const { t } = useTranslation('validation')
+  const narrative = useMemo(() => generateValidationNarrative(report), [report])
+  const tone =
+    narrative.tier === 'pass'
+      ? {
+          ring: 'ring-emerald-200 dark:ring-emerald-700/60',
+          bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+          text: 'text-emerald-900 dark:text-emerald-100',
+          label: 'text-emerald-700 dark:text-emerald-300',
+        }
+      : narrative.tier === 'marginal'
+      ? {
+          ring: 'ring-amber-200 dark:ring-amber-700/60',
+          bg: 'bg-amber-50 dark:bg-amber-900/20',
+          text: 'text-amber-900 dark:text-amber-100',
+          label: 'text-amber-700 dark:text-amber-300',
+        }
+      : {
+          ring: 'ring-red-200 dark:ring-red-700/60',
+          bg: 'bg-red-50 dark:bg-red-900/20',
+          text: 'text-red-900 dark:text-red-100',
+          label: 'text-red-700 dark:text-red-300',
+        }
+
+  const { scores } = report
+  const lead = t(`narrative.${narrative.tier}.lead`, {
+    total: scores.total,
+    chi: scores.chiSquare,
+    ks: scores.ksGap,
+    kl: scores.klDivergence,
+  })
+  const weakestDimLabel = t(`narrative.dim.${narrative.weakestDim}`)
+  const weakestDimScore = scores.subScores[narrative.weakestDim]
+  const weakestLine = t(`narrative.${narrative.tier}.weakest`, {
+    dim: weakestDimLabel,
+    score: weakestDimScore,
+  })
+  const suggestion = narrative.weakestCategory
+    ? t('narrative.suggestionWithCategory', {
+        category: narrative.weakestCategory.key,
+        delta:
+          ((narrative.weakestCategory.observed -
+            narrative.weakestCategory.expected) *
+            100).toFixed(1),
+        advice: t(narrative.weakestCategory.suggestionKey),
+      })
+    : t(`narrative.${narrative.tier}.suggestionFallback`)
+
+  return (
+    <section
+      className={`mt-4 rounded-xl ring-1 ring-inset ${tone.ring} ${tone.bg} p-4`}
+      aria-label={t('narrative.ariaLabel')}
+    >
+      <div className={`text-[11px] font-semibold uppercase tracking-wide ${tone.label} mb-1.5`}>
+        {t('narrative.heading')}
+      </div>
+      <p className={`text-sm leading-relaxed ${tone.text}`}>
+        {lead}
+      </p>
+      <p className={`mt-1.5 text-sm leading-relaxed ${tone.text}`}>
+        {weakestLine}
+      </p>
+      <p className={`mt-1.5 text-sm leading-relaxed ${tone.text}`}>
+        {suggestion}
+      </p>
     </section>
   )
 }

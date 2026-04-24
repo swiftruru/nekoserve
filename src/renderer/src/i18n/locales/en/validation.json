@@ -195,6 +195,44 @@
   "observed": "Simulation",
   "warnings": "Other warnings",
   "downloadJson": "📥 Download validation report (JSON)",
+  "printButton": "Print report",
+  "runContext": {
+    "title": "What this validation audited",
+    "scenario": "Scenario",
+    "seed": "Random seed",
+    "duration": "Simulation length",
+    "durationMinutes": "{{main}} min",
+    "durationWithWarmUp": "{{main}} min (+ warm-up {{warmUp}} min)",
+    "effectiveSample": "Effective sample",
+    "effectiveSampleValue": "{{catCount}} cats × {{duration}} min = {{total}} cat-minutes",
+    "ranAt": "Validated at",
+    "customScenario": "Custom (no preset selected)"
+  },
+  "narrative": {
+    "heading": "Overall verdict",
+    "ariaLabel": "Validation narrative verdict",
+    "dim": {
+      "chiSquare": "Chi-square fit",
+      "ksGap": "KS cumulative gap",
+      "klDivergence": "KL divergence"
+    },
+    "pass": {
+      "lead": "Composite score {{total}} / 100 meets the Hirsch 2025 nine-state alignment threshold; χ² = {{chi}}, KS D = {{ks}}, KL = {{kl}} nats.",
+      "weakest": "Among the three sub-metrics, {{dim}} scores lowest ({{score}}), though it is still within an acceptable band.",
+      "suggestionFallback": "No single category deviates beyond the significance cut-off; the overall shape matches the paper sample."
+    },
+    "marginal": {
+      "lead": "Composite score {{total}} / 100: heading the right way, but not yet at the 80-point pass threshold. χ² = {{chi}}, KS D = {{ks}}, KL = {{kl}} nats.",
+      "weakest": "Among the three sub-metrics, {{dim}} scores lowest ({{score}}), which is the main drag on the composite.",
+      "suggestionFallback": "No single category is dramatically off; the whole distribution is slightly displaced. Consider increasing the effective sample (longer simulation or more cats)."
+    },
+    "fail": {
+      "lead": "Composite score {{total}} / 100: the shape does not match Hirsch 2025. χ² = {{chi}}, KS D = {{ks}}, KL = {{kl}} nats.",
+      "weakest": "Among the three sub-metrics, {{dim}} scores lowest ({{score}}), which is the clearest signal of structural mismatch.",
+      "suggestionFallback": "The deviation is spread across several categories rather than one. Revisit whether the scenario truly matches the paper setup (27 cats, large café, 12 h with warm-up)."
+    },
+    "suggestionWithCategory": "The most-deviant category is {{category}} (delta {{delta}} pp). {{advice}}"
+  },
   "suggestionHint": "Suggested tweak:",
   "goToSettings": "→ Open Settings to tweak",
   "fitNoteTitle": "How this score is computed",
@@ -342,7 +380,21 @@
     "inCIYes": "Simulation inside 95% CI",
     "inCINo": "Simulation outside 95% CI (deviates from empirical)",
     "paperStatsTitle": "Statistical tests used in the paper itself",
-    "paperStatsIntro": "Hirsch 2025 runs χ² goodness-of-fit tests on exactly these distributions. Our validation method is aligned with the paper's own analytical approach, not a new invention."
+    "paperStatsIntro": "Hirsch 2025 runs χ² goodness-of-fit tests on exactly these distributions. Our validation method is aligned with the paper's own analytical approach, not a new invention.",
+    "gloss": {
+      "OUT_OF_LOUNGE": { "zh": "離開顧客區（回到員工/貓咪專屬空間）", "en": "Cat is outside the customer lounge (back-of-house or cat-only zone)" },
+      "RESTING": { "zh": "休息、趴臥或睡覺，對外界刺激反應低", "en": "Resting, lying down, or sleeping; low responsiveness" },
+      "SOCIALIZING": { "zh": "主動與顧客或其他貓互動、接觸", "en": "Actively interacting or making contact with people or other cats" },
+      "HIDDEN": { "zh": "躲在顧客看不到的隱蔽處（床底、箱內等）", "en": "Hidden out of customer sight (under furniture, inside boxes, etc.)" },
+      "ALERT": { "zh": "警覺觀察環境，未進入互動或休息", "en": "Alert and scanning the environment, neither interacting nor resting" },
+      "GROOMING": { "zh": "理毛、清潔自己或同伴", "en": "Grooming itself or a cat-mate" },
+      "MOVING": { "zh": "在空間裡走動、穿梭，沒有特定目的地", "en": "Walking or moving through the space without a clear destination" },
+      "EXPLORING": { "zh": "嗅聞、觀察物件或環境細節", "en": "Sniffing or investigating objects and surroundings" },
+      "PLAYING": { "zh": "追逐、撲抓玩具或同伴的玩耍行為", "en": "Chasing, pouncing, or playing with toys or other cats" },
+      "FLOOR": { "zh": "位於地面層（0 m）", "en": "On the floor level (0 m)" },
+      "FURNITURE": { "zh": "位於家具高度（椅子、桌面等中層）", "en": "On furniture height (chairs, tables; mid-level)" },
+      "SHELF": { "zh": "位於貓跳台、層板等高處", "en": "On shelves or cat trees; the elevated level" }
+    }
   },
   "suggest": {
     "behavior": {

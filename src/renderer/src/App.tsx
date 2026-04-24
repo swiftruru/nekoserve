@@ -90,7 +90,7 @@ export default function App() {
   const {
     status, result, error, elapsed, history,
     batchResult, batchProgress, simProgress, sweepResult,
-    run, runBatch, runSweep, cancel, reset, clearSimProgress, clearHistory, deleteHistoryEntry, renameHistoryEntry, loadHistoryResult,
+    run, runBatch, runSweep, cancel, reset, clearSimProgress, clearHistory, deleteHistoryEntry, renameHistoryEntry, togglePinHistoryEntry, loadHistoryResult,
   } = useSimulation()
   const update = useUpdateCheck()
 
@@ -484,6 +484,7 @@ export default function App() {
                 onDeleteHistory={deleteHistoryEntry}
                 onClearHistory={clearHistory}
                 onRenameHistory={renameHistoryEntry}
+                onTogglePinHistory={togglePinHistoryEntry}
                 onLoadHistory={loadHistoryResult}
               />
             )}

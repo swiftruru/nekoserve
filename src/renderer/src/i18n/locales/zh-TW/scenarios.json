@@ -1,19 +1,19 @@
 {
-  "weekday": {
-    "name": "平日白天",
-    "description": "悠閒步調，顧客到達間隔較長，店員與貓咪壓力適中"
-  },
-  "holiday-rush": {
-    "name": "假日尖峰",
-    "description": "人潮洶湧，顧客耐心較低，資源壓力最大，放棄率偏高"
-  },
-  "cat-nap": {
-    "name": "貓咪午睡模式",
-    "description": "貓咪頻繁休息，互動資源嚴重不足，展示排隊瓶頸效果"
-  },
   "hirsch-paper": {
     "name": "論文樣本（Hirsch 2025）",
     "description": "對齊 Hirsch 等 (2025) 在 Stockholm 蹲點 227 小時的設定：27 隻貓、12 小時營業、含暖機。樣本量足夠讓驗證模式分數穩定在 80+。"
+  },
+  "paper-weekday": {
+    "name": "論文樣本・平日白天",
+    "description": "論文基底（27 隻貓、大型咖啡廳、12 小時含暖機）搭配平日悠閒步調：顧客到達稀疏、耐心較長、貓咪休息率偏低。"
+  },
+  "paper-holiday-rush": {
+    "name": "論文樣本・假日尖峰",
+    "description": "論文基底遇上假日人潮：顧客密集到達、耐心偏短、需要多一位店員撐場，貓咪也比較容易累。"
+  },
+  "paper-cat-nap": {
+    "name": "論文樣本・午睡模式",
+    "description": "論文基底 27 隻貓裡多數在休息：休息機率與休息時長都拉高，互動資源相對稀缺，用來看互動瓶頸。"
   },
   "customDefaultDescription": "自訂情境"
 }

@@ -17,7 +17,7 @@
  * suggestions.
  */
 
-import type { MetricSummary } from '../types'
+import type { MetricSummary, SimulationConfig } from '../types'
 import type {
   CategoryBenchmark,
   ValidationBenchmark,
@@ -74,6 +74,24 @@ export interface ValidationWarning {
   params: Record<string, string | number>
 }
 
+/**
+ * Reproducibility metadata captured at validation time so the JSON
+ * report (and the on-screen header) can identify exactly which run
+ * was audited. Added in v2.2 alongside the print-ready layout.
+ */
+export interface ValidationRunContext {
+  /** Scenario preset id (e.g. 'hirsch-paper'); 'custom' when user edited config. */
+  scenarioId: string
+  /** PRNG seed that produced the metrics. */
+  seed: number
+  /** Main sim duration in minutes (excluding warm-up). */
+  simulationDuration: number
+  /** Warm-up duration in minutes (0 when not used). */
+  warmUpDuration: number
+  /** Cat count at the moment of the run, used for cat-minute sample size. */
+  catCount: number
+}
+
 export interface ValidationReport {
   benchmarkId: string
   benchmarkName: string
@@ -83,6 +101,9 @@ export interface ValidationReport {
   warnings: ValidationWarning[]
   /** ISO timestamp at which validation ran. */
   ranAt: string
+  /** Which simulation run was validated. Optional for backwards-compat
+   *  with older persisted reports that predate v2.2. */
+  runContext?: ValidationRunContext
 }
 
 // ─── Statistical primitives ────────────────────────────────
@@ -176,6 +197,7 @@ function klToScore(kl: number): number {
 export function validateAgainst(
   metrics: MetricSummary,
   benchmark: ValidationBenchmark,
+  runContext?: { scenarioId: string; config: SimulationConfig },
 ): ValidationReport {
   const behaviorObs = metrics.catBehaviorShare ?? {}
   const verticalObs = metrics.catVerticalLevelShare ?? {}
@@ -294,6 +316,15 @@ export function validateAgainst(
     issues,
     warnings,
     ranAt: new Date().toISOString(),
+    runContext: runContext
+      ? {
+          scenarioId: runContext.scenarioId,
+          seed: runContext.config.randomSeed,
+          simulationDuration: runContext.config.simulationDuration,
+          warmUpDuration: runContext.config.warmUpDuration,
+          catCount: runContext.config.catCount,
+        }
+      : undefined,
   }
 }
 

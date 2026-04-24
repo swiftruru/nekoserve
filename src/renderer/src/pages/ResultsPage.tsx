@@ -48,6 +48,7 @@ interface ResultsPageProps {
   onDeleteHistory?: (id: number) => void
   onClearHistory?: () => void
   onRenameHistory?: (id: number, label: string) => void
+  onTogglePinHistory?: (id: number) => void
   onLoadHistory?: (entry: HistoryEntry) => void
 }
 
@@ -59,6 +60,7 @@ export default function ResultsPage({
   onDeleteHistory,
   onClearHistory,
   onRenameHistory,
+  onTogglePinHistory,
   onLoadHistory,
   batchResult,
   sweepResult,
@@ -239,6 +241,9 @@ export default function ResultsPage({
                     {t('results:history.selectHint')}
                   </div>
                 )}
+                <div className="text-[10px] text-gray-400 dark:text-bark-400 mb-2">
+                  {t('results:history.capHint')}
+                </div>
 
                 {/* Paged list */}
                 <div className="space-y-1">
@@ -298,6 +303,14 @@ export default function ResultsPage({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
+                            {entry.pinned && (
+                              <span
+                                className="text-[10px] leading-none shrink-0"
+                                title={t('results:history.pinnedBadge')}
+                              >
+                                📌
+                              </span>
+                            )}
                             <span className="font-semibold text-gray-800 dark:text-bark-100 truncate">
                               {entry.label}
                             </span>
@@ -325,6 +338,22 @@ export default function ResultsPage({
                               className="px-2 py-1 rounded-lg text-[10px] font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
                             >
                               {t('results:history.load')}
+                            </button>
+                          )}
+                          {onTogglePinHistory && (
+                            <button
+                              type="button"
+                              onClick={() => onTogglePinHistory(entry.id)}
+                              data-testid="results-history-pin"
+                              aria-pressed={entry.pinned}
+                              className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors text-xs ${
+                                entry.pinned
+                                  ? 'text-orange-500 bg-orange-50 dark:bg-bark-600 hover:bg-orange-100 dark:hover:bg-bark-500'
+                                  : 'text-gray-400 dark:text-bark-400 hover:bg-gray-200 dark:hover:bg-bark-600'
+                              }`}
+                              title={entry.pinned ? t('results:history.unpin') : t('results:history.pin')}
+                            >
+                              {entry.pinned ? '📌' : '📍'}
                             </button>
                           )}
                           {onRenameHistory && (

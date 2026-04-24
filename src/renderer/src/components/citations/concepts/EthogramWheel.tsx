@@ -13,7 +13,7 @@ import ScriptedAnim from '../ScriptedAnim'
  */
 
 const VB_W = 320
-const VB_H = 240
+const VB_H = 270
 const CX = VB_W / 2
 const CY = 130
 const R_OUTER = 90
@@ -155,8 +155,9 @@ function Frame({
         x={VB_W / 2}
         y={VB_H - 10}
         textAnchor="middle"
-        fontSize="10"
-        fill="#6b7280"
+        fontSize="13"
+        fontWeight="500"
+        fill="#4b5563"
         fontStyle="italic"
       >
         {caption}

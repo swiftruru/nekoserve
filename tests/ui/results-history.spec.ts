@@ -9,7 +9,7 @@ test('compares two history runs and loads an older run from the results history 
     await page.locator('[data-testid="playback-skip-results"]').click()
 
     await page.locator('[data-testid="nav-tab-settings"]').click()
-    await page.locator('[data-testid="scenario-button-holiday-rush"]').click()
+    await page.locator('[data-testid="scenario-button-paper-holiday-rush"]').click()
 
     await runSimulation(page)
     await page.locator('[data-testid="playback-skip-results"]').click()
@@ -44,12 +44,12 @@ test('deletes one history entry and clears the rest from the results history pan
     await page.locator('[data-testid="playback-skip-results"]').click()
 
     await page.locator('[data-testid="nav-tab-settings"]').click()
-    await page.locator('[data-testid="scenario-button-holiday-rush"]').click()
+    await page.locator('[data-testid="scenario-button-paper-holiday-rush"]').click()
     await runSimulation(page)
     await page.locator('[data-testid="playback-skip-results"]').click()
 
     await page.locator('[data-testid="nav-tab-settings"]').click()
-    await page.locator('[data-testid="scenario-button-cat-nap"]').click()
+    await page.locator('[data-testid="scenario-button-paper-cat-nap"]').click()
     await runSimulation(page)
     await page.locator('[data-testid="playback-skip-results"]').click()
 

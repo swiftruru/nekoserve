@@ -12,7 +12,7 @@ import ScriptedAnim from '../ScriptedAnim'
  */
 
 const VB_W = 360
-const VB_H = 200
+const VB_H = 232
 const BAR_Y = 60
 const BAR_H = 90
 const BAR_W = 30
@@ -46,10 +46,11 @@ function Frame({ bars, caption, scenarioLabel }: {
       </text>
       <text
         x={VB_W / 2}
-        y={40}
+        y={42}
         textAnchor="middle"
-        fontSize="10"
-        fill="#9a3412"
+        fontSize="12"
+        fontWeight="500"
+        fill="#7c2d12"
       >
         綠 = 越高越好、紅 = 越低越好
       </text>
@@ -123,8 +124,9 @@ function Frame({ bars, caption, scenarioLabel }: {
         x={VB_W / 2}
         y={VB_H - 8}
         textAnchor="middle"
-        fontSize="10"
-        fill="#6b7280"
+        fontSize="13"
+        fontWeight="500"
+        fill="#4b5563"
         fontStyle="italic"
       >
         {caption}

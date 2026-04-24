@@ -27,15 +27,21 @@
       "lede": "這一頁把每一篇引用文獻怎麼對應到系統的一塊功能整理成一條故事線：從 1961 年 Little 的排隊公式、1963 年 Ancker-Gafarian 的 balking/reneging 模型，一路走到 2025 年 Hirsch 等人在瑞典貓咖實地蹲點 227 小時的行為學資料，再接回我這邊的模擬邏輯。往下滑就能一章一章看。"
     },
     "stats": {
-      "citations": "{{count}} 篇文獻",
+      "tablistLabel": "切換架構圖分類",
+      "storyCitations": "故事主線 {{count}} 篇",
+      "methodologyCitations": "方法論/統計基礎 {{count}} 篇",
       "parameters": "{{count}} 個被引用的預設值",
       "validationTargets": "{{count}} 個驗證基準"
     },
     "landscape": {
       "ariaLabel": "三層引用全景圖：經典理論、服務實證、貓咖行為",
+      "ariaLabelMethodology": "方法論與統計基礎三層引用圖：模擬驗證、距離度量、統計推論",
       "tierClassical": "經典理論",
       "tierEmpirical": "服務實證",
       "tierCatCafe": "貓咖行為",
+      "tierMethodologyVV": "模擬驗證",
+      "tierMethodologyDistance": "距離度量",
+      "tierMethodologyStats": "統計推論",
       "hoverHint": "滑鼠移過去會高亮同層，點一下方塊會跳出這篇文獻的簡介。",
       "close": "關閉",
       "kindLabel": "類型",
@@ -72,8 +78,123 @@
         "ropski2023analysis": {
           "kind": "2023 年 Journal of Veterinary Behavior 的動物福祉研究",
           "contribution": "對照貓咖與寄養家庭的貓健康與停留期指標，提醒我貓本身是 stakeholder、不是服務的布景板。我的 CatWelfareScore 是這個視角的延伸。"
+        },
+        "sargent2013vv": {
+          "kind": "2013 年 Journal of Simulation 的模擬驗證方法論經典",
+          "contribution": "提出模擬模型 Verification & Validation 的完整流程圖（conceptual / data / operational validity）。我的驗證模式頁就是按這份架構拆分：先檢查輸入資料、再比對輸出與實證基準。"
+        },
+        "kleijnen1995vv": {
+          "kind": "1995 年 European Journal of Operational Research 的 V&V 早期奠基作",
+          "contribution": "把模擬驗證拆成 face validity、歷史資料比對、敏感度分析三層。我在敏感度掃描（sensitivity sweep）以及與 Hirsch 基準的歷史資料比對，思路源自這篇。"
+        },
+        "rubner2000emd": {
+          "kind": "2000 年 International Journal of Computer Vision 的距離度量方法論",
+          "contribution": "Earth Mover's Distance（EMD）給我一把可以量「兩個分佈到底有多像」的尺。驗證模式比對 NekoServe ethogram 與 Hirsch 實測 9 狀態分佈時用的就是這條公式。"
+        },
+        "agresti2013cda": {
+          "kind": "2013 年 Wiley 的類別資料分析教科書",
+          "contribution": "提供我在處理 ethogram 這類類別分佈時的統計推論架構：卡方檢定、類別比例的信賴區間、多項分佈的比較方法。驗證頁的 goodness-of-fit 檢定都走這條路線。"
+        },
+        "wilson1927ci": {
+          "kind": "1927 年 JASA 的比例信賴區間原始論文",
+          "contribution": "Wilson score interval 是小樣本下計算「比例 p 的信賴區間」比常態近似更穩的方法。我在顯示 balking 率、reneging 率這類百分比指標的誤差棒時用的就是這條公式。"
         }
       }
+    },
+    "radial": {
+      "ariaLabel": "預設值來源輻射圖：NekoServe 15 個預設值依來源文獻分群",
+      "hoverHint": "滑鼠移到文獻節點會高亮底下所有參數；點參數方塊可看預設值與來源說明。",
+      "paramCount": "{{count}} 個參數",
+      "sourceLabel": "來源",
+      "paramsListLabel": "撐起的參數"
+    },
+    "benchmark": {
+      "title": "Hirsch 2025 · 9 狀態 ethogram 驗證基準",
+      "method": "227 小時／{{cats}} 隻貓／{{scans}} 次觀察取樣",
+      "ariaLabel": "9 狀態 ethogram 基準條形圖，附 Wilson 95% 信賴區間誤差線",
+      "hoverHint": "滑鼠移到任一行會顯示精確比例、觀察次數與 95% 信賴區間；點一下會展開這個狀態的完整說明。",
+      "ci95": "95% CI",
+      "meaningLabel": "這個狀態是什麼",
+      "nekoUseLabel": "NekoServe 怎麼用",
+      "sourcePrefix": "資料：",
+      "nudge": "↓ 說明",
+      "formulaLabel": "背後的公式",
+      "formulaIntro": "圖上那條黑色的誤差線用的是 Wilson 信賴區間。相較一般常態近似，它在 p 接近 0 或 1、樣本數 n 偏小的時候還是很穩，所以 Hirsch 統計 PLAYING 只佔 0.3% 這種小比例也能畫出合理的上下界。這條公式引用自 Wilson CI 方法論文獻。",
+      "formulaParts": {
+        "pWilson": {
+          "label": "Wilson 校正後的比例",
+          "desc": "把原始比例 p̂ 往 0.5 稍微拉一下再算區間，避免 p 靠近 0 或 1 時常態近似爆炸。圖上的黑色誤差線中心就是這個值，而不是 p̂ 本身。",
+          "unit": "比例 (0–1)",
+          "example": "HIDDEN 這格 p̂ = 10.7%，Wilson 校正後中心大約 10.8%，CI 為 [10.1%, 11.3%]。"
+        },
+        "pHat": {
+          "label": "樣本觀察到的比例",
+          "desc": "把「該狀態出現次數」除以「總觀察次數」得到的實際比例。這是 Hirsch 在論文 Figure 3 直接報告的數字。",
+          "unit": "比例 (0–1)",
+          "example": "這格 p̂ = 12.8% 代表 12,505 次取樣裡，SOCIALIZING 出現 1,601 次。"
+        },
+        "n": {
+          "label": "樣本總次數",
+          "desc": "整個 ethogram 資料集的觀察筆數。n 越大，Wilson CI 越窄；n 很小的時候 Wilson 比常態近似穩得多。",
+          "unit": "觀察次",
+          "example": "Hirsch 這份 227 小時觀察累積 n = 12,505 次 scan。"
+        },
+        "z": {
+          "label": "標準常態分位數",
+          "desc": "決定信心水準用的常數。常用的 90% / 95% / 99% 信心水準各對應不同 z 值；越高的信心水準 z 越大、區間越寬。",
+          "unit": "標準差倍數",
+          "example": "95% 信賴區間 z ≈ 1.96；99% 信賴區間 z ≈ 2.58。"
+        },
+        "shrinkage": {
+          "label": "Wilson 的收縮項",
+          "desc": "把分子往 0.5 拉一點點的修正量。n 越大這項越接近 0，就越退回常態近似；n 很小時這項會把極端比例往中間拉，避免邊界爆炸。",
+          "unit": "比例修正",
+          "example": "PLAYING 這格 p̂ = 0.3%、n = 12,505，收縮項只有約 0.00015，幾乎看不見影響；但如果 n 只有 50，收縮項會把估計從 0.3% 拉到 ~2.1%。"
+        },
+        "halfWidth": {
+          "label": "信賴區間半寬",
+          "desc": "± 後面那整段是 Wilson 區間的半寬，代表對估計的不確定性。誤差線的兩根豎線就是中心 ± 這個半寬得到的。",
+          "unit": "比例",
+          "example": "OUT_OF_LOUNGE p̂ = 31.6%、n = 12,505，半寬約 ±0.8 個百分點，所以圖上的 whisker 看起來很短。"
+        }
+      },
+      "state": {
+        "OUT_OF_LOUNGE": "在貓房外",
+        "RESTING": "休息",
+        "SOCIALIZING": "社交互動",
+        "HIDDEN": "躲藏",
+        "ALERT": "警戒",
+        "GROOMING": "理毛",
+        "MOVING": "移動",
+        "EXPLORING": "探索",
+        "PLAYING": "玩耍"
+      },
+      "description": {
+        "OUT_OF_LOUNGE": "貓不在觀察空間裡，通常是退到員工休息室或貓專用空間。Hirsch 把它單獨拉成一類，是為了強調「貓有自主退場權」。",
+        "RESTING": "貓在觀察空間內，但姿勢放鬆、不動、清醒程度低（躺、蜷縮、淺睡）。這是貓在貓咖最常見的狀態。",
+        "SOCIALIZING": "與人或另一隻貓發生近距離互動：接觸、嗅聞、聞味、被撫摸、同睡。",
+        "HIDDEN": "藏在家具下、盒子內、高處角落等看不見的地方；跟 OUT_OF_LOUNGE 不同的是貓仍在空間內。",
+        "ALERT": "清醒且坐著、站著、注視某個方向，沒有移動也沒有互動。判定為「留意環境」的中性警覺態。",
+        "GROOMING": "舔毛、整理身體。短時、頻率穩定，是福祉指標中「舒適」的代表行為。",
+        "MOVING": "走動、爬跳、從 A 點移到 B 點。觀察瞬間正在位移的狀態。",
+        "EXPLORING": "嗅聞新物件、擺弄小玩具、觀察非例行刺激。比 MOVING 更偏「主動探查」。",
+        "PLAYING": "追、撲、抓玩具，帶有明顯戲耍目的。Hirsch 量到 0.3%，是所有狀態裡最低的。"
+      },
+      "nekoUse": {
+        "OUT_OF_LOUNGE": "我讓貓可以離開可視區域（休息中不上班），回放時那 31.6% 的貓自然就不在畫面上。",
+        "RESTING": "貓的 FSM 把 RESTING 設為預設權重最高的 idle 狀態，跟 Hirsch 的 31.7% 對齊。",
+        "SOCIALIZING": "對應顧客-貓互動事件；我的 catInteractionTime 機率抽樣就讓 SOCIALIZING 佔比落在 12.8% 附近。",
+        "HIDDEN": "躲藏狀態會把貓從貓咪互動池中暫時排除，對應 Ropski 福祉研究中的「退場壓力」訊號。",
+        "ALERT": "貓在警戒時不會主動走向顧客，模擬器把它當作 SOCIALIZING 的 gating 條件。",
+        "GROOMING": "福祉分數的「舒適」子項加分行為，在 CatWelfareScore 中權重為正。",
+        "MOVING": "對應回放畫面裡貓從座位間走動的動畫幀。",
+        "EXPLORING": "提高探索能見度會增加 CatWelfareScore，對應 Hirsch 在 discussion 提出的 environmental enrichment 建議。",
+        "PLAYING": "貓咪福祉的「最理想」指標；scenario 比較時可以看到場景條件改變時 PLAYING 比例的變化。"
+      },
+      "chipEMD": "EMD · Rubner 2000",
+      "chipWilson": "Wilson CI · Wilson 1927",
+      "chipChi2": "χ² · Agresti 2013",
+      "chipSource": "資料來源 · {{short}}"
     },
     "nav": {
       "title": "章節導覽",

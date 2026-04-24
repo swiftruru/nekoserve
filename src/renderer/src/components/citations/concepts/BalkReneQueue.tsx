@@ -43,7 +43,7 @@ function QueueFrame({ children }: { children: React.ReactNode }) {
       <text x={VB_W / 2} y={40} textAnchor="middle" fontSize="13" fontWeight="700" fill="#7c2d12">
         Balking vs Reneging
       </text>
-      <text x={VB_W / 2} y={58} textAnchor="middle" fontSize="10" fill="#9a3412">
+      <text x={VB_W / 2} y={60} textAnchor="middle" fontSize="12" fontWeight="500" fill="#7c2d12">
         進來前就不排 vs 排一半放棄
       </text>
       {children}

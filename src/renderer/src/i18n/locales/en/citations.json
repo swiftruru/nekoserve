@@ -27,15 +27,21 @@
       "lede": "This page walks through every cited work and the part of the simulator it powers, as one story. We start with Little's 1961 queueing identity, move through Ancker & Gafarian's 1963 balking/reneging model, and land on Hirsch et al.'s 2025 ethological study where they watched 27 cats in a Swedish cat café for 227 hours. Scroll down to read it chapter by chapter."
     },
     "stats": {
-      "citations": "{{count}} papers",
+      "tablistLabel": "Switch landscape view",
+      "storyCitations": "{{count}} papers in the storyline",
+      "methodologyCitations": "{{count}} methodology / stats references",
       "parameters": "{{count}} cited parameters",
       "validationTargets": "{{count}} validation targets"
     },
     "landscape": {
       "ariaLabel": "Three-tier citation landscape: classical theory, service empirics, cat-café behavior",
+      "ariaLabelMethodology": "Three-tier methodology landscape: simulation V&V, distance metrics, statistical inference",
       "tierClassical": "Classical theory",
       "tierEmpirical": "Service empirics",
       "tierCatCafe": "Cat-café behavior",
+      "tierMethodologyVV": "Simulation V&V",
+      "tierMethodologyDistance": "Distance metric",
+      "tierMethodologyStats": "Statistical inference",
       "hoverHint": "Hover to dim the other tiers; click a card for a short summary of the paper.",
       "close": "Close",
       "kindLabel": "Kind",
@@ -72,8 +78,123 @@
         "ropski2023analysis": {
           "kind": "2023 animal-welfare study in Journal of Veterinary Behavior",
           "contribution": "Compared cat health and length-of-stay between cat cafés and foster-based rescue. A key reminder that cats are stakeholders, not stage dressing. My CatWelfareScore extends this perspective."
+        },
+        "sargent2013vv": {
+          "kind": "2013 methodology classic in Journal of Simulation on simulation V&V",
+          "contribution": "Lays out the full verification & validation workflow (conceptual / data / operational validity). My Validation page is structured after this framework: check inputs first, then compare outputs against empirical benchmarks."
+        },
+        "kleijnen1995vv": {
+          "kind": "1995 foundational V&V paper in European Journal of Operational Research",
+          "contribution": "Decomposes simulation validation into face validity, historical-data comparison, and sensitivity analysis. My sensitivity sweeps and Hirsch-baseline comparisons trace back to this layering."
+        },
+        "rubner2000emd": {
+          "kind": "2000 distance-metric paper in International Journal of Computer Vision",
+          "contribution": "Earth Mover's Distance (EMD) gives a principled way to measure how close two distributions are. The Validation page compares NekoServe's ethogram against Hirsch's 9-state distribution with this metric."
+        },
+        "agresti2013cda": {
+          "kind": "2013 Wiley textbook on categorical data analysis",
+          "contribution": "Provides the inference toolkit for ethogram-style categorical distributions: chi-square tests, proportion CIs, and multinomial comparisons. All goodness-of-fit tests on the Validation page follow this playbook."
+        },
+        "wilson1927ci": {
+          "kind": "1927 JASA paper introducing the Wilson score interval",
+          "contribution": "Wilson's score interval is a small-sample-robust way to bound a proportion p, better than the normal approximation. I use it for error bars on balking rates, reneging rates, and other percentage metrics."
         }
       }
+    },
+    "radial": {
+      "ariaLabel": "Parameter-source radial map: NekoServe's 15 cited parameters grouped by source paper",
+      "hoverHint": "Hover a paper node to highlight every parameter it backs; click a parameter chip to see its default value and source note.",
+      "paramCount": "{{count}} params",
+      "sourceLabel": "Source",
+      "paramsListLabel": "Parameters it backs"
+    },
+    "benchmark": {
+      "title": "Hirsch 2025 · 9-state ethogram validation benchmark",
+      "method": "{{hours}} observation hours · {{cats}} cats · {{scans}} scan samples",
+      "ariaLabel": "9-state ethogram benchmark bar chart with Wilson 95% confidence intervals",
+      "hoverHint": "Hover any row for exact proportion, sample count, and 95% CI; click to pin a full description of that state.",
+      "ci95": "95% CI",
+      "meaningLabel": "What this state is",
+      "nekoUseLabel": "How NekoServe uses it",
+      "sourcePrefix": "Source:",
+      "nudge": "↓ details",
+      "formulaLabel": "The formula behind it",
+      "formulaIntro": "The black whisker in the chart is a Wilson CI. Compared to the normal-approximation interval, Wilson stays well-behaved when p is near 0 or 1 and when n is small, which is why even a 0.3% PLAYING slice still gets reasonable bounds. The formula comes from the Wilson CI methodology paper.",
+      "formulaParts": {
+        "pWilson": {
+          "label": "Wilson-corrected proportion",
+          "desc": "Nudges the raw p̂ toward 0.5 before forming the interval, so the CI does not blow up when p is near 0 or 1. The center of the whisker in the chart is this value, not p̂ itself.",
+          "unit": "proportion (0–1)",
+          "example": "For HIDDEN, p̂ = 10.7% and the Wilson-corrected center is ~10.8%, CI = [10.1%, 11.3%]."
+        },
+        "pHat": {
+          "label": "Sample proportion",
+          "desc": "The raw empirical fraction: count of that state divided by total scans. This is the number Hirsch reports directly in Figure 3.",
+          "unit": "proportion (0–1)",
+          "example": "Here p̂ = 12.8% means SOCIALIZING occurred 1,601 times out of 12,505 scans."
+        },
+        "n": {
+          "label": "Total samples",
+          "desc": "Sample size across the ethogram dataset. Larger n shrinks the Wilson CI; for small n the Wilson interval is much more robust than the normal approximation.",
+          "unit": "scans",
+          "example": "Hirsch's 227 observation hours accumulate n = 12,505 scans."
+        },
+        "z": {
+          "label": "Standard normal quantile",
+          "desc": "Controls the confidence level. 90% / 95% / 99% use different z; higher confidence = larger z = wider interval.",
+          "unit": "std. dev. units",
+          "example": "z ≈ 1.96 for 95%, z ≈ 2.58 for 99%."
+        },
+        "shrinkage": {
+          "label": "Wilson shrinkage term",
+          "desc": "The correction that pulls the estimate toward 0.5. As n grows this term vanishes and Wilson collapses back to the normal approximation; when n is small it rescues edge proportions from exploding.",
+          "unit": "proportion offset",
+          "example": "For PLAYING (p̂ = 0.3%, n = 12,505) the shrinkage is ~0.00015 — invisible. With n = 50 it would pull 0.3% up to ~2.1%."
+        },
+        "halfWidth": {
+          "label": "Interval half-width",
+          "desc": "The ± portion is the Wilson half-width — the uncertainty bound. The whisker ticks in the chart sit at center ± this value.",
+          "unit": "proportion",
+          "example": "For OUT_OF_LOUNGE (p̂ = 31.6%, n = 12,505), the half-width is ~±0.8pp, so the whisker is short."
+        }
+      },
+      "state": {
+        "OUT_OF_LOUNGE": "Out of lounge",
+        "RESTING": "Resting",
+        "SOCIALIZING": "Socializing",
+        "HIDDEN": "Hidden",
+        "ALERT": "Alert",
+        "GROOMING": "Grooming",
+        "MOVING": "Moving",
+        "EXPLORING": "Exploring",
+        "PLAYING": "Playing"
+      },
+      "description": {
+        "OUT_OF_LOUNGE": "The cat is not in the observable lounge — typically retreated to staff space or a cat-only room. Hirsch breaks this out to stress that cats retain an exit option.",
+        "RESTING": "In the lounge but relaxed, still, low-arousal (lying, curled, light sleep). The most common cat state inside cat cafés.",
+        "SOCIALIZING": "Close-range interaction with a human or another cat: contact, sniffing, being petted, co-sleeping.",
+        "HIDDEN": "Tucked under furniture, inside boxes, or in high corners. Different from OUT_OF_LOUNGE — the cat is still in-space but out of sight.",
+        "ALERT": "Awake and sitting/standing, watching a direction, not moving or interacting. A neutral vigilant state.",
+        "GROOMING": "Licking or tidying fur. Short, steady, a welfare indicator of comfort.",
+        "MOVING": "Walking, jumping, relocating. The scan caught the cat mid-motion.",
+        "EXPLORING": "Investigating novel objects or toys. More active than MOVING — directed curiosity.",
+        "PLAYING": "Pouncing, batting, chasing with clear play intent. Hirsch measured this at only 0.3%, the lowest of all states."
+      },
+      "nekoUse": {
+        "OUT_OF_LOUNGE": "Cats can leave the viewable area (off-duty). In playback, that ~31.6% naturally drops off-screen.",
+        "RESTING": "The cat FSM sets RESTING as the highest-weight idle state, calibrated to the 31.7% benchmark.",
+        "SOCIALIZING": "Drives customer–cat interaction events; catInteractionTime sampling lands SOCIALIZING near 12.8%.",
+        "HIDDEN": "Hidden removes the cat from the interaction pool — maps to the welfare-stress signal described in Ropski 2023.",
+        "ALERT": "Alert cats don't initiate customer approaches; in-sim it acts as a gating precondition for SOCIALIZING.",
+        "GROOMING": "Counts as a positive-weight term in CatWelfareScore (comfort sub-indicator).",
+        "MOVING": "Drives the cat-walking animation frames during playback.",
+        "EXPLORING": "Boosting exploration visibility raises CatWelfareScore, aligned with Hirsch's environmental-enrichment discussion.",
+        "PLAYING": "The 'most ideal' welfare indicator; scenario comparisons surface how PLAYING share shifts under different conditions."
+      },
+      "chipEMD": "EMD · Rubner 2000",
+      "chipWilson": "Wilson CI · Wilson 1927",
+      "chipChi2": "χ² · Agresti 2013",
+      "chipSource": "Data · {{short}}"
     },
     "nav": {
       "title": "Chapters",

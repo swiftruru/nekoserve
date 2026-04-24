@@ -195,6 +195,44 @@
   "observed": "模擬",
   "warnings": "其他警示",
   "downloadJson": "📥 下載驗證報告（JSON）",
+  "printButton": "列印驗證報告",
+  "runContext": {
+    "title": "這次驗證對象",
+    "scenario": "情境",
+    "seed": "隨機種子",
+    "duration": "模擬時長",
+    "durationMinutes": "{{main}} 分鐘",
+    "durationWithWarmUp": "{{main}} 分鐘（+ 暖機 {{warmUp}} 分）",
+    "effectiveSample": "有效樣本",
+    "effectiveSampleValue": "{{catCount}} 隻貓 × {{duration}} 分＝{{total}} 貓·分",
+    "ranAt": "驗證執行時間",
+    "customScenario": "自訂（未選預設情境）"
+  },
+  "narrative": {
+    "heading": "綜合結論",
+    "ariaLabel": "驗證結論敘事",
+    "dim": {
+      "chiSquare": "卡方適合度",
+      "ksGap": "KS 累積分布差距",
+      "klDivergence": "KL 相對熵"
+    },
+    "pass": {
+      "lead": "合成分數 {{total}} / 100，達到 Hirsch 2025 的九類行為分布對齊門檻；χ² = {{chi}}、KS D = {{ks}}、KL = {{kl}} nats。",
+      "weakest": "三個子指標中，{{dim}} 分數最低（{{score}}），但仍落在可接受區間。",
+      "suggestionFallback": "沒有單一類別的偏差超過顯著門檻，整體分布形狀與論文樣本一致。"
+    },
+    "marginal": {
+      "lead": "合成分數 {{total}} / 100，方向對了但還沒達到通過門檻 80；χ² = {{chi}}、KS D = {{ks}}、KL = {{kl}} nats。",
+      "weakest": "三個子指標中，{{dim}} 分數最低（{{score}}），是拖累合成分數的主因。",
+      "suggestionFallback": "沒有某一類偏差非常顯著，比較像是整體分布都差一點；可先從加大有效樣本（拉長模擬時間或提高貓數）開始。"
+    },
+    "fail": {
+      "lead": "合成分數 {{total}} / 100，分布形狀與 Hirsch 2025 明顯不一致；χ² = {{chi}}、KS D = {{ks}}、KL = {{kl}} nats。",
+      "weakest": "三個子指標中，{{dim}} 分數最低（{{score}}），是結構性偏差的主要訊號。",
+      "suggestionFallback": "偏差是散在多類上而不是單一類，建議先回頭檢查情境是否真的貼近論文設定（27 隻貓、大型咖啡廳、12 小時含暖機）。"
+    },
+    "suggestionWithCategory": "最偏離的類別是 {{category}}（差 {{delta}} 個百分點）。{{advice}}"
+  },
   "suggestionHint": "建議調整方向：",
   "goToSettings": "→ 去模擬設定調整",
   "fitNoteTitle": "這個分數怎麼來的",
@@ -342,7 +380,21 @@
     "inCIYes": "模擬值落在 95% CI 內",
     "inCINo": "模擬值在 95% CI 外（⚠ 偏離實證）",
     "paperStatsTitle": "論文原本就使用的統計檢定",
-    "paperStatsIntro": "Hirsch 2025 自己就對這些分布做了 χ² goodness-of-fit 檢定。我們的驗證方法跟論文同源，不是我們自己新發明的。"
+    "paperStatsIntro": "Hirsch 2025 自己就對這些分布做了 χ² goodness-of-fit 檢定。我們的驗證方法跟論文同源，不是我們自己新發明的。",
+    "gloss": {
+      "OUT_OF_LOUNGE": { "zh": "離開顧客區（回到員工/貓咪專屬空間）", "en": "Cat is outside the customer lounge (back-of-house or cat-only zone)" },
+      "RESTING": { "zh": "休息、趴臥或睡覺，對外界刺激反應低", "en": "Resting, lying down, or sleeping; low responsiveness" },
+      "SOCIALIZING": { "zh": "主動與顧客或其他貓互動、接觸", "en": "Actively interacting or making contact with people or other cats" },
+      "HIDDEN": { "zh": "躲在顧客看不到的隱蔽處（床底、箱內等）", "en": "Hidden out of customer sight (under furniture, inside boxes, etc.)" },
+      "ALERT": { "zh": "警覺觀察環境，未進入互動或休息", "en": "Alert and scanning the environment, neither interacting nor resting" },
+      "GROOMING": { "zh": "理毛、清潔自己或同伴", "en": "Grooming itself or a cat-mate" },
+      "MOVING": { "zh": "在空間裡走動、穿梭，沒有特定目的地", "en": "Walking or moving through the space without a clear destination" },
+      "EXPLORING": { "zh": "嗅聞、觀察物件或環境細節", "en": "Sniffing or investigating objects and surroundings" },
+      "PLAYING": { "zh": "追逐、撲抓玩具或同伴的玩耍行為", "en": "Chasing, pouncing, or playing with toys or other cats" },
+      "FLOOR": { "zh": "位於地面層（0 m）", "en": "On the floor level (0 m)" },
+      "FURNITURE": { "zh": "位於家具高度（椅子、桌面等中層）", "en": "On furniture height (chairs, tables; mid-level)" },
+      "SHELF": { "zh": "位於貓跳台、層板等高處", "en": "On shelves or cat trees; the elevated level" }
+    }
   },
   "suggest": {
     "behavior": {

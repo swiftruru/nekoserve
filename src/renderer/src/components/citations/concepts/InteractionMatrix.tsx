@@ -14,11 +14,11 @@ import ScriptedAnim from '../ScriptedAnim'
  */
 
 const VB_W = 360
-const VB_H = 220
+const VB_H = 280
 const CELL_W = 52
 const CELL_H = 34
 const MATRIX_X = 110
-const MATRIX_Y = 60
+const MATRIX_Y = 80
 
 type CustomerType = 'woman' | 'man' | 'girl' | 'boy'
 type Mode = 'no_interaction' | 'no_attention' | 'non_contact' | 'contact'
@@ -74,11 +74,12 @@ function Frame({
         顧客類別 × 互動方式 (Hirsch Fig 6)
       </text>
 
-      {/* Column headers */}
+      {/* Column headers. Lifted above the cells so the label text does
+          not touch the top row (cells start at MATRIX_Y). */}
       {MODE_COLS.map((m, i) => (
-        <g key={m.key} transform={`translate(${MATRIX_X + i * CELL_W + CELL_W / 2}, ${MATRIX_Y - 8})`}>
+        <g key={m.key} transform={`translate(${MATRIX_X + i * CELL_W + CELL_W / 2}, ${MATRIX_Y - 24})`}>
           <text textAnchor="middle" fontSize="11">{m.emoji}</text>
-          <text textAnchor="middle" fontSize="8" fill="#7c2d12" y="10">{m.label}</text>
+          <text textAnchor="middle" fontSize="8" fill="#7c2d12" y="12">{m.label}</text>
         </g>
       ))}
 
@@ -138,8 +139,9 @@ function Frame({
         x={VB_W / 2}
         y={VB_H - 8}
         textAnchor="middle"
-        fontSize="10"
-        fill="#6b7280"
+        fontSize="13"
+        fontWeight="500"
+        fill="#4b5563"
         fontStyle="italic"
       >
         {caption}

@@ -322,40 +322,55 @@ export default function EventLogTable({
         </div>
 
         {/* Time range filter */}
-        <div className="mt-3 flex items-center gap-2 text-xs">
-          <span className="text-gray-400 dark:text-bark-400">
-            {t('eventLog:column.time')}:
-          </span>
-          <span className="text-gray-400 dark:text-bark-400">{t('eventLog:timeRange.from')}</span>
-          <input
-            type="number"
-            value={timeFrom}
-            onChange={(e) => setTimeFrom(e.target.value)}
-            placeholder={timeRange.min.toFixed(1)}
-            step="0.1"
-            className="w-20 px-1.5 py-1 text-xs rounded border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-700 text-gray-700 dark:text-bark-200 tabular-nums"
-            data-selectable
-          />
-          <span className="text-gray-400 dark:text-bark-400">{t('eventLog:timeRange.to')}</span>
-          <input
-            type="number"
-            value={timeTo}
-            onChange={(e) => setTimeTo(e.target.value)}
-            placeholder={timeRange.max.toFixed(1)}
-            step="0.1"
-            className="w-20 px-1.5 py-1 text-xs rounded border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-700 text-gray-700 dark:text-bark-200 tabular-nums"
-            data-selectable
-          />
-          <span className="text-gray-300 dark:text-bark-500">{t('eventLog:timeRange.unit')}</span>
-          {(timeFrom !== '' || timeTo !== '') && (
-            <button
-              type="button"
-              onClick={() => { setTimeFrom(''); setTimeTo('') }}
-              className="text-gray-400 hover:text-orange-500 transition-colors"
-            >
-              {t('eventLog:timeRange.reset')}
-            </button>
-          )}
+        <div className="mt-3 flex items-center gap-2 text-xs flex-wrap">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50/60 dark:bg-bark-700/60 ring-1 ring-inset ring-orange-100 dark:ring-bark-600">
+            <span className="text-sm leading-none" aria-hidden="true">⏱</span>
+            <span className="text-gray-500 dark:text-bark-300 font-medium">
+              {t('eventLog:column.time')}
+            </span>
+            <div className="relative">
+              <input
+                type="number"
+                value={timeFrom}
+                onChange={(e) => setTimeFrom(e.target.value)}
+                placeholder={timeRange.min.toFixed(1)}
+                step="0.1"
+                aria-label={t('eventLog:timeRange.from')}
+                className="w-20 pl-2 pr-7 py-1 text-xs rounded-md border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-800 text-gray-700 dark:text-bark-200 tabular-nums focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-500/40 focus:border-orange-300"
+                data-selectable
+              />
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 dark:text-bark-400">
+                {t('eventLog:timeRange.unit')}
+              </span>
+            </div>
+            <span className="text-gray-400 dark:text-bark-400 select-none" aria-hidden="true">→</span>
+            <div className="relative">
+              <input
+                type="number"
+                value={timeTo}
+                onChange={(e) => setTimeTo(e.target.value)}
+                placeholder={timeRange.max.toFixed(1)}
+                step="0.1"
+                aria-label={t('eventLog:timeRange.to')}
+                className="w-20 pl-2 pr-7 py-1 text-xs rounded-md border border-orange-200 dark:border-bark-500 bg-white dark:bg-bark-800 text-gray-700 dark:text-bark-200 tabular-nums focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-500/40 focus:border-orange-300"
+                data-selectable
+              />
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 dark:text-bark-400">
+                {t('eventLog:timeRange.unit')}
+              </span>
+            </div>
+            {(timeFrom !== '' || timeTo !== '') && (
+              <button
+                type="button"
+                onClick={() => { setTimeFrom(''); setTimeTo('') }}
+                className="ml-0.5 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-orange-400 transition-colors leading-none"
+                title={t('eventLog:timeRange.reset')}
+                aria-label={t('eventLog:timeRange.reset')}
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Screen reader announcement */}

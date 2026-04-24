@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   CITATIONS,
@@ -8,6 +8,8 @@ import {
 import { PARAMETER_META } from '../data/parameterMeta'
 import CitationCard from '../components/citations/CitationCard'
 import CitationLandscapeMap from '../components/citations/CitationLandscapeMap'
+import CitationParameterRadial from '../components/citations/CitationParameterRadial'
+import CitationBenchmarkBars from '../components/citations/CitationBenchmarkBars'
 import StoryChapter from '../components/citations/StoryChapter'
 import StoryNav, { type StoryNavItem } from '../components/citations/StoryNav'
 import {
@@ -78,6 +80,12 @@ export default function CitationsPage({ onNavigate }: CitationsPageProps = {}) {
   const { t } = useTranslation('citations')
 
   const citations = useMemo(() => Object.values(CITATIONS), [])
+  const methodologyCount = useMemo(
+    () => citations.filter((c) => c.role?.startsWith('methodology')).length,
+    [citations],
+  )
+  const storyCount = citations.length - methodologyCount
+  const [landscapeTab, setLandscapeTab] = useState<'story' | 'methodology' | 'params' | 'benchmark'>('story')
 
   const paramsByCitation = useMemo(() => {
     const map: Record<string, string[]> = {}
@@ -163,13 +171,56 @@ export default function CitationsPage({ onNavigate }: CitationsPageProps = {}) {
               <p className="mt-3 text-sm text-gray-700 dark:text-bark-200 leading-relaxed">
                 {t('story.hero.lede')}
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <StatPill text={t('story.stats.citations', { count: citations.length })} />
-                <StatPill text={t('story.stats.parameters', { count: citedParamCount })} />
-                <StatPill text={t('story.stats.validationTargets', { count: 1 })} />
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <div
+                  role="tablist"
+                  aria-label={t('story.stats.tablistLabel')}
+                  className="flex flex-wrap gap-2"
+                >
+                  <LandscapeTab
+                    id="landscape-tab-story"
+                    panelId="landscape-panel"
+                    active={landscapeTab === 'story'}
+                    onClick={() => setLandscapeTab('story')}
+                    text={t('story.stats.storyCitations', { count: storyCount })}
+                  />
+                  <LandscapeTab
+                    id="landscape-tab-methodology"
+                    panelId="landscape-panel"
+                    active={landscapeTab === 'methodology'}
+                    onClick={() => setLandscapeTab('methodology')}
+                    text={t('story.stats.methodologyCitations', { count: methodologyCount })}
+                  />
+                  <LandscapeTab
+                    id="landscape-tab-params"
+                    panelId="landscape-panel"
+                    active={landscapeTab === 'params'}
+                    onClick={() => setLandscapeTab('params')}
+                    text={t('story.stats.parameters', { count: citedParamCount })}
+                  />
+                  <LandscapeTab
+                    id="landscape-tab-benchmark"
+                    panelId="landscape-panel"
+                    active={landscapeTab === 'benchmark'}
+                    onClick={() => setLandscapeTab('benchmark')}
+                    text={t('story.stats.validationTargets', { count: 1 })}
+                  />
+                </div>
               </div>
             </div>
-            <CitationLandscapeMap />
+            <div
+              id="landscape-panel"
+              role="tabpanel"
+              aria-labelledby={`landscape-tab-${landscapeTab}`}
+            >
+              {(landscapeTab === 'story' || landscapeTab === 'methodology') && (
+                <CitationLandscapeMap variant={landscapeTab} />
+              )}
+              {landscapeTab === 'params' && <CitationParameterRadial />}
+              {landscapeTab === 'benchmark' && (
+                <CitationBenchmarkBars onJumpToMethodology={() => setLandscapeTab('methodology')} />
+              )}
+            </div>
           </section>
 
           {/* Chapter 1a — Little's Law.
@@ -377,6 +428,39 @@ function StatPill({ text }: { text: string }) {
     <span className="rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-3 py-1 font-semibold">
       {text}
     </span>
+  )
+}
+
+function LandscapeTab({
+  id,
+  panelId,
+  active,
+  onClick,
+  text,
+}: {
+  id: string
+  panelId: string
+  active: boolean
+  onClick: () => void
+  text: string
+}) {
+  return (
+    <button
+      id={id}
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-controls={panelId}
+      onClick={onClick}
+      className={
+        'rounded-full px-3 py-1 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ' +
+        (active
+          ? 'bg-orange-500 text-white ring-2 ring-orange-600 dark:bg-orange-500 dark:text-white'
+          : 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:hover:bg-orange-900/60')
+      }
+    >
+      {text}
+    </button>
   )
 }
 

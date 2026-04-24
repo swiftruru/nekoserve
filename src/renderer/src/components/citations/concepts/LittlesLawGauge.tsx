@@ -99,8 +99,9 @@ function Frame({ lambda, w, l, hint }: {
         x={VB_W / 2}
         y={190}
         textAnchor="middle"
-        fontSize="10"
-        fill="#6b7280"
+        fontSize="13"
+        fontWeight="500"
+        fill="#4b5563"
         fontStyle="italic"
       >
         {hint}

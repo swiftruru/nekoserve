@@ -19,16 +19,22 @@ interface SimulationState {
   status: SimulationStatus
   result: SimulationResult | null
   error: SimulatorError | null
+  /** v2.2: scenario preset id active when the current result was produced.
+   *  Validation mode reads this to stamp a reproducibility header. `null`
+   *  means the user hand-edited the config before running. */
+  lastRunScenarioId: string | null
   setStatus: (status: SimulationStatus) => void
   setResult: (result: SimulationResult | null) => void
   setError: (error: SimulatorError | null) => void
+  setLastRunScenarioId: (id: string | null) => void
   reset: () => void
 }
 
-const INITIAL: Pick<SimulationState, 'status' | 'result' | 'error'> = {
+const INITIAL: Pick<SimulationState, 'status' | 'result' | 'error' | 'lastRunScenarioId'> = {
   status: 'idle',
   result: null,
   error: null,
+  lastRunScenarioId: null,
 }
 
 export const useSimulationStore = create<SimulationState>((set) => ({
@@ -36,5 +42,6 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   setStatus: (status) => set({ status }),
   setResult: (result) => set({ result }),
   setError: (error) => set({ error }),
+  setLastRunScenarioId: (id) => set({ lastRunScenarioId: id }),
   reset: () => set(INITIAL),
 }))

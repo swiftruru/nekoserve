@@ -1,19 +1,19 @@
 {
-  "weekday": {
-    "name": "Weekday daytime",
-    "description": "Relaxed pace, with long inter-arrival times and moderate load on staff and cats."
-  },
-  "holiday-rush": {
-    "name": "Holiday rush",
-    "description": "Crowded peak hours with impatient customers and heavy resource contention."
-  },
-  "cat-nap": {
-    "name": "Cat nap mode",
-    "description": "Cats frequently rest, creating an interaction-resource bottleneck for demonstration."
-  },
   "hirsch-paper": {
     "name": "Paper sample (Hirsch 2025)",
     "description": "Mirrors Hirsch et al. (2025)'s Stockholm cat café setup: 27 cats, 12 operating hours, warm-up included. Sample size large enough for the validation score to stabilise above 80."
+  },
+  "paper-weekday": {
+    "name": "Paper sample · Weekday daytime",
+    "description": "The paper baseline (27 cats, large café, 12 h with warm-up) at a relaxed weekday pace: sparser arrivals, more patient customers, and a lower cat-rest probability."
+  },
+  "paper-holiday-rush": {
+    "name": "Paper sample · Holiday rush",
+    "description": "The paper baseline under holiday crowding: dense arrivals, shorter patience, one extra staff to cope, and cats that tire more easily."
+  },
+  "paper-cat-nap": {
+    "name": "Paper sample · Cat nap mode",
+    "description": "The paper baseline with most of the 27 cats resting: higher rest probability and longer rest duration, surfacing the interaction-resource bottleneck."
   },
   "customDefaultDescription": "Custom preset"
 }

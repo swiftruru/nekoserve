@@ -82,7 +82,7 @@ function Frame({
       >
         顧客到達近似 Poisson
       </text>
-      <text x={VB_W / 2} y={46} textAnchor="middle" fontSize="9" fill="#9a3412">
+      <text x={VB_W / 2} y={48} textAnchor="middle" fontSize="12" fontWeight="500" fill="#7c2d12">
         間隔 = Exp(λ)
       </text>
 

@@ -12,7 +12,8 @@ import { CITATIONS, citationShort, citationUrl, type Citation } from '../../data
  * Pure SVG + Tailwind + React state. No external diagram library.
  */
 
-type Tier = 'classical' | 'empirical' | 'cat-cafe'
+type Tier = 'top' | 'middle' | 'bottom'
+export type LandscapeVariant = 'story' | 'methodology'
 
 interface LandscapeNode {
   key: string
@@ -21,47 +22,92 @@ interface LandscapeNode {
   y: number
 }
 
+interface LandscapeConfig {
+  nodes: LandscapeNode[]
+  tierLabelKeys: Record<Tier, string>
+  ariaLabelKey: string
+}
+
 const VB_W = 820
 const VB_H = 420
 const NODE_W = 170
 const NODE_H = 52
 
-const NODES: LandscapeNode[] = [
-  // Tier 1: classical theory (top)
-  { key: 'little1961proof',     tier: 'classical', x: 110, y: 50 },
-  { key: 'ancker1963balking1',  tier: 'classical', x: 320, y: 50 },
-  { key: 'ancker1963balking2',  tier: 'classical', x: 540, y: 50 },
-
-  // Tier 2: empirical service science (middle)
-  { key: 'hasugian2020analysis',tier: 'empirical', x: 90,  y: 170 },
-  { key: 'dbeis2024enhancing',  tier: 'empirical', x: 320, y: 170 },
-  { key: 'li2025attributes',    tier: 'empirical', x: 550, y: 170 },
-
-  // Tier 3: cat-cafe ethology + welfare (bottom)
-  { key: 'hirsch2025cats',      tier: 'cat-cafe',  x: 210, y: 290 },
-  { key: 'ropski2023analysis',  tier: 'cat-cafe',  x: 460, y: 290 },
+const STORY_NODES: LandscapeNode[] = [
+  { key: 'little1961proof',     tier: 'top',    x: 110, y: 50 },
+  { key: 'ancker1963balking1',  tier: 'top',    x: 320, y: 50 },
+  { key: 'ancker1963balking2',  tier: 'top',    x: 540, y: 50 },
+  { key: 'hasugian2020analysis',tier: 'middle', x: 90,  y: 170 },
+  { key: 'dbeis2024enhancing',  tier: 'middle', x: 320, y: 170 },
+  { key: 'li2025attributes',    tier: 'middle', x: 550, y: 170 },
+  { key: 'hirsch2025cats',      tier: 'bottom', x: 210, y: 290 },
+  { key: 'ropski2023analysis',  tier: 'bottom', x: 460, y: 290 },
 ]
 
+const METHODOLOGY_NODES: LandscapeNode[] = [
+  { key: 'sargent2013vv',  tier: 'top',    x: 210, y: 50 },
+  { key: 'kleijnen1995vv', tier: 'top',    x: 460, y: 50 },
+  { key: 'rubner2000emd',  tier: 'middle', x: 320, y: 170 },
+  { key: 'agresti2013cda', tier: 'bottom', x: 210, y: 290 },
+  { key: 'wilson1927ci',   tier: 'bottom', x: 460, y: 290 },
+]
+
+const CONFIGS: Record<LandscapeVariant, LandscapeConfig> = {
+  story: {
+    nodes: STORY_NODES,
+    tierLabelKeys: {
+      top: 'story.landscape.tierClassical',
+      middle: 'story.landscape.tierEmpirical',
+      bottom: 'story.landscape.tierCatCafe',
+    },
+    ariaLabelKey: 'story.landscape.ariaLabel',
+  },
+  methodology: {
+    nodes: METHODOLOGY_NODES,
+    tierLabelKeys: {
+      top: 'story.landscape.tierMethodologyVV',
+      middle: 'story.landscape.tierMethodologyDistance',
+      bottom: 'story.landscape.tierMethodologyStats',
+    },
+    ariaLabelKey: 'story.landscape.ariaLabelMethodology',
+  },
+}
+
 const TIER_FILL: Record<Tier, string> = {
-  classical: '#e0e7ff',  // indigo-100
-  empirical: '#fef3c7',  // amber-100
-  'cat-cafe': '#fce7f3', // pink-100
+  top:    '#e0e7ff',
+  middle: '#fef3c7',
+  bottom: '#fce7f3',
 }
 const TIER_STROKE: Record<Tier, string> = {
-  classical: '#6366f1',  // indigo-500
-  empirical: '#f59e0b',  // amber-500
-  'cat-cafe': '#ec4899', // pink-500
+  top:    '#6366f1',
+  middle: '#f59e0b',
+  bottom: '#ec4899',
 }
 
 const CAPSTONE = { x: 310, y: 360, w: 200, h: 40 }
 
-export default function CitationLandscapeMap() {
+export default function CitationLandscapeMap({
+  variant = 'story',
+}: {
+  variant?: LandscapeVariant
+}) {
   const { t } = useTranslation('citations')
   const [hovered, setHovered] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+
+  const config = CONFIGS[variant]
+  const nodes = config.nodes
+
+  // Reset transient UI state when switching variants so a popover or
+  // hover tied to the previous set of nodes doesn't linger.
+  useEffect(() => {
+    setHovered(null)
+    setSelected(null)
+  }, [variant])
+
   const hoveredTier: Tier | null = hovered
-    ? (NODES.find((n) => n.key === hovered)?.tier ?? null)
+    ? (nodes.find((n) => n.key === hovered)?.tier ?? null)
     : null
 
   // Close the popover when clicking outside the landscape wrapper or
@@ -83,7 +129,7 @@ export default function CitationLandscapeMap() {
     }
   }, [selected])
 
-  const selectedNode = selected ? NODES.find((n) => n.key === selected) ?? null : null
+  const selectedNode = selected ? nodes.find((n) => n.key === selected) ?? null : null
   const selectedCitation = selected ? CITATIONS[selected] : null
 
   return (
@@ -95,15 +141,15 @@ export default function CitationLandscapeMap() {
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         className="w-full h-auto"
         role="img"
-        aria-label={t('story.landscape.ariaLabel')}
+        aria-label={t(config.ariaLabelKey)}
       >
         {/* Tier labels on the left */}
-        <TierLabel y={76}  text={t('story.landscape.tierClassical')} color={TIER_STROKE.classical} />
-        <TierLabel y={196} text={t('story.landscape.tierEmpirical')} color={TIER_STROKE.empirical} />
-        <TierLabel y={316} text={t('story.landscape.tierCatCafe')}  color={TIER_STROKE['cat-cafe']} />
+        <TierLabel y={76}  text={t(config.tierLabelKeys.top)}    color={TIER_STROKE.top} />
+        <TierLabel y={196} text={t(config.tierLabelKeys.middle)} color={TIER_STROKE.middle} />
+        <TierLabel y={316} text={t(config.tierLabelKeys.bottom)} color={TIER_STROKE.bottom} />
 
         {/* Dashed down-arrows connecting each node to the capstone. */}
-        {NODES.map((n) => {
+        {nodes.map((n) => {
           const dim =
             hovered !== null && n.tier !== hoveredTier && n.key !== hovered
           return (
@@ -124,7 +170,7 @@ export default function CitationLandscapeMap() {
         })}
 
         {/* Citation nodes */}
-        {NODES.map((n, i) => {
+        {nodes.map((n, i) => {
           const c = CITATIONS[n.key]
           if (!c) return null
           const dim =
@@ -244,7 +290,7 @@ function NodePopover({
   // in the bottom tier we flip the panel above to avoid overflowing.
   const anchorXPct = ((node.x + NODE_W / 2) / VB_W) * 100
   const anchorYPct = ((node.y + NODE_H) / VB_H) * 100
-  const flipAbove = node.tier === 'cat-cafe'
+  const flipAbove = node.tier === 'bottom'
 
   const kind = t(`story.landscape.details.${node.key}.kind`)
   const contribution = t(`story.landscape.details.${node.key}.contribution`)
@@ -347,6 +393,11 @@ function shortTitle(c: Citation): string {
     case 'li2025attributes':     return 'Pet-café satisfaction'
     case 'hirsch2025cats':       return 'Cat-café ethogram'
     case 'ropski2023analysis':   return 'Cat welfare & stay'
+    case 'sargent2013vv':        return 'V&V of simulation models'
+    case 'kleijnen1995vv':       return 'V&V framework'
+    case 'rubner2000emd':        return "Earth Mover's Distance"
+    case 'agresti2013cda':       return 'Categorical data analysis'
+    case 'wilson1927ci':         return 'Wilson confidence interval'
     default:                     return c.key
   }
 }

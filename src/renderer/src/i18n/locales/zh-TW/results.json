@@ -65,16 +65,16 @@
     },
     "advice": {
       "seat": {
-        "friendly": "擴充座位數（+seatCount）才能讓更多人坐下。加店員沒用，因為顧客根本還沒坐下就先卡住了。",
-        "expert": "應增加 `seatCount`。擴充店員或貓咪皆無效，因為顧客根本還未進入服務階段 — 限制是座位容量，不是服務速度。"
+        "friendly": "擴充「座位數（seatCount）」才能讓更多人坐下。加店員沒用，因為顧客根本還沒坐下就先卡住了。",
+        "expert": "應增加「座位數（seatCount）」。擴充店員或貓咪皆無效，因為顧客根本還未進入服務階段，限制是座位容量，不是服務速度。"
       },
       "staff": {
-        "friendly": "擴充店員（+staffCount）才能加快點餐與出餐。加座位反而只會讓隊伍看起來更長，因為塞進來的人也服務不到。",
-        "expert": "應增加 `staffCount`。擴充座位只會拉長等餐隊伍（Little's Law：waitingFood 階段 L 變大）。店員吞吐量才是真正的 binding constraint。"
+        "friendly": "擴充「店員數（staffCount）」才能加快點餐與出餐。加座位反而只會讓隊伍看起來更長，因為塞進來的人也服務不到。",
+        "expert": "應增加「店員數（staffCount）」。擴充座位只會拉長等餐隊伍（Little's Law：waitingFood 階段 L 變大）。店員吞吐量才是真正的 binding constraint。"
       },
       "cat": {
-        "friendly": "貓咪利用率滿了代表貓已經忙不過來了。加貓（+catCount）才能提升拜訪率，讓更多顧客摸到貓。",
-        "expert": "應增加 `catCount`。貓的可用性是 `catInteractionRate` 的限制因子；調整 interactionTime / idleInterval 只能平移速率曲線，無法提高上限。"
+        "friendly": "貓咪利用率滿了代表貓已經忙不過來了。增加「貓咪數（catCount）」才能提升拜訪率，讓更多顧客摸到貓。",
+        "expert": "應增加「貓咪數（catCount）」。貓的可用性是 catInteractionRate 的限制因子；調整 catInteractionTime / catIdleInterval 只能平移速率曲線，無法提高上限。"
       }
     }
   },
@@ -416,7 +416,11 @@
     "compareSelected": "對比 ({{count}})",
     "configBrief": "{{seats}} 座 · {{staff}} 員 · {{cats}} 貓 · seed {{seed}}",
     "abandonRateBrief": "放棄 {{rate}}%",
-    "servedBrief": "服務 {{count}} 人"
+    "servedBrief": "服務 {{count}} 人",
+    "capHint": "歷史紀錄最多保留 20 筆，最新一筆跑完會擠掉最舊的未釘選紀錄。想保住某一筆，按 📍 把它釘起來。",
+    "pin": "釘選（避免被自動擠掉）",
+    "unpin": "取消釘選",
+    "pinnedBadge": "已釘選，不會被自動擠掉"
   },
   "comparison": {
     "title": "對比檢視",

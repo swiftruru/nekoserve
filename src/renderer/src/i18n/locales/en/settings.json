@@ -8,7 +8,7 @@
   },
   "academicDisclaimer": {
     "title": "📘 A note about these numbers",
-    "body": "I set every default on this page from common sense and casual observation of small cafés, not by measuring any real store. Expanding \"Design rationale\" in each section shows how I estimated the number, which distribution it uses, and the literature that backs the distribution choice. The sidebar card \"A note about these numbers\" lays out the full methodology stance."
+    "body": "All presets build on Hirsch et al. (2025)'s Stockholm sample (27 cats, large café, 12 hours with warm-up). The four presets correspond to the paper baseline, weekday, holiday, and cat-nap variants; they differ only along the load dials (customer arrival density, customer patience, cat rest behaviour). Expanding \"Design rationale\" in each section shows how I estimated the number, which distribution it uses, and the literature that backs the distribution choice. The sidebar card \"A note about these numbers\" lays out the full methodology stance."
   },
   "rationaleSection": {
     "toggle": "📘 Design rationale (click to expand)",

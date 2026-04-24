@@ -12,12 +12,15 @@ import ScriptedAnim from '../ScriptedAnim'
  */
 
 const VB_W = 320
-const VB_H = 200
+const VB_H = 228
 const BAR_Y = 80
 const BAR_H = 80
 const BAR_W = 32
 const BAR_GAP = 20
 const BARS_START_X = 50
+const LABEL_Y_OFFSET = 14
+const VALUE_Y_OFFSET = 28
+const CAPTION_Y = VB_H - 8
 
 interface Bar {
   key: string
@@ -45,10 +48,11 @@ function Frame({ bars, faceEmoji, caption }: {
       </text>
       <text
         x={VB_W / 2}
-        y={42}
+        y={44}
         textAnchor="middle"
-        fontSize="9"
-        fill="#9a3412"
+        fontSize="12"
+        fontWeight="500"
+        fill="#7c2d12"
       >
         環境 / 價格 / 服務 加權得滿意度
       </text>
@@ -85,7 +89,7 @@ function Frame({ bars, faceEmoji, caption }: {
             />
             <text
               x={x + BAR_W / 2}
-              y={BAR_Y + BAR_H + 14}
+              y={BAR_Y + BAR_H + LABEL_Y_OFFSET}
               textAnchor="middle"
               fontSize="9"
               fill="#7c2d12"
@@ -95,7 +99,7 @@ function Frame({ bars, faceEmoji, caption }: {
             </text>
             <text
               x={x + BAR_W / 2}
-              y={BAR_Y + BAR_H + 26}
+              y={BAR_Y + BAR_H + VALUE_Y_OFFSET}
               textAnchor="middle"
               fontSize="9"
               fill="#9a3412"
@@ -117,10 +121,11 @@ function Frame({ bars, faceEmoji, caption }: {
 
       <text
         x={VB_W / 2}
-        y={VB_H - 8}
+        y={CAPTION_Y}
         textAnchor="middle"
-        fontSize="10"
-        fill="#6b7280"
+        fontSize="13"
+        fontWeight="500"
+        fill="#4b5563"
         fontStyle="italic"
       >
         {caption}

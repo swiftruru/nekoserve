@@ -144,10 +144,26 @@ export default function CitationPipelineFlow({ onNavigate }: Props) {
                 }
               }}
             >
+              {/* When selected, draw a roomy halo behind the whole node
+                  group (hint + circle + label + ref count) so the active
+                  state reads like a framed card rather than a tight
+                  outline that kisses the text. */}
+              {isActive && (
+                <rect
+                  x={-NODE_R - 18}
+                  y={-NODE_R - 22}
+                  width={(NODE_R + 18) * 2}
+                  height={NODE_R * 2 + 60}
+                  rx="12"
+                  fill="#fff7ed"
+                  stroke="#c2410c"
+                  strokeWidth="2"
+                />
+              )}
               <circle
                 r={NODE_R}
-                fill={isActive ? '#fff7ed' : '#fff7ed'}
-                stroke={isActive ? '#c2410c' : '#c2410c'}
+                fill="#fff7ed"
+                stroke="#c2410c"
                 strokeWidth={isActive ? 3 : 2}
               />
               <text textAnchor="middle" y="6" fontSize="20">
@@ -233,7 +249,7 @@ function StagePopover({
 
   return (
     <div
-      className="absolute z-20 w-[340px] max-w-[92%] rounded-xl shadow-xl ring-1 ring-orange-300 dark:ring-orange-800 bg-white dark:bg-bark-700 p-4"
+      className="absolute z-20 w-[340px] max-w-[92%] rounded-xl shadow-xl ring-1 ring-orange-300 dark:ring-orange-800 bg-white dark:bg-bark-700 px-5 py-5"
       role="dialog"
       aria-label={t(`story.pipeline.nodes.${node.id}`)}
       style={{
@@ -264,7 +280,7 @@ function StagePopover({
         {renderWithTerms(t(`story.pipeline.popover.stageSummary.${node.id}`))}
       </p>
 
-      <div className="mb-3 rounded-lg bg-cream-50 dark:bg-bark-800/70 ring-1 ring-inset ring-orange-100 dark:ring-bark-600 p-2">
+      <div className="mb-3 rounded-lg bg-cream-50 dark:bg-bark-800/70 ring-1 ring-inset ring-orange-100 dark:ring-bark-600 px-3 py-3">
         {renderStageAnimation(node.id)}
       </div>
 

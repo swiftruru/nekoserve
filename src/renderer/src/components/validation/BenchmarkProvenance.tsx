@@ -34,13 +34,17 @@ export default function BenchmarkProvenance({
   benchmark,
   observedBehavior,
   observedVertical,
+  forceOpen = false,
 }: {
   benchmark: ValidationBenchmark
   observedBehavior: Record<string, number>
   observedVertical: Record<string, number>
+  /** v2.2: when true, always render the provenance body (used by print layout). */
+  forceOpen?: boolean
 }) {
   const { t } = useTranslation('validation')
   const [open, setOpen] = useState(false)
+  const isOpen = open || forceOpen
 
   const wilsonCitation = CITATIONS.wilson1927ci
 
@@ -49,18 +53,21 @@ export default function BenchmarkProvenance({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
-        aria-expanded={open}
+        className="w-full flex items-center justify-between px-4 py-3 text-left print:hidden"
+        aria-expanded={isOpen}
       >
         <span className="text-sm font-bold text-slate-700 dark:text-bark-100">
           📜 {t('provenance.title')}
         </span>
         <span className="text-xs text-slate-500 dark:text-bark-400">
-          {open ? t('provenance.collapse') : t('provenance.expand')}
+          {isOpen ? t('provenance.collapse') : t('provenance.expand')}
         </span>
       </button>
+      <div className="hidden print:block px-4 pt-3 pb-1 text-sm font-bold text-slate-700">
+        📜 {t('provenance.title')}
+      </div>
 
-      {open && (
+      {isOpen && (
         <div className="px-4 pb-4 pt-1 text-xs text-gray-700 dark:text-bark-200 leading-relaxed space-y-4">
           <p>
             {renderWithTerms(t('provenance.intro'))}{' '}
@@ -161,7 +168,10 @@ function ProvenanceTable({
                   key={key}
                   className="border-t border-slate-100 dark:border-bark-600"
                 >
-                  <td className="px-2 py-1.5 font-mono text-gray-800 dark:text-bark-100">{key}</td>
+                  <td className="px-2 py-1.5 text-gray-800 dark:text-bark-100 align-top">
+                    <div className="font-mono">{key}</div>
+                    <CategoryGloss categoryKey={key} />
+                  </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">{(c.proportion * 100).toFixed(1)}%</td>
                   <td className="px-2 py-1.5 text-right tabular-nums text-gray-600 dark:text-bark-400">{c.n.toLocaleString()}</td>
                   <td className="px-2 py-1.5 text-right tabular-nums text-gray-600 dark:text-bark-400">
@@ -198,6 +208,32 @@ function ProvenanceTable({
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────── */
+
+function CategoryGloss({ categoryKey }: { categoryKey: string }) {
+  const { t, i18n } = useTranslation('validation')
+  const zh = t(`provenance.gloss.${categoryKey}.zh`, { defaultValue: '' })
+  const en = t(`provenance.gloss.${categoryKey}.en`, { defaultValue: '' })
+  if (!zh && !en) return null
+  const isZh = i18n.language?.startsWith('zh')
+  const primary = isZh ? zh : en
+  const secondary = isZh ? en : zh
+  return (
+    <div className="mt-0.5 leading-snug">
+      {primary && (
+        <div className="text-[10.5px] text-gray-600 dark:text-bark-300 font-normal">
+          {primary}
+        </div>
+      )}
+      {secondary && (
+        <div className="text-[10px] text-gray-400 dark:text-bark-500 italic font-normal">
+          {secondary}
+        </div>
+      )}
     </div>
   )
 }

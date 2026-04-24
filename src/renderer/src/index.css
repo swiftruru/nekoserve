@@ -942,6 +942,26 @@
     animation: neko-node-fade-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  /* Benchmark state detail card — slides up with a light glow so the
+     user notices it after clicking a row in CitationBenchmarkBars. */
+  @keyframes neko-benchmark-card-in {
+    0%   { opacity: 0; transform: translateY(8px); box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.0); }
+    50%  { box-shadow: 0 0 0 6px rgba(251, 146, 60, 0.25); }
+    100% { opacity: 1; transform: translateY(0);  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+  }
+  .neko-benchmark-card-in {
+    animation: neko-benchmark-card-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Little "see below ↓" nudge next to the selected row. */
+  @keyframes neko-benchmark-nudge {
+    0%, 100% { opacity: 0.55; transform: translateY(0); }
+    50%      { opacity: 1;    transform: translateY(2px); }
+  }
+  .neko-benchmark-nudge {
+    animation: neko-benchmark-nudge 1.4s ease-in-out infinite;
+  }
+
   /* Customer emoji dropping onto the ground (ArrivalDropper). Each
      sprite's own animation-delay + animation-duration are tuned per
      Poisson sample inline. */
@@ -1046,3 +1066,84 @@
     animation: neko-pipeline-flow 1.8s linear infinite;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * v2.2 print layout for the validation page.
+ *
+ * When the user hits "🖨️ 列印驗證報告", we force all collapsed
+ * sections open (via `forceOpen` / `printMode` props), then call
+ * window.print(). The rules below reshape the page into an
+ * academic-report feel: white background, no navigation chrome,
+ * no toasts / FABs / tooltips, and every card loses its ring /
+ * shadow so the page reads as a single continuous document.
+ * ───────────────────────────────────────────────────────────── */
+@media print {
+  @page { margin: 14mm; }
+
+  html, body {
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body {
+    color: #111 !important;
+  }
+
+  /* The app shell uses `h-screen` + `overflow-y-auto` on <main> as the
+   * scroll container. In print, that chops output at the viewport
+   * height; force every ancestor to auto-height / visible overflow so
+   * the full validation page flows across pages naturally. */
+  #root,
+  #root > div,
+  .h-screen,
+  main,
+  #main-content {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Hide shell chrome so only the validation content prints. */
+  nav,
+  [role="navigation"],
+  [data-testid="toast-container"],
+  [data-testid="global-run-indicator"],
+  [data-testid="learning-fab"],
+  [data-testid="nav-tab-settings"],
+  [data-testid="nav-tab-playback"],
+  [data-testid="nav-tab-results"],
+  [data-testid="nav-tab-eventlog"],
+  [data-testid="nav-tab-howitworks"],
+  [data-testid="nav-tab-citations"],
+  [data-testid="nav-tab-validation"],
+  [data-testid="nav-tab-about"] {
+    display: none !important;
+  }
+
+  /* Flatten card styling so print doesn't waste ink on rings / tints.
+   * NOTE: do NOT add `break-inside: avoid` to `section` — some sections
+   * (methodology, provenance) are taller than a page and the browser
+   * will either blank them out or push them to a ghost page. Let sections
+   * flow naturally and only pin smaller discrete units. */
+  .ring-1, .ring-2 { box-shadow: none !important; }
+  section, .card {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+  }
+
+  /* Keep titles glued to their content but allow content itself to split. */
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Individual formula boxes (KaTeX-rendered BlockMath blocks) should
+   * stay together if possible, but are small enough to fit on any page. */
+  .katex-display,
+  .katex {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
