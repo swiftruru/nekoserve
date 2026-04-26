@@ -27,6 +27,10 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   CAT_START_REST:               'bg-indigo-100 text-indigo-700',
   CAT_END_REST:                 'bg-indigo-100 text-indigo-600',
   CAT_STATE_CHANGE:             'bg-amber-100 text-amber-700',
+  CAT_CAT_AFFILIATIVE:          'bg-rose-100 text-rose-700',
+  CAT_CAT_AGONISTIC:            'bg-red-100 text-red-700',
+  STAFF_FEEDING:                'bg-emerald-100 text-emerald-700',
+  STAFF_LITTER_CLEANING:        'bg-teal-100 text-teal-700',
 }
 
 const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_COLORS) as EventType[]
@@ -100,6 +104,27 @@ export default function EventLogTable({
       setSortColumn(col)
       setSortDir('asc')
     }
+  }
+
+  // Customer events that fire before the customer is assigned a seat —
+  // ARRIVE / WAIT_SEAT have no seat label yet, ABANDON happens because
+  // the customer never got one. Render these as "queueing" rather than
+  // a bare dash so the table reads as story, not as missing data.
+  function isPreSeatCustomerEvent(type: EventType): boolean {
+    return (
+      type === 'CUSTOMER_ARRIVE' ||
+      type === 'CUSTOMER_WAIT_SEAT' ||
+      type === 'CUSTOMER_ABANDON'
+    )
+  }
+
+  // Staff-side or venue-routine events that have no specific resource
+  // id but are still meaningful (we don't track individual staff).
+  function isStaffOnlyEvent(type: EventType): boolean {
+    return (
+      type === 'STAFF_FEEDING' ||
+      type === 'STAFF_LITTER_CLEANING'
+    )
   }
 
   function formatResourceId(raw: string | undefined): string {
@@ -513,7 +538,13 @@ export default function EventLogTable({
                       )}
                     </td>
                     <td className="px-4 py-2 text-gray-500 dark:text-bark-300 text-xs">
-                      {e.resourceId ? formatResourceId(e.resourceId) : '-'}
+                      {e.resourceId
+                        ? formatResourceId(e.resourceId)
+                        : isPreSeatCustomerEvent(e.eventType)
+                          ? <span className="italic text-gray-400 dark:text-bark-400">{t('events:resource.preSeat')}</span>
+                          : isStaffOnlyEvent(e.eventType)
+                            ? <span className="italic text-gray-400 dark:text-bark-400">{t('events:resource.staffOnly')}</span>
+                            : '-'}
                     </td>
                     <td className="px-4 py-2 text-gray-700 dark:text-bark-100" data-selectable>
                       {description}

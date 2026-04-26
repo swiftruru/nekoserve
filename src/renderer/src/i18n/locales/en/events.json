@@ -3,7 +3,7 @@
   "CUSTOMER_WAIT_SEAT": "Customer #{{customerId}} is waiting for a seat",
   "CUSTOMER_SEATED": "Customer #{{customerId}} seated at {{resourceId}}",
   "CUSTOMER_ORDER": "Customer #{{customerId}} placed an order",
-  "ORDER_START_PREPARE": "Staff {{resourceId}} started preparing order for customer #{{customerId}}",
+  "ORDER_START_PREPARE": "Staff started preparing the order for customer #{{customerId}}",
   "ORDER_READY": "Order for customer #{{customerId}} is ready",
   "CUSTOMER_START_DINING": "Customer #{{customerId}} started dining",
   "CUSTOMER_FINISH_DINING": "Customer #{{customerId}} finished dining",
@@ -15,6 +15,10 @@
   "CAT_END_REST": "{{resourceId}} wakes up and stretches",
   "CAT_STATE_CHANGE": "{{toSentence}}",
   "CAT_STATE_CHANGE_initial": "{{toSentence}}",
+  "CAT_CAT_AFFILIATIVE": "{{resourceId}} affiliates with another cat",
+  "CAT_CAT_AGONISTIC": "{{resourceId}} clashes with another cat",
+  "STAFF_FEEDING": "Staff feeding (1 of 4 daily)",
+  "STAFF_LITTER_CLEANING": "Staff cleans the litter box (1 of 2 daily)",
   "label": {
     "CUSTOMER_ARRIVE": "Arrive",
     "CUSTOMER_WAIT_SEAT": "Wait seat",
@@ -30,11 +34,17 @@
     "CAT_LEAVE_SEAT": "Cat leave",
     "CAT_START_REST": "Cat rest",
     "CAT_END_REST": "Rest end",
-    "CAT_STATE_CHANGE": "Cat state change"
+    "CAT_STATE_CHANGE": "Cat state change",
+    "CAT_CAT_AFFILIATIVE": "Cat-cat affiliative",
+    "CAT_CAT_AGONISTIC": "Cat-cat agonistic",
+    "STAFF_FEEDING": "Staff feeding",
+    "STAFF_LITTER_CLEANING": "Litter cleaning"
   },
   "resource": {
     "cat": "Cat #{{n}}",
-    "seat": "Seat #{{n}}"
+    "seat": "Seat #{{n}}",
+    "preSeat": "queueing",
+    "staffOnly": "all staff"
   },
   "catState": {
     "OUT_OF_LOUNGE": "in the cat room",

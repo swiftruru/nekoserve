@@ -248,6 +248,10 @@
     "noCatVisitRate": {
       "tooHigh": "{{observed}}% of customers leave with no cat visit, above Hirsch's expected [{{min}}%, {{max}}%]; cat supply may be too low or interaction time too short.",
       "tooLow": "Only {{observed}}% of customers leave with no cat visit, below Hirsch's expected [{{min}}%, {{max}}%]; the simulator generates more interaction than the paper observed (high cat supply / long interaction time)."
+    },
+    "staffCount": {
+      "tooLow": "Staff count {{observed}} is below the Hirsch 2025 setup (2 weekday / 3 weekend); service bottlenecks may inflate wait times — keep this in mind when comparing to paper results.",
+      "tooHigh": "Staff count {{observed}} exceeds the Hirsch 2025 setup (2 weekday / 3 weekend); observed service speed may exceed paper conditions — keep this in mind when comparing."
     }
   },
   "smallSampleTitle": "Sample size is small; scores will swing widely",
@@ -309,6 +313,30 @@
       "caveat": "These soft-cap choices are engineering heuristics, not rigorous hypothesis tests. For strict statistical significance, consult the raw p-values (surfaced below each indicator card), not the 0-100 score.",
       "softCapLabel": "Soft-cap mapping formula",
       "softCapHint": "Converts a raw statistic (χ², KS D, KL in nats) to a 0-100 score: stat = 0 gives 100 points; stat ≥ cap gives 0; linear in between."
+    },
+    "nonHirschTitle": "Which thresholds are NOT from Hirsch 2025?",
+    "nonHirschIntro": "Our composite score uses a few thresholds that are not in the source paper. To keep the citation honest, here is the list of non-Hirsch knobs:",
+    "nonHirschItems": {
+      "abandon": {
+        "value": "abandonRate ∈ [0%, 25%]",
+        "note": "general café-industry expectation, not Hirsch (paper does not measure abandonment)"
+      },
+      "noInteraction": {
+        "value": "noInteractionRate ∈ [30%, 60%]",
+        "note": "soft envelope around the paper's 44.4%; band width is an engineering choice"
+      },
+      "softCap": {
+        "value": "KS / KL soft-cap = 0.3",
+        "note": "Sargent 2013 face-validity convention, not a significance threshold"
+      },
+      "weights": {
+        "value": "composite weights 40% χ² + 30% KS + 30% KL",
+        "note": "blend of recommendations from Sargent / Kleijnen / Rubner V&V literature"
+      },
+      "gap": {
+        "value": "Significant gap = 6 percentage points",
+        "note": "heuristic for highlighting per-category mismatches; paper gives no explicit threshold"
+      }
     }
   },
   "breakdown": {
@@ -370,6 +398,7 @@
     "wilsonFormulaHint": "p̂ is the sample proportion, n the sample size, z = 1.96 for a 95% CI. This expression stays well-behaved even when p̂ is near 0 or 1 or n is small — unlike Wald, which collapses to zero width.",
     "wilsonFormulaLong": "The Wald interval p̂ ± 1.96·√(p̂(1−p̂)/n) is simple but fails when p approaches 0 or 1 (width goes to zero). Wilson (1927) derived this score-test-based correction: add a z²/(2n) bias term, divide by a shrinkage factor (1 + z²/n). Agresti & Coull (1998) showed Wilson keeps actual coverage near the nominal 95% even for small n and extreme proportions, so it's the standard in modern statistics texts.",
     "behaviorTitle": "Nine-state behavior distribution (Figure 3)",
+    "areaTitle": "Three-area distribution (Figure 3 left panel)",
     "verticalTitle": "Vertical-level distribution (Figure 3 right / in-lounge)",
     "colCategory": "Category",
     "colProportion": "Empirical %",
@@ -377,10 +406,36 @@
     "colObserved": "Simulation %",
     "colInCI": "In CI",
     "colSource": "Source",
+    "colNTooltip": "n = number of observations (scans) in this category in the paper. The proportion and 95% CI are computed from this n.",
+    "nLegend": "n = scan count for the category. Paper total scans = 12,505.",
+    "symbolLegend": "Symbols: ✓ inside 95% CI, ≈ outside CI but within 3 pp (practical match), ⚠ off by >3 pp.",
+    "sourceNotes": {
+      "behaviorN": "n estimated from proportion × total scans (12,505)",
+      "verticalN": "Paper reports directly: floor 1560 + furniture 2778 + shelf 4209 = 8547",
+      "attentionN": "n = 3,310 classifiable customer-scan dyads (Women 1911 + Men 620 + Girls 447 + Boys 332)",
+      "areaN": "Paper reports directly: AREA_1 5,653 + Cat Room 3,948 + AREA_2 2,904 = 12,505"
+    },
     "inCIYes": "Simulation inside 95% CI",
-    "inCINo": "Simulation outside 95% CI (deviates from empirical)",
+    "inCIClose": "Simulation outside 95% CI but within 3 percentage points of the empirical value — close enough in practice (≈)",
+    "inCINo": "Simulation outside 95% CI and >3 percentage points off (⚠)",
     "paperStatsTitle": "Statistical tests used in the paper itself",
     "paperStatsIntro": "Hirsch 2025 runs χ² goodness-of-fit tests on exactly these distributions. Our validation method is aligned with the paper's own analytical approach, not a new invention.",
+    "paperQuestionsTitle": "Open questions in the source paper",
+    "paperQuestionsIntro": "Three places where Hirsch 2025 leaves loose ends. Surfacing them isn't a critique — it keeps our citation honest and gives future readers a foothold for follow-up work.",
+    "paperQuestions": {
+      "figure6Df": {
+        "title": "Figure 6 degrees-of-freedom mismatch",
+        "body": "Body text reports χ²(18) = 87.42, but the figure caption reports χ²(16) = 107.07. The paper does not say which version reflects category merging. We flag this with ⚠ above the Figure 6 table."
+      },
+      "inLoungeN": {
+        "title": "In-lounge n: 8,547 vs 8,553",
+        "body": "Figure 3 caption gives the in-lounge proportion as 68.4%; 0.684 × 12,505 ≈ 8,553. But the three vertical-level counts (1560 + 2778 + 4209) sum to 8,547 — a ~10-scan gap. We commit to 8,547 (the directly-reported sum); the 8,553 figure is treated as cumulative rounding."
+      },
+      "longStayFloor": {
+        "title": "Cats with > 12 week stay drift back to the floor (unexplained)",
+        "body": "Figure 4(a) shows cats staying 6-12 weeks live mostly on shelves, but cats staying > 12 weeks revert to the floor. The Discussion does not explain why. Plausibly habituation or thinner sample, but the paper leaves it open."
+      }
+    },
     "gloss": {
       "OUT_OF_LOUNGE": { "zh": "離開顧客區（回到員工/貓咪專屬空間）", "en": "Cat is outside the customer lounge (back-of-house or cat-only zone)" },
       "RESTING": { "zh": "休息、趴臥或睡覺，對外界刺激反應低", "en": "Resting, lying down, or sleeping; low responsiveness" },
@@ -393,7 +448,19 @@
       "PLAYING": { "zh": "追逐、撲抓玩具或同伴的玩耍行為", "en": "Chasing, pouncing, or playing with toys or other cats" },
       "FLOOR": { "zh": "位於地面層（0 m）", "en": "On the floor level (0 m)" },
       "FURNITURE": { "zh": "位於家具高度（椅子、桌面等中層）", "en": "On furniture height (chairs, tables; mid-level)" },
-      "SHELF": { "zh": "位於貓跳台、層板等高處", "en": "On shelves or cat trees; the elevated level" }
+      "SHELF": { "zh": "位於貓跳台、層板等高處", "en": "On shelves or cat trees; the elevated level" },
+      "AREA_1": { "zh": "主要顧客互動區（lounge 主區，含座位與沙發）", "en": "Main customer lounge area (seating and sofas)" },
+      "AREA_2": { "zh": "次要顧客區（lounge 邊緣座位、桌邊區）", "en": "Secondary customer area (edge seating, table area)" },
+      "CAT_ROOM": { "zh": "貓咪專屬區（員工與貓使用，顧客不可進入）", "en": "Cat-only zone (back-of-house, customers may not enter)" },
+      "NO_INTERACTION": { "zh": "顧客和貓完全沒有互動（既沒注意、貓也沒靠過來）", "en": "Customer and cat have no interaction at all" },
+      "NON_CONTACT_ATTENTION": { "zh": "顧客有注意貓（看、說話、輕聲呼喚），但沒有身體接觸", "en": "Customer pays attention (looking, talking, soft-calling) without physical contact" },
+      "CONTACT_ATTENTION": { "zh": "顧客和貓有身體接觸（撫摸、抱、貓上腿）", "en": "Customer and cat have physical contact (petting, holding, cat on lap)" },
+      "NO_ATTENTION_FROM_HUMAN": { "zh": "貓主動接近或要求互動，但顧客沒有回應", "en": "Cat solicits attention but the human ignores it" }
+    },
+    "attentionTitle": "Human-cat attention 4-mode mix (Figure 6)",
+    "attentionUnvalidatedNote": "🚧 NekoServe does not yet classify customer-scan dyads into these four modes. Paper values are surfaced here for future validation.",
+    "caveats": {
+      "figure6DfMismatch": "⚠ Paper inconsistency: Figure 6 body text reports χ²(18)=87.42, but the figure caption reports χ²(16)=107.07. The paper does not explain which version reflects category merging."
     }
   },
   "suggest": {
@@ -447,6 +514,20 @@
       "shelf": {
         "too_high": "Shelf share is high, reflecting stress under crowding (Hirsch 2025 Figure 4b).",
         "too_low": "Shelf share is low; space enrichment may be inadequate."
+      }
+    },
+    "area": {
+      "area_1": {
+        "too_high": "Area 1 (main lounge) share is higher than the paper; cats over-prefer the main zone — other areas may be under-attractive.",
+        "too_low": "Area 1 share is lower than the paper; cats avoid the main interaction zone — check seating/furniture richness in AREA_1."
+      },
+      "area_2": {
+        "too_high": "Area 2 (secondary) share is higher than the paper; cats relatively cool on the main zone.",
+        "too_low": "Area 2 share is lower than the paper; secondary zone may not be cat-attractive."
+      },
+      "cat_room": {
+        "too_high": "Cat Room share is higher than the paper; cats retreat into back-of-house too often — customer pressure may be high or vertical space is lacking.",
+        "too_low": "Cat Room share is lower than the paper; not enough privacy. Verify cat-room capacity and availability."
       }
     }
   }

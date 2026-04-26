@@ -203,6 +203,7 @@ export default function ValidationPage({
             observedVertical={renormalizeVertical(
               result.metrics.catVerticalLevelShare ?? {},
             )}
+            observedArea={result.metrics.catAreaShare}
             forceOpen={printMode}
           />
         </section>

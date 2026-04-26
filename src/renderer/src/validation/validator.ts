@@ -268,6 +268,22 @@ export function validateAgainst(
     }
   }
 
+  // v2.3: spatial-area issues (Hirsch 2025 Figure 3 left).
+  if (benchmark.catArea && metrics.catAreaShare) {
+    for (const key of ['AREA_1', 'AREA_2', 'CAT_ROOM'] as const) {
+      const e = benchmark.catArea[key]?.proportion ?? 0
+      const o = metrics.catAreaShare[key] ?? 0
+      if (Math.abs(o - e) >= 0.1) {
+        issues.push({
+          key,
+          expected: e,
+          observed: o,
+          suggestionKey: `suggest.area.${key.toLowerCase()}.${o > e ? 'too_high' : 'too_low'}`,
+        })
+      }
+    }
+  }
+
   const warnings: ValidationWarning[] = []
   if (
     metrics.abandonRate < benchmark.abandonRateRange.min ||
@@ -300,6 +316,23 @@ export function validateAgainst(
         max: (benchmark.noInteractionRateRange.max * 100).toFixed(0),
       },
     })
+  }
+
+  // v2.3: staff count sanity. Hirsch 2025 Methods §2.1 reports 2 staff
+  // on weekdays and 3 on weekends. Anything outside [2, 3] for a
+  // Hirsch-anchored sim is suspicious; we flag a warning rather than
+  // a hard failure since user-driven what-ifs are expected.
+  if (runContext) {
+    const staff = runContext.config.staffCount
+    if (staff < 2 || staff > 3) {
+      warnings.push({
+        key:
+          staff < 2
+            ? 'warn.staffCount.tooLow'
+            : 'warn.staffCount.tooHigh',
+        params: { observed: staff },
+      })
+    }
   }
 
   return {

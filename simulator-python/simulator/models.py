@@ -27,6 +27,17 @@ class SimulationConfig:
     simulationDuration: float = 240.0      # minutes
     randomSeed: int = 42
     warmUpDuration: float = 0.0            # minutes (0 = disabled)
+    # v2.3: weekend arrival multiplier (Hirsch 2025 Fig 2 — weekend median
+    # 84.5/day vs weekday 34/day, ratio ≈ 2.5×). Applied to the arrival
+    # rate during weekend portions of a 7-day cycle. Default 1.0 disables
+    # the effect; the Hirsch scenario sets it to 2.5.
+    weekendArrivalMultiplier: float = 1.0
+    # v2.3: hard cap on simultaneous in-lounge customers (Hirsch 2025
+    # Methods §2.1 — venue policy max 14). 0 disables the cap. When
+    # active, this floors the seat-resource capacity to min(seatCount,
+    # maxLoungeOccupancy) so the existing maxWaitTime / abandon flow
+    # handles overflow naturally.
+    maxLoungeOccupancy: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -65,6 +76,10 @@ class SimulationConfig:
             raise ValueError("maxWaitTime 必須 > 0")
         if self.simulationDuration <= 0:
             raise ValueError("simulationDuration 必須 > 0")
+        if self.weekendArrivalMultiplier <= 0:
+            raise ValueError("weekendArrivalMultiplier 必須 > 0")
+        if self.maxLoungeOccupancy < 0:
+            raise ValueError("maxLoungeOccupancy 不得為負（0 = 不限制）")
 
 
 # ──────────────────────────────────────────────────────────────

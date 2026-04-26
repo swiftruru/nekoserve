@@ -241,6 +241,38 @@ function ThresholdBlock() {
       <p className="mt-2 text-[11px] text-gray-500 dark:text-bark-400 italic">
         {renderWithTerms(t('methodology.thresholds.caveat'))}
       </p>
+      <NonHirschThresholds />
+    </div>
+  )
+}
+
+/**
+ * v2.3: which numeric thresholds in the validator are NOT from Hirsch
+ * 2025? Surfacing this list keeps citations honest — readers know
+ * which knobs are paper-derived (the 9-state proportions, vertical
+ * shares, χ² statistics) and which ones are V&V conventions we
+ * picked from the Sargent / Kleijnen / Balci framework.
+ */
+function NonHirschThresholds() {
+  const { t } = useTranslation('validation')
+  const items = ['abandon', 'noInteraction', 'softCap', 'weights', 'gap'] as const
+  return (
+    <div className="mt-3 rounded-md bg-amber-50 dark:bg-amber-900/20 ring-1 ring-inset ring-amber-300/70 dark:ring-amber-700/50 px-3 py-2">
+      <div className="text-[11.5px] font-bold text-amber-900 dark:text-amber-100 mb-1">
+        ⚠ {t('methodology.nonHirschTitle')}
+      </div>
+      <p className="text-[10.5px] text-amber-900/80 dark:text-amber-100/80 mb-1.5 leading-snug">
+        {t('methodology.nonHirschIntro')}
+      </p>
+      <ul className="space-y-0.5 text-[10.5px] text-amber-950 dark:text-amber-100">
+        {items.map((id) => (
+          <li key={id}>
+            <span className="font-mono">{t(`methodology.nonHirschItems.${id}.value`)}</span>
+            {' — '}
+            {t(`methodology.nonHirschItems.${id}.note`)}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

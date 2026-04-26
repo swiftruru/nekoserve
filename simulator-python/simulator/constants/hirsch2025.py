@@ -194,3 +194,28 @@ CUSTOMER_BEHAVIOR_PROFILE: dict[CustomerType, dict[str, float]] = {
     CustomerType.GIRL:  {"approachCat": 1.4, "triggerAvoidance": 1.2, "attractiveness": 0.9},
     CustomerType.BOY:   {"approachCat": 1.4, "triggerAvoidance": 1.5, "attractiveness": 0.7},  # highest active avoidance
 }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Cat-cat interactions (Hirsch 2025 §3.3).
+#
+# Empirical rate: 0.58 events / cat / hour, 349 events total over the
+# 227-hour study (rate = 349 / (27 cats × 227 hr) ≈ 0.057, paper rounds
+# differently; we follow the paper's reported per-cat hourly rate).
+#
+# Affiliative vs agonistic split: 53% / 47%, χ²(1) = 1.264, p = 0.261
+# (not significantly different from 50/50). We sample a Bernoulli per
+# emitted event using AFFILIATIVE_SHARE.
+#
+# Eligibility: only cats currently in-lounge (not OUT_OF_LOUNGE) and
+# not HIDDEN can be interaction partners. The cat must also not be
+# alone — at least one other eligible cat must share its area.
+# ─────────────────────────────────────────────────────────────────────
+
+# Per-cat hourly rate of cat-cat interaction events.
+CAT_CAT_INTERACTION_RATE_PER_HOUR: float = 0.58
+
+# Share of emitted cat-cat events that are affiliative (vs agonistic).
+# Source: Hirsch 2025 §3.3, χ²(1) = 1.264, p = 0.261, not significantly
+# different from 50/50.
+CAT_CAT_AFFILIATIVE_SHARE: float = 0.53

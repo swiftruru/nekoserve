@@ -39,6 +39,19 @@ export interface SimulationConfig {
   randomSeed: number
   /** 暖機期（分鐘），暖機期間的指標不計入統計。預設 0（不啟用）。 */
   warmUpDuration: number
+  /**
+   * v2.3: 週末客流倍率（Hirsch 2025 Fig 2，週末中位數 84.5/天 vs 平日
+   * 34/天，比約 2.5×）。預設 1.0 表示停用週末變化；每 7 天循環一次，
+   * 索引 5、6 視為週末。
+   */
+  weekendArrivalMultiplier?: number
+  /**
+   * v2.3: lounge 同時容納上限（Hirsch 2025 Methods §2.1 — 場地政策
+   * 最多 14 客人）。0 表示停用。啟用時，座位資源容量取
+   * min(seatCount, maxLoungeOccupancy)；超過時客人會走既有的等待 /
+   * 放棄流程。
+   */
+  maxLoungeOccupancy?: number
 }
 
 // ----------------------------------------------------------
@@ -100,8 +113,20 @@ export interface MetricSummary {
   catBehaviorShare: Record<string, number>
   /** v2.0 Epic D: vertical-level time share across all cats. */
   catVerticalLevelShare: Record<string, number>
+  /**
+   * v2.3: per-area time share across all cats (Hirsch 2025 Fig 3 left —
+   * Area 1 45.2%, Cat Room 31.6%, Area 2 23.2%). Optional for backwards
+   * compat with persisted runs from before this field existed.
+   */
+  catAreaShare?: Record<string, number>
   /** v2.0 Epic D: overall customer satisfaction proxy (0–1). */
   customerSatisfactionScore: number
+  /** v2.3: total cat-cat affiliative interactions emitted across the run. */
+  catCatAffiliativeCount?: number
+  /** v2.3: total cat-cat agonistic interactions emitted across the run. */
+  catCatAgonisticCount?: number
+  /** v2.3: cat-cat interactions per cat per hour (sim-derived, vs paper 0.58). */
+  catCatInteractionRatePerHour?: number
 }
 
 export type EventType =
@@ -128,6 +153,17 @@ export type EventType =
   // any of the nine states). `resourceId` is the cat label; `description`
   // carries "from → to" for readability.
   | 'CAT_STATE_CHANGE'
+  // v2.3: cat-cat interaction events from Hirsch 2025 §3.3 (0.58
+  // events/cat/hr, 53/47 affiliative/agonistic split). `resourceId` is
+  // the initiating cat's label; `description` names the partner cat.
+  | 'CAT_CAT_AFFILIATIVE'
+  | 'CAT_CAT_AGONISTIC'
+  // v2.3: venue maintenance routines from Hirsch 2025 Methods §2.1
+  // (feeding 4×/day, litter cleaning 2×/day). Emitted as observability
+  // markers; the simulator does not yet alter cat behavior at these
+  // times, but downstream analyses can correlate with welfare scores.
+  | 'STAFF_FEEDING'
+  | 'STAFF_LITTER_CLEANING'
 
 /**
  * v2.0 Epic B: the nine-state cat ethogram derived from

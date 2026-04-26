@@ -154,6 +154,30 @@ The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/rendere
 
 **Ambient scene decorations** (v0.5.0) — the background now has time-of-day-aware atmosphere: 14 🌸 cherry blossom petals drift diagonally across the whole scene (always on), 9 🧶 yarn balls hang from the ceiling with a gentle sway (always on), 3 🦋 butterflies flutter in a figure-8 during the first ~45% of sim time, and 7 ✨ fireflies twinkle with a yellow glow during the final ~40%. All pure CSS keyframes, zero React re-render cost, disabled by `prefers-reduced-motion`.
 
+### Hirsch 2025 fidelity audit (v2.3.0)
+
+v2.3.0 closes the gap between the four Hirsch et al. (2025) results NekoServe was implicitly citing and what the simulator + validator actually checked. The simulator now emits cat-cat interaction events, three-area time accumulators, and venue-routine markers; the validator gains a three-area benchmark and surfaces the paper's open questions instead of papering over them.
+
+**🐈‍⬛ Cat-cat interactions modelled** -- new `CAT_CAT_AFFILIATIVE` / `CAT_CAT_AGONISTIC` event types fire at the paper's reported rate (0.58 events/cat/hr, 53/47 affiliative/agonistic split, χ²(1) = 1.264, p = 0.261). A SimPy process picks initiator + same-area partner from in-lounge non-hidden cats. New metrics `catCatAffiliativeCount`, `catCatAgonisticCount`, `catCatInteractionRatePerHour`. 24-hour Hirsch-config sims reproduce the rate to within ±3% on a fixed seed.
+
+**📐 Three-area benchmark + validator support** -- `area_time` accumulator parallels existing state / level accumulators; emits `catAreaShare: { AREA_1, AREA_2, CAT_ROOM }`. Validation page adds the Hirsch Figure 3 left-panel breakdown (45.2% / 23.2% / 31.6%) with Wilson 95% CIs and per-area `suggest.area.*` advisories.
+
+**👥 Human-cat attention 4-mode benchmark** -- Hirsch Figure 6 distribution surfaced in the provenance card: `NO_INTERACTION` 44.4%, `NON_CONTACT_ATTENTION` 29.0%, `CONTACT_ATTENTION` 23.2%, `NO_ATTENTION_FROM_HUMAN` 3.4%, n = 3,310 customer-scan dyads. Marked 🚧 because NekoServe does not yet emit per-dyad attention classifications -- the paper distribution is shown for transparency and future validation.
+
+**📝 Open paper questions disclosed** -- new "📝 Open questions in the source paper" section in the provenance card: (1) Figure 6 df=18 vs df=16 mismatch between body and caption, (2) in-lounge n=8,547 vs 8,553 rounding gap, (3) cats staying >12 weeks reverting to floor without explanation. Surfaced honestly rather than glossed.
+
+**⚠ Non-Hirsch thresholds disclosed** -- new amber card in the Methodology section lists the 5 validator knobs that are *not* from the paper (`abandonRate [0%, 25%]`, `noInteractionRate [30%, 60%]`, KS/KL soft-cap 0.3, composite weights 40/30/30, significant-gap 6pp). Keeps citations honest -- readers know which numbers are Hirsch-derived and which are V&V-framework choices.
+
+**📊 Practical-equivalence band on CI checks** -- Hirsch's n = 12,505 makes Wilson half-widths ~±0.8pp, too tight for any Monte Carlo simulation. The provenance table now shows three-tier symbols: ✓ inside CI, ≈ outside CI but within 3pp practical band, ⚠ off by >3pp. The Wilson CI is still computed and shown; the symbol just expresses *practical* equivalence in addition to *statistical* equivalence.
+
+**🏢 Lounge-cap and weekend-multiplier config** -- new `maxLoungeOccupancy` (default 0 = disabled) caps simultaneous in-lounge customers at the paper's policy max (14); new `weekendArrivalMultiplier` (default 1.0) scales arrival rate on days 5-6 of a 7-day cycle to match the paper's 2.5× weekend ratio. The canonical `hirsch-paper` preset leaves both off so the validator compares apples-to-apples against Hirsch's mixed-occupancy averages; both are exposed for what-if studies.
+
+**🍱 Maintenance routines as observability markers** -- new `STAFF_FEEDING` / `STAFF_LITTER_CLEANING` event types fire at fixed within-day times (4×/day feeding, 2×/day litter cleaning per Hirsch Methods §2.1). Pure markers; do not currently alter cat behavior.
+
+**📖 Hirsch-paper jargon glossary (+14 terms)** -- scan sampling / 掃描取樣, all-occurrence sampling / 全發生取樣, focal sampling / 焦點取樣, BORIS, in-lounge, Figure 3 / Figure 6 (Hirsch 2025), Mann-Whitney U, effect size r, facultative sociality / 兼性社會性, feigned sleep / 假寐, affiliative, agonistic, occupancy level. All provenance prose runs through `renderWithTerms` so every Hirsch term gets a hover tooltip with bilingual definition.
+
+**🪑 Event log resource cleanup** -- customer-side events (`ORDER_START_PREPARE`, `ORDER_READY`, etc.) now carry the customer's seat label as `resourceId`. Pre-seat events render as italic "queueing"; staff-only events as "all staff". Source notes localized to zh-TW.
+
 ### Citations page hero — four interactive diagrams behind every stat pill (v2.2.0)
 
 v2.2.0 turns the four static stat pills at the top of the Citations page (`X papers / Y methodology papers / Z cited parameters / 1 validation benchmark`) into **four clickable tabs**, each expanding its own interactive diagram in the same hero slot. The numbers are no longer decorative — click them and you see the actual papers, parameters, or benchmark data behind each one.

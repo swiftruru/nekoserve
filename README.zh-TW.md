@@ -154,6 +154,30 @@ hook 會偵測焦點是否在 `<input>` / `<textarea>` / `contenteditable`，所
 
 **環境裝飾**（v0.5.0）— 背景現在有時間感的氛圍：14 朵 🌸 櫻花瓣斜飄過整個場景（永遠開著）、9 顆 🧶 毛線球從天花板微晃（永遠開著）、3 隻 🦋 蝴蝶在前 ~45% 時間做八字飛舞、7 隻 ✨ 螢火蟲在後 ~40% 閃黃光。全部純 CSS keyframes，零 React rerender，`prefers-reduced-motion` 時停用。
 
+### Hirsch 2025 對齊度補強（v2.3.0）
+
+v2.3.0 把 Hirsch et al. (2025) 論文裡 NekoServe 過去隱性引用、但模擬端與驗證端沒實作到的四件事補齊：貓貓互動率、人貓注意力四模態、三區停留分布，加上把論文本身留下來沒解釋的疑點誠實地標註出來。
+
+**🐈‍⬛ 貓貓互動事件已建模** — 新增 `CAT_CAT_AFFILIATIVE` / `CAT_CAT_AGONISTIC` 兩種事件，依論文回報的 0.58 events/cat/hr 與 53/47 親和:衝突比例觸發（χ²(1) = 1.264, p = 0.261，論文承認跟 50/50 沒顯著差異）。SimPy process 從「在 lounge 內、未躲藏、同區」的貓中抽取啟動者與夥伴。新增三個 metric：`catCatAffiliativeCount`、`catCatAgonisticCount`、`catCatInteractionRatePerHour`。24 小時 Hirsch 情境模擬可重現論文比例至 ±3% 內（固定種子）。
+
+**📐 三區停留 benchmark + validator 整合** — 新增 `area_time` accumulator 與既有 state / level accumulator 並列；輸出 `catAreaShare: { AREA_1, AREA_2, CAT_ROOM }`。驗證頁加入 Hirsch Figure 3 左圖三區比例（45.2% / 23.2% / 31.6%）的 Wilson 95% CI 對照、以及每區的 `suggest.area.*` 建議句。
+
+**👥 人貓注意力四模態 benchmark** — Hirsch Figure 6 的四模態分布在 provenance 區塊呈現：`NO_INTERACTION` 44.4%、`NON_CONTACT_ATTENTION` 29.0%、`CONTACT_ATTENTION` 23.2%、`NO_ATTENTION_FROM_HUMAN` 3.4%（n = 3,310 筆顧客 × 掃描配對）。標 🚧 因為 NekoServe 還沒做 per-dyad 分類，論文值僅作日後驗證對照之用。
+
+**📝 揭露論文未解問題** — provenance 卡新增「論文中可疑或未解釋之處」段，列出三點 Hirsch 沒處理乾淨的細節：(1) Figure 6 正文 χ²(18) vs 圖說 χ²(16) 自由度不一致；(2) in-lounge n = 8,547 vs 8,553 約 10 筆掃描的差異；(3) 停留 > 12 週的貓回到地面、論文未解釋。誠實標出而不是粉飾。
+
+**⚠ 揭露非 Hirsch 來源的閾值** — 方法學章節新增琥珀色卡片，列出驗證器裡 5 個「不是來自論文」的閾值：`abandonRate ∈ [0%, 25%]`（業界經驗）、`noInteractionRate ∈ [30%, 60%]`（包住 44.4% 的軟邊界）、KS/KL soft-cap = 0.3（Sargent face-validity）、合成權重 40/30/30（V&V 文獻綜合）、significant-gap = 6pp（啟發式）。讓引用更乾淨：讀者知道哪些是論文數字、哪些是 V&V 框架選擇。
+
+**📊 比對加入「實務貼近」區間** — Hirsch 的 n = 12,505 讓 Wilson 半寬只有 ±0.8pp，任何 Monte Carlo 模擬都進不去這個窄區。provenance 表格改用三段符號：✓ 落在 95% CI 內、≈ 偏離 ≤ 3 個百分點（實務貼近）、⚠ 偏離 > 3 個百分點。Wilson CI 仍照算，符號額外表達「實務上接近」。
+
+**🏢 14 人 lounge 上限 + 週末客流倍率** — 新增 `maxLoungeOccupancy` 設定（預設 0 = 停用），啟用時將座位資源容量降為 `min(seatCount, maxLoungeOccupancy)`，符合論文 Methods §2.1 政策上限 14；新增 `weekendArrivalMultiplier` 設定（預設 1.0），啟用時 7 天循環中第 5、6 天客流倍增（論文 Figure 2 觀察到週末 84.5/天 vs 平日 34/天，比例約 2.5×）。`hirsch-paper` 預設保留兩者停用，因為論文行為平均值是混合 LOW/MID/HIGH 占用日的結果，套上 cap 會把模擬卡在 LOW 拉偏 RESTING / OUT_OF_LOUNGE。兩個欄位都開放給 what-if 情境使用。
+
+**🍱 餵食/清貓砂事件作為觀察記號** — 新增 `STAFF_FEEDING` / `STAFF_LITTER_CLEANING` 事件，按論文 Methods §2.1 的 4 次/天餵食 + 2 次/天清貓砂在每日固定時刻觸發（餵食 08:00 / 11:00 / 14:00 / 17:00、清貓砂 09:00 / 17:00）。純觀察記號，目前不改變貓咪行為。
+
+**📖 Hirsch 論文專有名詞 hover 詞彙表（+14 個）** — scan sampling / 掃描取樣、all-occurrence sampling / 全發生取樣、focal sampling / 焦點取樣、BORIS、in-lounge、Figure 3 / Figure 6 (Hirsch 2025)、Mann-Whitney U、effect size r、facultative sociality / 兼性社會性、feigned sleep / 假寐、affiliative、agonistic、occupancy level。provenance 區塊的所有敘述都跑過 `renderWithTerms`，論文用語會自動 hover 出小卡解釋（中英雙語）。
+
+**🪑 事件紀錄資源欄修順** — 顧客流程事件（`ORDER_START_PREPARE`、`ORDER_READY` 等）改帶顧客的座位 label 進 `resourceId`；尚未入座的事件顯示斜體「等候中」、員工事件顯示「全店員工」。論文來源 `note` 翻譯成繁中。
+
 ### 驗證頁面可稽核化升級（v2.1.0）
 
 v2.1.0 把驗證頁面從「一個黑盒子分數」升級成「可追溯的研究工具」。χ²/KS/KL 的數學本體一字不改，v2.1 只在外面加了方法學、審計軌跡、教學三層包裝，讓頁面上每一個數字都能追回源頭。

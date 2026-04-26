@@ -43,6 +43,14 @@ VALID_EVENT_TYPES = {
     # emitted alongside the existing VISIT/LEAVE/REST events so the Playback
     # floor plan can animate the cat's current behavior band.
     "CAT_STATE_CHANGE",
+    # v2.3: cat-cat interaction events (Hirsch 2025 §3.3 — 0.58/cat/hr,
+    # 53/47 affiliative/agonistic split).
+    "CAT_CAT_AFFILIATIVE",
+    "CAT_CAT_AGONISTIC",
+    # v2.3: venue maintenance routines (Hirsch 2025 Methods §2.1 —
+    # feeding 4×/day, litter cleaning 2×/day).
+    "STAFF_FEEDING",
+    "STAFF_LITTER_CLEANING",
 }
 
 

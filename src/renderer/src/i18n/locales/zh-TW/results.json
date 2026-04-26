@@ -352,6 +352,62 @@
       "verificationValidation": {
         "label": "Verification & Validation（V&V）",
         "def": "模擬研究的兩個獨立驗證概念：Verification 是「程式有沒有照規格寫對」（內部正確性），Validation 是「規格本身有沒有對到真實世界」（外部效度）。NekoServe 的驗證頁面測的是 Validation，模擬器有沒有照 simpy 規範跑則是 Verification。"
+      },
+      "scanSampling": {
+        "label": "Scan sampling（掃描取樣）",
+        "def": "動物行為學常用的觀察方法：每隔固定時間（Hirsch 2025 是 10 分鐘）對全體動物拍一個快照，記下每隻當下在做什麼。優點是可平均代表全體時間分布，缺點是抓不到稀有的瞬時事件。和 all-occurrence、focal 兩種取樣互補。"
+      },
+      "allOccurrenceSampling": {
+        "label": "All-occurrence sampling（全發生取樣）",
+        "def": "鎖定特定行為（如貓貓互動），整段觀察時段不間斷地每次發生都記下來，不靠抽樣。專門用來捕捉 scan sampling 抓不到的低頻事件。Hirsch 2025 用它記錄全部 349 次貓貓互動。"
+      },
+      "focalSampling": {
+        "label": "Focal sampling（焦點取樣）",
+        "def": "在一段時間內只盯住單一個體（焦點動物），把它的所有行為連續記下來。Hirsch 2025 用焦點取樣每天每隻貓觀察 15 分鐘，專門用來抓人貓互動細節。換另一個個體繼續觀察，輪完所有人。"
+      },
+      "boris": {
+        "label": "BORIS（Behavioral Observation Research Interactive Software）",
+        "def": "動物行為觀察的開源軟體（v 7.9.6 是 Hirsch 2025 用的版本），讓研究員按熱鍵就能即時記錄行為事件 + 持續時間。輸出可直接拿去做統計分析，是 ethogram 研究的標準工具。"
+      },
+      "inLounge": {
+        "label": "In-lounge（在 lounge 內）",
+        "def": "Hirsch 2025 用語，指貓咪當下出現在「客人可進入的 lounge 區域」（Area 1 + Area 2），對應 in-lounge 這個次集合（n = 8,547，從總掃描 12,505 扣掉 OUT_OF_LOUNGE 的 3,948 而來）。垂直層級分布只在 in-lounge 樣本上計算。"
+      },
+      "figure3Hirsch": {
+        "label": "Figure 3（Hirsch 2025）",
+        "def": "Hirsch et al. (2025) 論文的核心圖表，分兩個 panel：左圖呈現三區停留分布（Area 1 / Cat Room / Area 2），右圖呈現 in-lounge 子集裡的垂直層級分布（Floor / Furniture / Shelf）。NekoServe 的驗證頁就是拿 Figure 3 對齊模擬輸出。"
+      },
+      "figure6Hirsch": {
+        "label": "Figure 6（Hirsch 2025）",
+        "def": "Hirsch et al. (2025) 的 Figure 6 呈現顧客 × 注意力四模態的交叉表（Women / Men / Girls / Boys × No interaction / Non-contact / Contact / No attention from human），是評估人貓互動模式的關鍵圖。論文正文寫 χ²(18) 但圖說寫 χ²(16)，自由度標示有不一致（已在驗證頁面標註）。"
+      },
+      "mannWhitneyU": {
+        "label": "Mann-Whitney U test",
+        "def": "無母數檢定，用來比較兩個獨立群體的中位數是否有差異，不假設常態分布。Hirsch 2025 用它比較平日 vs 週末客流：U(41,26) = 212.00, z = -5.53, p < 0.001，r = 0.68（大效果量）。"
+      },
+      "effectSizeR": {
+        "label": "Effect size r（效果量）",
+        "def": "從 Mann-Whitney 的 z 推出來的效果量：r = z / √N。0.1 / 0.3 / 0.5 對應小 / 中 / 大效果。Hirsch 2025 平日 vs 週末客流的 r = 0.68 是大效果量，代表兩者差距非常顯著、不是雜訊造成的。"
+      },
+      "facultativeSocial": {
+        "label": "Facultative sociality（兼性社會性）",
+        "def": "家貓特殊的社交策略：可獨居也可群居，視資源充裕度與環境穩定度而定。和狗（必然群居）或老虎（強制獨居）不同。咖啡廳的封閉空間考驗的就是這項彈性，也解釋了為什麼貓咪需要多重高處與隱蔽點才能維持福祉。"
+      },
+      "feignedSleep": {
+        "label": "Feigned sleep（假寐）",
+        "def": "貓咪在壓力下假裝睡覺的行為，外觀和真休息很像但其實仍保持警覺。Hirsch 2025 在 Limitations 章節承認單觀察員無法分辨真假寐，這可能讓 RESTING 比例略被高估。NekoServe 模擬不區分這兩種狀態。"
+      },
+      "affiliative": {
+        "label": "Affiliative（親和性互動）",
+        "def": "貓貓之間的友善接觸，例如互相舔毛、靠在一起、用頭蹭對方。Hirsch 2025 觀察到 53% 的貓貓互動屬於這類；和攻擊性互動的 47% 不顯著差異（χ²(1) = 1.264, p = 0.261）。NekoServe 用 0.53 機率分配。"
+      },
+      "agonistic": {
+        "label": "Agonistic（衝突 / 攻擊性互動）",
+        "def": "貓貓之間的對抗行為：嘶吼、攻擊、追趕、警告姿態等。Hirsch 2025 觀察到 47%。家貓沒有有效的衝突最小化訊號，只能靠保持距離化解，封閉空間等於剝奪了這個本能。NekoServe 用 0.47 機率分配。"
+      },
+      "occupancyLevel": {
+        "label": "Occupancy level（占用率分級）",
+        "def": "Hirsch 2025 把咖啡廳當下客人數分成三級：LOW < 21、MID 21-29、HIGH > 29。許多貓咪行為（特別是 SHELF 偏好、ALERT、HIDDEN）的比例在三級之間有顯著差異，論文用 χ² 獨立性檢定驗證了這些關聯。NekoServe 沿用這個分級套用占用率調節係數。"
       }
     }
   },

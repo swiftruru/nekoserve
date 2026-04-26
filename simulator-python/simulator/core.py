@@ -24,6 +24,8 @@ from typing import Any
 from .models import SimulationConfig
 from .agents.cat_agent import CatAgent, sample_personality
 from .constants.hirsch2025 import (
+    CAT_CAT_AFFILIATIVE_SHARE,
+    CAT_CAT_INTERACTION_RATE_PER_HOUR,
     CAT_WELFARE_BASELINE,
     CafeArea,
     CatBehaviorState,
@@ -73,7 +75,16 @@ def run_simulation(config_dict: dict) -> dict:
     rng = random.Random(config.randomSeed)
     env = simpy.Environment()
 
-    seats = simpy.Resource(env, capacity=config.seatCount)
+    # v2.3: cap simultaneous in-lounge customers at the venue policy
+    # limit (Hirsch 2025 — max 14 customers in the 60 m² lounge). When
+    # `maxLoungeOccupancy` is 0 the cap is disabled and seat capacity
+    # equals the raw seatCount (legacy behavior).
+    effective_seat_capacity = (
+        min(config.seatCount, config.maxLoungeOccupancy)
+        if config.maxLoungeOccupancy > 0
+        else config.seatCount
+    )
+    seats = simpy.Resource(env, capacity=effective_seat_capacity)
     staff = simpy.Resource(env, capacity=config.staffCount)
     # Cats are no longer a pooled Resource/Container; each cat is an
     # individual long-running SimPy process (see `cat()` below).
@@ -86,6 +97,9 @@ def run_simulation(config_dict: dict) -> dict:
     total_abandoned = 0
     total_cat_visits = 0
     customers_with_visit = 0
+    # v2.3: cat-cat interaction counters (Hirsch 2025 §3.3).
+    cat_cat_affiliative_count = 0
+    cat_cat_agonistic_count = 0
 
     total_seat_busy = 0.0
     total_staff_busy = 0.0
@@ -100,6 +114,10 @@ def run_simulation(config_dict: dict) -> dict:
     # score and the behavior share distribution at the end of the run.
     state_time: dict[str, float] = {s.value: 0.0 for s in CatBehaviorState}
     level_time: dict[str, float] = {lv.value: 0.0 for lv in VerticalLevel}
+    # v2.3: per-area time accumulators (Hirsch 2025 Figure 3 left — Area 1
+    # 45.2%, Cat Room 31.6%, Area 2 23.2%). Used to validate that the
+    # simulation's spatial use matches the paper's lounge breakdown.
+    area_time: dict[str, float] = {a.value: 0.0 for a in CafeArea}
 
     # Registry of currently-seated customers, keyed by customer id. Cat
     # processes pick a target from this dict; customer processes insert
@@ -114,6 +132,12 @@ def run_simulation(config_dict: dict) -> dict:
     #     "leaving": bool,         # dining done; no new visitors allowed
     #   }
     seated: dict[int, dict[str, Any]] = {}
+
+    # v2.3: registry of all cat agents, keyed by cat id. Populated when the
+    # cat processes are launched; consulted by `cat_cat_interactions` to
+    # find eligible partners (same area, in-lounge, not hidden) at each
+    # interaction tick.
+    cats_registry: dict[int, CatAgent] = {}
 
     # ── Log helper ─────────────────────────────────────────
     def log(
@@ -197,7 +221,9 @@ def run_simulation(config_dict: dict) -> dict:
         seated[cid] = record
 
         # Phase 2: Order (staff occupied briefly)
-        log(env.now, "CUSTOMER_ORDER", cid, f"顧客 {cid} 呼叫店員點餐")
+        log(env.now, "CUSTOMER_ORDER", cid,
+            f"顧客 {cid} 呼叫店員點餐",
+            seat_label)
         order_start = env.now
         with staff.request() as s_req:
             yield s_req
@@ -205,7 +231,8 @@ def run_simulation(config_dict: dict) -> dict:
             total_staff_busy += order_dur
             yield env.timeout(order_dur)
         log(env.now, "ORDER_START_PREPARE", cid,
-            f"顧客 {cid} 完成點餐，餐點開始製作")
+            f"顧客 {cid} 完成點餐，餐點開始製作",
+            seat_label)
 
         # Phase 3: Preparation
         with staff.request() as s_req:
@@ -216,16 +243,19 @@ def run_simulation(config_dict: dict) -> dict:
         wait_order = env.now - order_start
         wait_order_times.append(wait_order)
         log(env.now, "ORDER_READY", cid,
-            f"顧客 {cid} 的餐點完成（等待 {wait_order:.1f} 分鐘）")
+            f"顧客 {cid} 的餐點完成（等待 {wait_order:.1f} 分鐘）",
+            seat_label)
 
         # Phase 4: Dining — cats may start visiting any time while seated,
         # but especially during this phase once the customer is settled.
         log(env.now, "CUSTOMER_START_DINING", cid,
-            f"顧客 {cid} 開始用餐")
+            f"顧客 {cid} 開始用餐",
+            seat_label)
         dining_dur = _normal(rng, config.diningTime)
         yield env.timeout(dining_dur)
         log(env.now, "CUSTOMER_FINISH_DINING", cid,
-            f"顧客 {cid} 用餐完畢")
+            f"顧客 {cid} 用餐完畢",
+            seat_label)
 
         # Phase 5: Wait for any cats still on our lap to finish their visit,
         # then stand up. Cats that want to start a new visit after this
@@ -249,7 +279,8 @@ def run_simulation(config_dict: dict) -> dict:
         total_served += 1
         log(env.now, "CUSTOMER_LEAVE", cid,
             f"顧客 {cid} 離開咖啡廳（總停留 {total_stay:.1f} 分鐘，"
-            f"被 {record['visit_count']} 隻貓拜訪）")
+            f"被 {record['visit_count']} 隻貓拜訪）",
+            seat_label)
 
     # ── Cat process (v2.0 Epic B: 9-state FSM) ─────────────
     #
@@ -294,6 +325,7 @@ def run_simulation(config_dict: dict) -> dict:
             state_time[next_state.value] += duration
             if next_level is not None:
                 level_time[next_level.value] += duration
+            area_time[next_area.value] += duration
 
             # Emit the state-change event on every transition (skip if
             # identical; the self-loop penalty makes this rare). The
@@ -377,11 +409,137 @@ def run_simulation(config_dict: dict) -> dict:
             else:
                 yield env.timeout(duration)
 
+    # ── Cat-cat interaction process (v2.3) ─────────────────
+    #
+    # Hirsch 2025 §3.3 reports 0.58 cat-cat interaction events per cat
+    # per hour, split 53% affiliative / 47% agonistic (χ²(1) = 1.264,
+    # p = 0.261; not significantly different from 50/50). We model this
+    # as a SimPy process that:
+    #
+    #   - Samples the next interaction time from
+    #     Exponential(mean = 60 / (catCount × rate_per_hour)) minutes,
+    #     so the aggregate rate matches the paper as catCount scales.
+    #   - On firing, picks an initiator uniformly from cats currently
+    #     in-lounge (not OUT_OF_LOUNGE) and not HIDDEN.
+    #   - Picks a partner from the same area, same eligibility rules.
+    #   - If no partner is available (cat is alone in area), drops the
+    #     event silently — matches the paper's eligibility (cat-cat
+    #     interactions can only happen when cats coexist in space).
+    #   - Classifies the event via Bernoulli(AFFILIATIVE_SHARE).
+    def cat_cat_interactions():
+        nonlocal cat_cat_affiliative_count, cat_cat_agonistic_count
+        cat_count = max(1, config.catCount)
+        # Aggregate rate across all cats, in events per minute.
+        agg_rate_per_min = (cat_count * CAT_CAT_INTERACTION_RATE_PER_HOUR) / 60.0
+        if agg_rate_per_min <= 0:
+            return
+        mean_interval = 1.0 / agg_rate_per_min
+        while True:
+            yield env.timeout(rng.expovariate(1.0 / mean_interval))
+            # Eligible cats: in-lounge, not hidden, not in cat room.
+            eligible = [
+                a for a in cats_registry.values()
+                if a.state not in (
+                    CatBehaviorState.OUT_OF_LOUNGE,
+                    CatBehaviorState.HIDDEN,
+                )
+                and a.area != CafeArea.CAT_ROOM
+            ]
+            if len(eligible) < 2:
+                continue
+            initiator = rng.choice(eligible)
+            partners = [
+                a for a in eligible
+                if a.cat_id != initiator.cat_id and a.area == initiator.area
+            ]
+            if not partners:
+                continue
+            partner = rng.choice(partners)
+            affiliative = rng.random() < CAT_CAT_AFFILIATIVE_SHARE
+            if affiliative:
+                cat_cat_affiliative_count += 1
+                log(env.now, "CAT_CAT_AFFILIATIVE", initiator.cat_id,
+                    f"{initiator.label} 與 {partner.label} 親和互動"
+                    f"（{initiator.area.value}）",
+                    initiator.label,
+                    extra={"partnerCatId": partner.cat_id,
+                           "partnerLabel": partner.label,
+                           "area": initiator.area.value})
+            else:
+                cat_cat_agonistic_count += 1
+                log(env.now, "CAT_CAT_AGONISTIC", initiator.cat_id,
+                    f"{initiator.label} 與 {partner.label} 衝突互動"
+                    f"（{initiator.area.value}）",
+                    initiator.label,
+                    extra={"partnerCatId": partner.cat_id,
+                           "partnerLabel": partner.label,
+                           "area": initiator.area.value})
+
+    # ── Maintenance routines (v2.3) ────────────────────────
+    #
+    # Hirsch 2025 Methods §2.1 reports the venue feeds cats 4×/day and
+    # cleans litter boxes 2×/day. We schedule these at fixed within-day
+    # times (relative to env.now mod 1440) so each simulated day emits:
+    #
+    #   - STAFF_FEEDING at minutes 480 / 660 / 840 / 1020 (08:00, 11:00,
+    #     14:00, 17:00) of each 1440-minute day
+    #   - STAFF_LITTER_CLEANING at minutes 540 / 1020 (09:00, 17:00)
+    #
+    # Pure observability markers — they do not alter cat or customer
+    # behavior. Downstream analyses can correlate welfare scores with
+    # routine timing if interesting.
+    FEEDING_MINUTES = (480, 660, 840, 1020)
+    LITTER_MINUTES = (540, 1020)
+
+    def maintenance_schedule():
+        last_emitted_day = -1
+        while True:
+            day = int(env.now // 1440)
+            if day != last_emitted_day:
+                day_offset = day * 1440
+                for m in FEEDING_MINUTES:
+                    if env.now <= day_offset + m < total_duration:
+                        env.process(_fire_event_at(day_offset + m, "feed"))
+                for m in LITTER_MINUTES:
+                    if env.now <= day_offset + m < total_duration:
+                        env.process(_fire_event_at(day_offset + m, "litter"))
+                last_emitted_day = day
+            # Re-check at the start of the next day.
+            next_day_start = (day + 1) * 1440
+            yield env.timeout(max(1.0, next_day_start - env.now))
+
+    def _fire_event_at(at_time: float, kind: str):
+        delay = max(0.0, at_time - env.now)
+        yield env.timeout(delay)
+        if env.now >= total_duration:
+            return
+        if kind == "feed":
+            log(env.now, "STAFF_FEEDING", 0,
+                "員工餵食（每日 4 次中的 1 次）")
+        else:
+            log(env.now, "STAFF_LITTER_CLEANING", 0,
+                "員工清貓砂盆（每日 2 次中的 1 次）")
+
     # ── Customer generator ─────────────────────────────────
+    #
+    # v2.3: weekend multiplier applies in a 7-day cycle. Day index = floor
+    # (sim_minute / 1440) mod 7, where indices 5 and 6 are weekend (Sat,
+    # Sun) and the multiplier scales the arrival *rate* up (so the mean
+    # interval scales down by 1/multiplier). Hirsch 2025 Fig 2 reports a
+    # 2.5× weekend ratio (median 84.5 vs weekday 34).
+    def is_weekend_minute(t_min: float) -> bool:
+        if config.weekendArrivalMultiplier == 1.0:
+            return False
+        day_idx = int(t_min // 1440) % 7
+        return day_idx >= 5
+
     def generator():
         cid = 1
         while True:
-            inter = rng.expovariate(1.0 / config.customerArrivalInterval)
+            current_mean = config.customerArrivalInterval
+            if is_weekend_minute(env.now):
+                current_mean = current_mean / config.weekendArrivalMultiplier
+            inter = rng.expovariate(1.0 / current_mean)
             yield env.timeout(inter)
             if env.now >= total_duration:
                 break
@@ -396,6 +554,7 @@ def run_simulation(config_dict: dict) -> dict:
         nonlocal total_arrived, total_served, total_abandoned
         nonlocal total_cat_visits, customers_with_visit
         nonlocal total_seat_busy, total_staff_busy, total_cat_busy
+        nonlocal cat_cat_affiliative_count, cat_cat_agonistic_count
         if warm_up <= 0:
             return
         yield env.timeout(warm_up)
@@ -407,6 +566,8 @@ def run_simulation(config_dict: dict) -> dict:
         total_seat_busy = 0.0
         total_staff_busy = 0.0
         total_cat_busy = 0.0
+        cat_cat_affiliative_count = 0
+        cat_cat_agonistic_count = 0
         wait_seat_times.clear()
         wait_order_times.clear()
         stay_times.clear()
@@ -421,10 +582,13 @@ def run_simulation(config_dict: dict) -> dict:
             label=f"cat-{i}",
             personality=sample_personality(rng),
         )
+        cats_registry[i] = agent
         env.process(cat(i, agent))
     if warm_up > 0:
         env.process(warm_up_reset())
     env.process(generator())
+    env.process(cat_cat_interactions())
+    env.process(maintenance_schedule())
 
     # Progress emitter: writes one newline-delimited JSON object every 5
     # simulated minutes so the Electron bridge can stream live progress
@@ -517,6 +681,8 @@ def run_simulation(config_dict: dict) -> dict:
     behavior_share = {k: round(v / total_state_time, 4) for k, v in state_time.items()}
     total_level_time = sum(level_time.values()) or 1.0
     level_share = {k: round(v / total_level_time, 4) for k, v in level_time.items()}
+    total_area_time = sum(area_time.values()) or 1.0
+    area_share = {k: round(v / total_area_time, 4) for k, v in area_time.items()}
 
     def welfare_component(share: float, baseline: float, positive: bool) -> float:
         if baseline <= 0:
@@ -593,7 +759,17 @@ def run_simulation(config_dict: dict) -> dict:
             "catWelfareScore": welfare_total,
             "catBehaviorShare": behavior_share,
             "catVerticalLevelShare": level_share,
+            "catAreaShare": area_share,
             "customerSatisfactionScore": customer_satisfaction,
+            # v2.3: cat-cat interaction counts and per-cat-per-hour rate.
+            "catCatAffiliativeCount": cat_cat_affiliative_count,
+            "catCatAgonisticCount": cat_cat_agonistic_count,
+            "catCatInteractionRatePerHour": round(
+                (cat_cat_affiliative_count + cat_cat_agonistic_count)
+                / max(1, config.catCount)
+                / max(1.0, sim_dur / 60.0),
+                4,
+            ),
         },
         "eventLog": sorted(event_log, key=lambda e: e["timestamp"]),
     }

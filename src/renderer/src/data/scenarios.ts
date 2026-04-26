@@ -27,6 +27,14 @@ export const SCENARIOS: ScenarioPreset[] = [
       simulationDuration: 720,
       randomSeed: 42,
       warmUpDuration: 30,
+      // Hirsch's behavior averages span LOW / MID / HIGH occupancy
+      // days; pinning the cap to 14 here would force the sim into LOW
+      // only and bias RESTING / OUT_OF_LOUNGE up. The cap stays
+      // available for what-if runs (advanced settings), but is off in
+      // the canonical paper preset so the validator compares apples
+      // to apples.
+      maxLoungeOccupancy: 0,
+      weekendArrivalMultiplier: 1.0,
     },
   },
   {

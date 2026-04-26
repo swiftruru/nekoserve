@@ -248,6 +248,10 @@
     "noCatVisitRate": {
       "tooHigh": "有 {{observed}}% 的顧客整場沒被任何貓拜訪，超出 Hirsch 推估的 [{{min}}%, {{max}}%]，貓的供給可能不足或互動時間設太短。",
       "tooLow": "只有 {{observed}}% 的顧客整場沒被貓拜訪，低於 Hirsch 推估的 [{{min}}%, {{max}}%]，模擬器互動比論文觀察熱絡很多（貓供給高 / 互動時間長）。"
+    },
+    "staffCount": {
+      "tooLow": "店員只有 {{observed}} 人，低於 Hirsch 2025 的平日 2 / 週末 3 設置；服務瓶頸可能影響顧客等待時間，需注意對驗證結果的影響。",
+      "tooHigh": "店員 {{observed}} 人多於 Hirsch 2025 的平日 2 / 週末 3 設置；觀察到的服務速度可能比論文情境快，比較時請保留這個差異。"
     }
   },
   "smallSampleTitle": "樣本量偏小，分數會大幅波動",
@@ -309,6 +313,30 @@
       "caveat": "以上 soft-cap 的選擇是工程近似，不是嚴謹假設檢定。嚴格的統計顯著性判斷應看原始 p-value，不是最後的 0-100 分。我會在指標卡片下方另外列 p-value 供參考。",
       "softCapLabel": "Soft-cap 映射公式",
       "softCapHint": "把原始統計量（χ²、KS D、KL nats）轉換成 0-100 分：stat = 0 時得滿分 100，stat 到達 cap 時得 0 分，中間線性過渡。"
+    },
+    "nonHirschTitle": "哪些閾值不是來自 Hirsch 2025？",
+    "nonHirschIntro": "我們的合成分數會用到一些閾值，並不是論文裡有的數字。為了讓引用更乾淨，下面把它們和真正的論文來源分開列：",
+    "nonHirschItems": {
+      "abandon": {
+        "value": "abandonRate ∈ [0%, 25%]",
+        "note": "一般咖啡廳業界經驗，非 Hirsch（論文沒測等待放棄）"
+      },
+      "noInteraction": {
+        "value": "noInteractionRate ∈ [30%, 60%]",
+        "note": "包住 Hirsch 44.4% 的軟邊界，邊界寬度是工程選擇"
+      },
+      "softCap": {
+        "value": "KS / KL soft-cap = 0.3",
+        "note": "Sargent 2013 face-validity 慣例，非統計顯著性"
+      },
+      "weights": {
+        "value": "合成權重 40% χ² + 30% KS + 30% KL",
+        "note": "由 Sargent / Kleijnen / Rubner 的 V&V 建議綜合判斷"
+      },
+      "gap": {
+        "value": "Significant gap = 6 個百分點",
+        "note": "標出單一類別偏差的啟發式門檻，論文未給具體值"
+      }
     }
   },
   "breakdown": {
@@ -370,6 +398,7 @@
     "wilsonFormulaHint": "p̂ 是樣本比例、n 是樣本數、z = 1.96（對應 95% CI）。這個公式在 p 接近 0 或 1、以及 n 很小時都不會退化成零寬度，比 Wald interval 穩健很多。",
     "wilsonFormulaLong": "Wald interval 只是 p̂ ± 1.96·√(p̂(1−p̂)/n)，簡單但在 p → 0 或 1 時會崩潰（區間寬度變成 0）。Wilson 1927 用 score test 推出了這個修正版：加上 z²/(2n) 作為 bias correction、並把分母除以 (1 + z²/n) 做 shrinkage。Agresti & Coull (1998) 證明 Wilson 在小 n 和極端比例下仍保持接近 95% 的實際覆蓋率，因此當代統計教科書都以此為標準。",
     "behaviorTitle": "行為九類分布（Figure 3）",
+    "areaTitle": "三區停留分布（Figure 3 左圖）",
     "verticalTitle": "垂直層級分布（Figure 3 右圖 / in-lounge）",
     "colCategory": "類別",
     "colProportion": "實證 %",
@@ -377,10 +406,36 @@
     "colObserved": "模擬 %",
     "colInCI": "落在 CI 內",
     "colSource": "論文來源",
+    "colNTooltip": "n = 該類別在論文裡的觀察筆數（scan 次數）。所有樣本比例和 95% CI 都是依這個 n 算出來的。",
+    "nLegend": "n = 該類別的觀察筆數（scan 次數）。論文總掃描數為 12,505。",
+    "symbolLegend": "符號：✓ 落在 95% CI 內、≈ 偏離 ≤ 3 個百分點（實務貼近）、⚠ 偏離 > 3 個百分點。",
+    "sourceNotes": {
+      "behaviorN": "n 由論文比例 × 總掃描數（12,505）反推",
+      "verticalN": "論文直接報出：地面 1560 + 家具 2778 + 層板 4209 = 8547",
+      "attentionN": "n = 3,310 筆可分類的顧客 × 掃描配對（女性 1911 + 男性 620 + 女孩 447 + 男孩 332）",
+      "areaN": "論文直接報出：Area 1 共 5,653 + 貓室 3,948 + Area 2 共 2,904 = 12,505"
+    },
     "inCIYes": "模擬值落在 95% CI 內",
-    "inCINo": "模擬值在 95% CI 外（⚠ 偏離實證）",
+    "inCIClose": "模擬值在 95% CI 外，但和實證差距 ≤ 3 個百分點，實務上仍算接近（≈）",
+    "inCINo": "模擬值在 95% CI 外，且偏離實證 > 3 個百分點（⚠）",
     "paperStatsTitle": "論文原本就使用的統計檢定",
     "paperStatsIntro": "Hirsch 2025 自己就對這些分布做了 χ² goodness-of-fit 檢定。我們的驗證方法跟論文同源，不是我們自己新發明的。",
+    "paperQuestionsTitle": "論文中可疑或未解釋之處",
+    "paperQuestionsIntro": "我們在重現過程中讀到三點論文沒處理乾淨的細節。標出來不是要否定論文，而是讓引用更誠實，未來討論時也好對焦。",
+    "paperQuestions": {
+      "figure6Df": {
+        "title": "Figure 6 自由度標示不一致",
+        "body": "正文寫 χ²(18) = 87.42，但圖說寫 χ²(16) = 107.07。論文沒交代是不是合併了某些行為類別。我們在 Figure 6 那張表上方也加了 ⚠ 標註。"
+      },
+      "inLoungeN": {
+        "title": "in-lounge 樣本數 8,547 vs 8,553 的差",
+        "body": "論文 Figure 3 caption 寫 in-lounge 比例 68.4%，乘上總掃描數 12,505 ≈ 8,553；但右圖三類加總（1560 + 2778 + 4209）= 8,547，兩者差 ~10 筆。我們以加總 8,547 為準（論文直接報出的數字），8,553 視為四捨五入造成的累積誤差。"
+      },
+      "longStayFloor": {
+        "title": "停留 > 12 週的貓回到地面，論文未解釋",
+        "body": "Figure 4(a) 顯示停留 6-12 週的貓主要待在層板上，但停留超過 12 週後反而回到地面。論文 Discussion 沒給原因，可能是漸漸熟悉環境、或樣本數變少導致雜訊。值得在後續研究追問。"
+      }
+    },
     "gloss": {
       "OUT_OF_LOUNGE": { "zh": "離開顧客區（回到員工/貓咪專屬空間）", "en": "Cat is outside the customer lounge (back-of-house or cat-only zone)" },
       "RESTING": { "zh": "休息、趴臥或睡覺，對外界刺激反應低", "en": "Resting, lying down, or sleeping; low responsiveness" },
@@ -393,7 +448,19 @@
       "PLAYING": { "zh": "追逐、撲抓玩具或同伴的玩耍行為", "en": "Chasing, pouncing, or playing with toys or other cats" },
       "FLOOR": { "zh": "位於地面層（0 m）", "en": "On the floor level (0 m)" },
       "FURNITURE": { "zh": "位於家具高度（椅子、桌面等中層）", "en": "On furniture height (chairs, tables; mid-level)" },
-      "SHELF": { "zh": "位於貓跳台、層板等高處", "en": "On shelves or cat trees; the elevated level" }
+      "SHELF": { "zh": "位於貓跳台、層板等高處", "en": "On shelves or cat trees; the elevated level" },
+      "AREA_1": { "zh": "主要顧客互動區（lounge 主區，含座位與沙發）", "en": "Main customer lounge area (seating and sofas)" },
+      "AREA_2": { "zh": "次要顧客區（lounge 邊緣座位、桌邊區）", "en": "Secondary customer area (edge seating, table area)" },
+      "CAT_ROOM": { "zh": "貓咪專屬區（員工與貓使用，顧客不可進入）", "en": "Cat-only zone (back-of-house, customers may not enter)" },
+      "NO_INTERACTION": { "zh": "顧客和貓完全沒有互動（既沒注意、貓也沒靠過來）", "en": "Customer and cat have no interaction at all" },
+      "NON_CONTACT_ATTENTION": { "zh": "顧客有注意貓（看、說話、輕聲呼喚），但沒有身體接觸", "en": "Customer pays attention (looking, talking, soft-calling) without physical contact" },
+      "CONTACT_ATTENTION": { "zh": "顧客和貓有身體接觸（撫摸、抱、貓上腿）", "en": "Customer and cat have physical contact (petting, holding, cat on lap)" },
+      "NO_ATTENTION_FROM_HUMAN": { "zh": "貓主動接近或要求互動，但顧客沒有回應", "en": "Cat solicits attention but the human ignores it" }
+    },
+    "attentionTitle": "人貓注意力四模態（Figure 6）",
+    "attentionUnvalidatedNote": "🚧 此分布尚未在模擬端分類，僅顯示論文實證值供日後驗證對照。",
+    "caveats": {
+      "figure6DfMismatch": "⚠ 論文 Figure 6 內文寫 χ²(18)=87.42，但圖說寫 χ²(16)=107.07，自由度不一致；論文未說明哪個是合併後的版本。"
     }
   },
   "suggest": {
@@ -447,6 +514,20 @@
       "shelf": {
         "too_high": "架子使用率偏高，反映貓咪壓力大（Hirsch 2025 Figure 4b）。",
         "too_low": "架子使用率偏低，可能是空間豐富度不足。"
+      }
+    },
+    "area": {
+      "area_1": {
+        "too_high": "Area 1（主要顧客區）佔比偏高，貓咪比論文更常出現在主區，可能是其他區域吸引力不足。",
+        "too_low": "Area 1 佔比偏低，貓咪不太進主互動區，檢查 AREA_1 的座位/家具豐富度。"
+      },
+      "area_2": {
+        "too_high": "Area 2（次要區）佔比偏高，貓咪相對冷淡主區。",
+        "too_low": "Area 2 佔比偏低，可能是次要區位置不吸引貓。"
+      },
+      "cat_room": {
+        "too_high": "貓室佔比偏高，貓咪太常躲進員工區。可能是顧客壓力過大或店內缺少高處。",
+        "too_low": "貓室佔比偏低，沒給夠隱私空間。確認貓室容量與可用性。"
       }
     }
   }

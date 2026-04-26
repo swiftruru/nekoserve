@@ -352,6 +352,62 @@
       "verificationValidation": {
         "label": "Verification & Validation (V&V)",
         "def": "Two independent checks in simulation research. Verification: 'did we code the spec correctly' (internal correctness). Validation: 'does the spec match reality' (external validity). The validation page tests the Validation side; whether simpy runs to spec is Verification."
+      },
+      "scanSampling": {
+        "label": "Scan sampling",
+        "def": "An ethology observation method: at fixed intervals (10 minutes in Hirsch 2025), record what every animal is doing at that instant. Captures average time-shares well, misses rare bursts. Complements all-occurrence and focal sampling."
+      },
+      "allOccurrenceSampling": {
+        "label": "All-occurrence sampling",
+        "def": "Targets a specific behavior (e.g. cat-cat interaction); every instance during the observation window is logged exhaustively, no sampling. Captures rare events that scan sampling would miss. Hirsch 2025 used it for all 349 cat-cat interactions."
+      },
+      "focalSampling": {
+        "label": "Focal sampling",
+        "def": "Picks one focal individual and continuously records all of its behaviors for a fixed time. Hirsch 2025 used 15-minute focal windows per cat per day to capture human-cat interactions in detail."
+      },
+      "boris": {
+        "label": "BORIS (Behavioral Observation Research Interactive Software)",
+        "def": "Open-source ethology recording software (v 7.9.6 in Hirsch 2025). Lets researchers hotkey-log behaviors and durations in real time; output feeds straight into statistical analysis. Standard tool for ethogram research."
+      },
+      "inLounge": {
+        "label": "In-lounge",
+        "def": "Hirsch 2025 terminology: cat is in the customer-accessible lounge (Area 1 + Area 2). The in-lounge subset (n = 8,547 = 12,505 total - 3,948 OUT_OF_LOUNGE scans) is what the vertical-level distribution is computed over."
+      },
+      "figure3Hirsch": {
+        "label": "Figure 3 (Hirsch 2025)",
+        "def": "Core figure of Hirsch et al. (2025), in two panels: left shows the three-area distribution (Area 1 / Cat Room / Area 2), right shows the vertical-level breakdown on the in-lounge subset (Floor / Furniture / Shelf). NekoServe's validation page aligns simulation output against Figure 3."
+      },
+      "figure6Hirsch": {
+        "label": "Figure 6 (Hirsch 2025)",
+        "def": "Crosstab of customer demographics × human-cat attention modes (Women / Men / Girls / Boys × No interaction / Non-contact / Contact / No attention from human). The paper's body text reports χ²(18) but the caption reports χ²(16) — flagged by NekoServe as an open paper inconsistency."
+      },
+      "mannWhitneyU": {
+        "label": "Mann-Whitney U test",
+        "def": "Non-parametric test comparing the medians of two independent groups, no normality assumption. Hirsch 2025 used it for weekday vs weekend customer flow: U(41,26) = 212.00, z = -5.53, p < 0.001, r = 0.68 (large effect)."
+      },
+      "effectSizeR": {
+        "label": "Effect size r",
+        "def": "Derived from the Mann-Whitney z: r = z / √N. Conventional thresholds: 0.1 small / 0.3 medium / 0.5 large. Hirsch 2025's weekday-vs-weekend r = 0.68 is a large effect, well above noise."
+      },
+      "facultativeSocial": {
+        "label": "Facultative sociality",
+        "def": "Domestic cats' adaptive social strategy: can be solitary or live in groups depending on resource availability and environmental stability. Unlike obligately social dogs or strictly solitary tigers. The cat café's confined space tests exactly this flexibility, and explains why multi-level perches and hide-spots matter for welfare."
+      },
+      "feignedSleep": {
+        "label": "Feigned sleep",
+        "def": "A cat appearing to sleep while remaining vigilant — a stress response. Hirsch 2025 acknowledges in Limitations that a single observer cannot distinguish feigned from genuine sleep, which may inflate the RESTING share. NekoServe does not model the distinction either."
+      },
+      "affiliative": {
+        "label": "Affiliative interaction",
+        "def": "Friendly cat-cat contact such as mutual grooming, sitting close, head-bunting. Hirsch 2025 observed 53% of cat-cat events as affiliative; not significantly different from agonistic 47% (χ²(1) = 1.264, p = 0.261). NekoServe uses Bernoulli(0.53)."
+      },
+      "agonistic": {
+        "label": "Agonistic interaction",
+        "def": "Conflict behaviors between cats: hisses, swats, chases, threat postures. 47% of Hirsch 2025's observations. Domestic cats lack effective conflict-minimization signals, so they rely on distance — confined spaces strip them of this option. NekoServe uses Bernoulli(0.47)."
+      },
+      "occupancyLevel": {
+        "label": "Occupancy level",
+        "def": "Hirsch 2025 bins the simultaneous customer count into three levels: LOW < 21, MID 21-29, HIGH > 29. Many cat behaviors (especially SHELF preference, ALERT, HIDDEN) shift significantly across these levels, which the paper validates with χ² tests of independence. NekoServe inherits the bins as occupancy modifiers."
       }
     }
   },

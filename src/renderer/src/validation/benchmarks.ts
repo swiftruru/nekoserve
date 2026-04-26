@@ -49,6 +49,31 @@ export type CatBehaviorDistribution = Record<string, CategoryBenchmark>
 /** Per-level share of a cat's time (floor / furniture / shelf). */
 export type VerticalLevelDistribution = Record<string, CategoryBenchmark>
 
+/**
+ * v2.3: human-cat interaction mix from Hirsch 2025 Figure 6.
+ *
+ * Four mutually exclusive modes describing what was happening at each
+ * customer-scan instant: no interaction at all, non-contact attention
+ * (looking, talking, soft-calling), contact attention (petting, lap),
+ * and no attention from the human (cat soliciting but human ignoring).
+ *
+ * NekoServe does not yet emit per-customer attention-mode time-series,
+ * so the validation page surfaces the paper's distribution + Wilson CI
+ * for transparency, but leaves the "simulated %" column blank for now.
+ */
+export type HumanCatAttentionDistribution = Record<string, CategoryBenchmark>
+
+/**
+ * v2.3: paper-side caveat surfaced under a benchmark axis. Used to
+ * flag known inconsistencies or extraction judgment calls right next
+ * to the table they apply to (e.g. Figure 6 df=18 in body vs df=16 in
+ * caption). Rendered as a small ⚠ note under the table title.
+ */
+export interface BenchmarkCaveat {
+  /** i18n key under `validation:provenance.caveats`. */
+  key: string
+}
+
 export interface ValidationBenchmark {
   id: string
   /** Short name for the UI card. */
@@ -72,6 +97,27 @@ export interface ValidationBenchmark {
   catVerticalLevelTotalN: number
   /** Hirsch 2025 Figure 3 right panel — vertical-level share (in-lounge only). */
   catVerticalLevel: VerticalLevelDistribution
+  /**
+   * v2.3: total observation count for the area-level axis (sum equals
+   * `catAreaTotalN` and matches `catBehaviorTotalN` since every scan
+   * is classified into exactly one area).
+   */
+  catAreaTotalN?: number
+  /**
+   * v2.3: Hirsch 2025 Figure 3 left panel — three-area breakdown
+   * (Area 1 / Area 2 / Cat Room) over all 12,505 scans.
+   */
+  catArea?: CatBehaviorDistribution
+  /**
+   * Sample total used to compute Wilson CIs on the human-cat attention
+   * axis. Hirsch 2025 reports 3,310 classifiable customer-scan
+   * dyads in Figure 6 (Women 1911 + Men 620 + Girls 447 + Boys 332).
+   */
+  humanCatAttentionTotalN?: number
+  /** Hirsch 2025 Figure 6 — four-mode human-cat attention mix. */
+  humanCatAttentionMix?: HumanCatAttentionDistribution
+  /** Caveats specific to humanCatAttentionMix (e.g. Figure 6 df mismatch). */
+  humanCatAttentionCaveats?: BenchmarkCaveat[]
   /**
    * Expected range for customer-abandonment rate in cat-café settings.
    * Used as a soft validation: if the simulation's abandonRate is way
@@ -132,6 +178,11 @@ function cat(
 
 const HIRSCH_TOTAL_SCANS = 12505
 const HIRSCH_INLOUNGE_N = 8547
+// Figure 6 totals: 1911 (Women) + 620 (Men) + 447 (Girls) + 332 (Boys) = 3310
+// classifiable customer-scan dyads. The 4-mode mix (no interaction
+// 44.4% / non-contact 29.0% / contact 23.2% / no attention 3.4%) is
+// reported as a percentage breakdown of these dyads.
+const HIRSCH_ATTENTION_N = 3310
 
 const BEHAVIOR_SOURCE = {
   figureOrTable: 'Figure 3, Results §3.2',
@@ -140,6 +191,14 @@ const BEHAVIOR_SOURCE = {
 const VERTICAL_SOURCE = {
   figureOrTable: 'Figure 3 right panel (in-lounge)',
   note: 'n reported directly: 1560 (floor) + 2778 (furniture) + 4209 (shelf) = 8547',
+}
+const ATTENTION_SOURCE = {
+  figureOrTable: 'Figure 6, Results §3.3',
+  note: 'n = 3,310 classifiable customer-scan dyads (Women 1911 + Men 620 + Girls 447 + Boys 332)',
+}
+const AREA_SOURCE = {
+  figureOrTable: 'Figure 3 left panel',
+  note: 'n reported directly: AREA_1 5,653 + CAT_ROOM 3,948 + AREA_2 2,904 = 12,505',
 }
 
 export const HIRSCH_2025_BENCHMARK: ValidationBenchmark = {
@@ -158,6 +217,30 @@ export const HIRSCH_2025_BENCHMARK: ValidationBenchmark = {
     MOVING: cat(0.027, HIRSCH_TOTAL_SCANS, BEHAVIOR_SOURCE),
     EXPLORING: cat(0.008, HIRSCH_TOTAL_SCANS, BEHAVIOR_SOURCE),
     PLAYING: cat(0.003, HIRSCH_TOTAL_SCANS, BEHAVIOR_SOURCE),
+  },
+  catAreaTotalN: HIRSCH_TOTAL_SCANS,
+  catArea: {
+    AREA_1: {
+      proportion: 0.452,
+      n: 5653,
+      total: HIRSCH_TOTAL_SCANS,
+      wilsonCI95: wilsonCI95(5653, HIRSCH_TOTAL_SCANS),
+      source: AREA_SOURCE,
+    },
+    CAT_ROOM: {
+      proportion: 0.316,
+      n: 3948,
+      total: HIRSCH_TOTAL_SCANS,
+      wilsonCI95: wilsonCI95(3948, HIRSCH_TOTAL_SCANS),
+      source: AREA_SOURCE,
+    },
+    AREA_2: {
+      proportion: 0.232,
+      n: 2904,
+      total: HIRSCH_TOTAL_SCANS,
+      wilsonCI95: wilsonCI95(2904, HIRSCH_TOTAL_SCANS),
+      source: AREA_SOURCE,
+    },
   },
   catVerticalLevelTotalN: HIRSCH_INLOUNGE_N,
   catVerticalLevel: {
@@ -183,6 +266,16 @@ export const HIRSCH_2025_BENCHMARK: ValidationBenchmark = {
       source: VERTICAL_SOURCE,
     },
   },
+  humanCatAttentionTotalN: HIRSCH_ATTENTION_N,
+  humanCatAttentionMix: {
+    NO_INTERACTION: cat(0.444, HIRSCH_ATTENTION_N, ATTENTION_SOURCE),
+    NON_CONTACT_ATTENTION: cat(0.290, HIRSCH_ATTENTION_N, ATTENTION_SOURCE),
+    CONTACT_ATTENTION: cat(0.232, HIRSCH_ATTENTION_N, ATTENTION_SOURCE),
+    NO_ATTENTION_FROM_HUMAN: cat(0.034, HIRSCH_ATTENTION_N, ATTENTION_SOURCE),
+  },
+  humanCatAttentionCaveats: [
+    { key: 'figure6DfMismatch' },
+  ],
   abandonRateRange: { min: 0.0, max: 0.25 },
   noInteractionRateRange: { min: 0.3, max: 0.6 },
   paperStatisticalTests: [

@@ -236,6 +236,73 @@ export const TERMS: TermDef[] = [
     key: 'verificationValidation',
     keywords: ['Verification & Validation', 'V&V'],
   },
+  // ── Hirsch 2025 paper-specific jargon ─────────────────────
+  {
+    key: 'scanSampling',
+    keywords: ['scan sampling', 'Scan sampling', '掃描取樣', '掃描抽樣'],
+  },
+  {
+    key: 'allOccurrenceSampling',
+    keywords: [
+      'all-occurrence sampling',
+      'All-occurrence sampling',
+      'all occurrence sampling',
+      '全發生取樣',
+    ],
+  },
+  {
+    key: 'focalSampling',
+    keywords: ['focal sampling', 'Focal sampling', '焦點取樣'],
+  },
+  {
+    key: 'boris',
+    keywords: ['BORIS', 'Boris'],
+  },
+  {
+    key: 'inLounge',
+    keywords: ['in-lounge', 'In-lounge', 'in lounge'],
+  },
+  {
+    key: 'figure3Hirsch',
+    keywords: [
+      'Figure 3, Results §3.2',
+      'Figure 3 right panel',
+      'Figure 3 left panel',
+      'Figure 3',
+    ],
+  },
+  {
+    key: 'figure6Hirsch',
+    keywords: ['Figure 6, Results §3.3', 'Figure 6'],
+  },
+  {
+    key: 'mannWhitneyU',
+    keywords: ['Mann-Whitney U', 'Mann-Whitney', 'Mann–Whitney'],
+  },
+  {
+    key: 'effectSizeR',
+    keywords: ['effect size r', 'r effect size'],
+  },
+  {
+    key: 'facultativeSocial',
+    keywords: ['facultative sociality', 'Facultative sociality', '兼性社會性'],
+  },
+  {
+    key: 'feignedSleep',
+    keywords: ['feigned sleep', 'Feigned sleep', '假寐'],
+  },
+  {
+    key: 'affiliative',
+    keywords: ['affiliative', 'Affiliative', '親和性'],
+  },
+  {
+    key: 'agonistic',
+    keywords: ['agonistic', 'Agonistic', '攻擊性', '衝突性'],
+  },
+  {
+    key: 'occupancyLevel',
+    keywords: ['occupancy level', 'Occupancy level', '占用率分級'],
+  },
 ]
 
 /**

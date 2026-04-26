@@ -3,8 +3,8 @@
   "CUSTOMER_WAIT_SEAT": "顧客 #{{customerId}} 開始等待座位",
   "CUSTOMER_SEATED": "顧客 #{{customerId}} 入座 {{resourceId}}",
   "CUSTOMER_ORDER": "顧客 #{{customerId}} 向店員點餐",
-  "ORDER_START_PREPARE": "店員 {{resourceId}} 開始為顧客 #{{customerId}} 製作餐點",
-  "ORDER_READY": "顧客 #{{customerId}} 的餐點完成",
+  "ORDER_START_PREPARE": "店員開始為顧客 #{{customerId}} 製作餐點",
+  "ORDER_READY": "顧客 #{{customerId}} 的餐點製作完成",
   "CUSTOMER_START_DINING": "顧客 #{{customerId}} 開始用餐",
   "CUSTOMER_FINISH_DINING": "顧客 #{{customerId}} 用餐完畢",
   "CUSTOMER_LEAVE": "顧客 #{{customerId}} 心滿意足地離店",
@@ -15,6 +15,10 @@
   "CAT_END_REST": "{{resourceId}} 睡飽了，起來伸懶腰",
   "CAT_STATE_CHANGE": "{{toSentence}}",
   "CAT_STATE_CHANGE_initial": "{{toSentence}}",
+  "CAT_CAT_AFFILIATIVE": "{{resourceId}} 與另一隻貓親和互動",
+  "CAT_CAT_AGONISTIC": "{{resourceId}} 與另一隻貓起衝突",
+  "STAFF_FEEDING": "員工餵食（每日 4 次中的 1 次）",
+  "STAFF_LITTER_CLEANING": "員工清貓砂盆（每日 2 次中的 1 次）",
   "label": {
     "CUSTOMER_ARRIVE": "顧客到達",
     "CUSTOMER_WAIT_SEAT": "等待座位",
@@ -30,11 +34,17 @@
     "CAT_LEAVE_SEAT": "貓咪離開",
     "CAT_START_REST": "貓咪休息",
     "CAT_END_REST": "休息結束",
-    "CAT_STATE_CHANGE": "貓咪狀態變化"
+    "CAT_STATE_CHANGE": "貓咪狀態變化",
+    "CAT_CAT_AFFILIATIVE": "貓貓親和",
+    "CAT_CAT_AGONISTIC": "貓貓衝突",
+    "STAFF_FEEDING": "員工餵食",
+    "STAFF_LITTER_CLEANING": "清貓砂盆"
   },
   "resource": {
     "cat": "貓 #{{n}}",
-    "seat": "座位 #{{n}}"
+    "seat": "座位 #{{n}}",
+    "preSeat": "等候中",
+    "staffOnly": "全店員工"
   },
   "catState": {
     "OUT_OF_LOUNGE": "在貓房裡",
