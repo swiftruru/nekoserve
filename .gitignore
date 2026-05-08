@@ -54,6 +54,10 @@ test-results/
 # Private planning scratchpad (personal notes, drafts, unpublished plans)
 docs/
 
+# Stray scratch dirs from unrelated side projects
+.codex-pet-runs/
+tmp/
+
 # Python virtual envs
 .venv/
 venv/
