@@ -12,6 +12,8 @@ import PlaybackControls, {
 import TimelineScrubber from '../components/playback/TimelineScrubber'
 import InspectPopover from '../components/playback/InspectPopover'
 import LearningOverlay from '../components/learning/LearningOverlay'
+import BatchPromoBanner from '../components/playback/BatchPromoBanner'
+import { useLiveBatchStore } from '../store/liveBatchStore'
 
 /**
  * Animated replay of a completed simulation (v0.3).
@@ -43,10 +45,18 @@ interface PlaybackPageProps {
   fullscreen?: boolean
   /** Toggle fullscreen mode on/off. */
   onToggleFullscreen?: () => void
+  /** Notify App whenever playback play/pause state flips. App uses this
+   *  signal to know when it can safely swap CafeScene to the latest
+   *  finished batch run without interrupting playback. */
+  onPlayingChange?: (playing: boolean) => void
+  /** v5: lets the BatchPromoBanner kick off a 20-replica batch in one
+   *  click. App provides this callback. */
+  onQuickStartBatch?: () => void
 }
 
 const DEFAULT_SPEED = 4
 const SPEED_STORAGE_KEY = 'nekoserve:playback-speed'
+const BATCH_PROMO_DISMISSED_KEY = 'nekoserve:batch-promo-dismissed'
 
 function loadSpeed(): number {
   try {
@@ -74,6 +84,8 @@ export default function PlaybackPage({
   onSkipToResults,
   fullscreen,
   onToggleFullscreen,
+  onPlayingChange,
+  onQuickStartBatch,
 }: PlaybackPageProps) {
   const { t } = useTranslation(['playback', 'events', 'learnMode'])
   const { config, eventLog } = result
@@ -94,10 +106,30 @@ export default function PlaybackPage({
   }, [eventLog])
 
   const [playing, setPlaying] = useState(false)
+  useEffect(() => {
+    onPlayingChange?.(playing)
+  }, [playing, onPlayingChange])
   const [speed, setSpeed] = useState<number>(() => loadSpeed())
   const [focus, setFocus] = useState<FocusTarget | null>(null)
   const [learningMode, setLearningMode] = useState(false)
   const sceneRef = useRef<HTMLDivElement>(null)
+
+  // v5 batch promo banner: nudges single-run users to discover Live
+  // Mode by offering a one-click batch from this page. Hidden once
+  // the user has run a batch (liveBatchStore.runs > 0) or has
+  // explicitly dismissed it (localStorage flag).
+  const liveRunsCount = useLiveBatchStore((s) => s.runs.length)
+  const [batchPromoDismissed, setBatchPromoDismissed] = useState<boolean>(() => {
+    try { return localStorage.getItem(BATCH_PROMO_DISMISSED_KEY) === 'true' }
+    catch { return false }
+  })
+  const showBatchPromo =
+    !!onQuickStartBatch && liveRunsCount === 0 && !batchPromoDismissed
+  function dismissBatchPromo() {
+    setBatchPromoDismissed(true)
+    try { localStorage.setItem(BATCH_PROMO_DISMISSED_KEY, 'true') }
+    catch { /* localStorage unavailable, in-memory dismiss only */ }
+  }
 
   // Precompute metric snapshots once per simulation result. The Learning
   // Overlay concept cards pull from this series in O(log N) per frame
@@ -337,6 +369,14 @@ export default function PlaybackPage({
         </div>
       </div>
 
+      {/* v5 batch promo banner (single-run users only) */}
+      {showBatchPromo && onQuickStartBatch && (
+        <BatchPromoBanner
+          onQuickStartBatch={onQuickStartBatch}
+          onDismiss={dismissBatchPromo}
+        />
+      )}
+
       {/* ── Scene + Learning Mode side-by-side ──────────────
           When Learning Mode is on at lg+ viewports, scene and
           concept cards render as 3fr/2fr columns so the user sees
@@ -433,3 +473,4 @@ export function PlaybackPageEmpty() {
     </div>
   )
 }
+

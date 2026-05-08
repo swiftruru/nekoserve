@@ -18,6 +18,7 @@ export type {
 // ── Page navigation ───────────────────────────────────────────
 export type Page =
   | 'settings'
+  | 'liveMode'
   | 'results'
   | 'eventlog'
   | 'playback'
@@ -33,6 +34,7 @@ export type Page =
  */
 export const PAGE_ORDER: readonly Page[] = [
   'settings',
+  'liveMode',
   'playback',
   'results',
   'eventlog',

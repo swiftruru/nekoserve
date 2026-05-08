@@ -1,0 +1,183 @@
+{
+  "title": "即時歷程模式",
+  "subtitle": "邊跑邊看：累積平均值如何隨模擬次數收斂、分配如何從稀疏變鐘形。資料點一筆一筆累積，回答「跑幾次才夠」這個問題。",
+  "toggle": "即時歷程模式",
+  "close": "關閉",
+  "progress": "已完成 {{completed}} / {{total}} 次",
+  "metricLabel": "觀察指標：",
+  "cumulativeMean": "目前累積平均",
+  "ci95": "95% 信賴區間",
+  "sampleCount": "已完成樣本數 n",
+  "errorPrefix": "錯誤",
+  "convergenceHint": "✓ 結果已穩定：近 {{window}} 次累積平均的相對變化小於 {{percent}}%，可以考慮停止。",
+  "convergenceWaiting": "尚未收斂：累積平均還在變動，繼續累積樣本。",
+  "chart": {
+    "empty": "等待第一筆資料...",
+    "xMaxLabel": "目標 N = {{n}}",
+    "xMaxLabelTooltip": "大寫 N = 你計劃要跑的總次數 (在模擬設定設的 replications)。圖會延伸到這個數值。",
+    "xAxisTitle": "模擬次數",
+    "firstRunLabel": "第 1 次 = {{value}}",
+    "currentMeanLabel": "目前平均 = {{value}}",
+    "hint": "橘色折線是「累積平均」,淡橘色帶是 95% 信賴區間。隨著 n 增加,帶會以 1/√n 速度收窄。",
+    "help": {
+      "summary": "ℹ️ 怎麼看這張圖 (累積平均收斂曲線)",
+      "axesTitle": "軸的意義",
+      "xAxis": "X 軸 = 模擬跑了第幾次。每跑完一次模擬,圖上就多一個點。",
+      "yAxis": "Y 軸 = 從第 1 次到目前為止,所有模擬該指標的平均值。",
+      "elementsTitle": "圖上的元素",
+      "elementOrangeLine": "橘色折線：累積平均。每多跑一次,平均值會更新。",
+      "elementBand": "淡橘色帶：95% 信賴區間 (CI)。代表「真實值有 95% 機率落在這個範圍內」。樣本越多,帶越窄。",
+      "elementBlip": "右邊閃爍的橘點：剛跑完那次的位置。",
+      "elementGrayDashed": "灰色虛線：第 1 次模擬的單次值。讓你比較跑 1 次跟跑很多次的差距。",
+      "elementRedLine": "紅色橫線：目前的累積平均值,落在 Y 軸某處。",
+      "elementGreenZone": "淡綠色背景區段：自動偵測到收斂的區域。",
+      "howToReadTitle": "怎麼判讀",
+      "howRead1": "前 30 次通常震盪劇烈 → 結果還不穩定,不能信。",
+      "howRead2": "帶子越來越窄 → 結果越來越精確 (1/√n 規律)。",
+      "howRead3": "進到綠色穩定區 → 累積平均近 100 次相對變化 < 1%,可以停了。",
+      "howRead4": "如果第 1 次 (灰虛線) 跟目前平均 (紅線) 差很多,證明「跑 1 次模擬會誤判」。",
+      "howRead5": "滑鼠移到曲線上任意點 → 看那次的精確數值與 CI。",
+      "notationTitle": "N 跟 n 的差別 (統計慣例)",
+      "notationN": "**大寫 N** = 你計劃要跑的總次數 (例如目標 N=50)。在模擬設定的 batch replications 設定。",
+      "notationLowerN": "**小寫 n** = 目前已經完成的次數 (例如 n=42 表示已跑 42 次)。隨進度變動。",
+      "notationWhyDifferent": "跑到一半 (例如 30/50) 時:N=50, n=30。跑完後兩者相等 (n=N=50)。"
+    }
+  },
+  "histogram": {
+    "title": "{{metric}} 分配",
+    "totalCount": "已完成 n = {{n}}",
+    "totalCountTooltip": "小寫 n = 目前已收集到的樣本數 (= 已完成的模擬次數)。",
+    "binTooltip": "[{{from}}, {{to}}) 共 {{count}} 筆",
+    "meanLabel": "平均 = {{value}}",
+    "hint": "每跑一次模擬就累加一筆樣本到對應 bin。樣本少時稀疏,樣本多時收斂為鐘形。",
+    "tooltipCount": "次數",
+    "tooltipDensity": "密度",
+    "help": {
+      "summary": "ℹ️ 怎麼看這張圖 (分配圖)",
+      "axesTitle": "軸的意義",
+      "xAxis": "X 軸 = 該指標的數值範圍 (從最低到最高)。",
+      "yAxis": "Y 軸 = 落在那個範圍的模擬次數。柱越高,代表那個範圍出現越多次。",
+      "elementsTitle": "圖上的元素",
+      "elementBars": "橘色長條：histogram,把資料分成 20 格,每格算落在那的次數。",
+      "elementKde": "深橘色平滑曲線：KDE (核密度估計),用機率密度函數還原連續形狀。樣本越多曲線越平滑。",
+      "elementMedian": "黑色虛線「中位數」：50% 的模擬結果落在線左邊,50% 落在右邊。",
+      "elementP5P95": "灰色虛線 P5 / P95：5% / 95% 分位數。中間 90% 的結果落在這兩線之間 (圖右上角顯示區間)。",
+      "elementMeanRed": "紅色虛線「平均」：平均值。如果跟中位數差很多,代表分配偏一邊。",
+      "elementShape": "右下角「分配形狀」：自動判讀偏度與峰度,給你白話結論。",
+      "howToReadTitle": "怎麼判讀",
+      "howRead1": "鐘形 (對稱) → 接近常態,結果集中可預測。",
+      "howRead2": "右偏 (長尾在右) → 偶爾會出現遠超平均的極大值 (例如等待時間經常如此)。",
+      "howRead3": "左偏 (長尾在左) → 偶爾會出現遠低於平均的極小值。",
+      "howRead4": "長尾 → 極端值偏多,要小心 (很多隨機過程有此特性)。",
+      "howRead5": "中位數 vs 平均差很多 → 分配偏一邊,單看平均會誤導。",
+      "howRead6": "滑鼠移到任一格 → 看那格的次數、密度、樣本總數。",
+      "notationTitle": "N 跟 n 的差別 (統計慣例)",
+      "notationN": "**大寫 N** = 你計劃要跑的總次數 (在模擬設定的 batch replications)。",
+      "notationLowerN": "**小寫 n** = 目前已收集到的樣本數,也就是這張 histogram 用了幾筆資料。",
+      "notationWhyDifferent": "進行中時 N > n (例如目標 N=50,目前 n=30 表示還剩 20 次)。跑完後 n=N。"
+    }
+  },
+  "status": {
+    "idle": "尚未開始",
+    "running": "進行中",
+    "paused": "暫停",
+    "done": "完成",
+    "stopped": "已停止",
+    "error": "錯誤"
+  },
+  "controls": {
+    "pause": "暫停",
+    "resume": "繼續",
+    "stop": "停止"
+  },
+  "bootstrap": {
+    "subtitle": "批次模式啟動中。第 1 次模擬跑完後，左邊會開始播動畫；右邊的累積平均曲線跟著一起長。",
+    "runningFirst": "正在跑第 1 次模擬...",
+    "runningHint": "貓咪 SVG 動畫正在準備中"
+  },
+  "scenePanel": {
+    "title": "當前模擬動畫",
+    "runLabel": "第 {{index}} 次",
+    "minUnit": "分",
+    "thumbnailsLabel": "已完成的模擬",
+    "thumbnailHint": "點擊任一格切換到該次的動畫",
+    "expand": "▼ 展開",
+    "collapse": "收合動畫面板,讓圖表佔滿頁面",
+    "collapseShort": "收合",
+    "replay": "從頭開始播放這次的動畫",
+    "replayShort": "重播"
+  },
+  "convergence": {
+    "celebration": "結果已穩定，可以停了！"
+  },
+  "annotations": {
+    "ciShrinkage": "1/√n 收窄中"
+  },
+  "shape": {
+    "label": "分配形狀",
+    "tooFew": "樣本太少 (需要 ≥ 8)",
+    "narrow": "✓ 集中 (變異很小)",
+    "normal": "✓ 接近常態",
+    "rightSkewed": "→ 右偏 (長尾在右)",
+    "leftSkewed": "← 左偏 (長尾在左)",
+    "longTail": "⚠ 長尾分配 (極端值偏多)",
+    "centralRange": "中間 90%: [{{lo}}, {{hi}}]",
+    "p5Label": "P5",
+    "p50Label": "中位數",
+    "p95Label": "P95",
+    "kdeLegend": "平滑分配曲線 (KDE)"
+  },
+  "smallMultiples": {
+    "title": "多指標即時面板",
+    "hint": "每跑完一次模擬,每張小圖同時加新點。點任一張看詳細",
+    "back": "← 返回小圖",
+    "configureButton": "選指標",
+    "configureTitle": "顯示哪些指標?",
+    "configureHint": "至少選 1 個,最多沒上限。設定會記住。",
+    "metricsCount": "{{count}} 個指標"
+  },
+  "counter": {
+    "label": "樣本"
+  },
+  "replay": {
+    "button": "重播曲線",
+    "title": "從 n=1 開始重新播放所有曲線的成長過程",
+    "stopShort": "停止"
+  },
+  "emptyState": {
+    "title": "尚未啟動批次模擬",
+    "lead": "「即時歷程」是用來看「跑了 N 次之後,結果有沒有穩」的工具。",
+    "needBatch": "因為要畫累積平均收斂曲線跟分配形狀,**至少要跑 2 次以上**才有東西可看。",
+    "singleRunHint": "如果你只跑單次模擬,請看「模擬回放」頁的「🎓 即時學習模式」— 那是「一次模擬內」的即時指標 (事件鐘、隊列長度、Little's Law、利用率)。",
+    "howToStart": "怎麼啟動批次模式?",
+    "step1": "切到「模擬設定」頁",
+    "step2": "找到「Batch / 批次模式」開關,打開它",
+    "step3": "設定要跑幾次 (N=20 起跳,推薦 N=50 看收斂效果)",
+    "step4": "按「執行」,系統會自動帶你回來這頁",
+    "goSettings": "前往模擬設定",
+    "quickStartBatch": "🚀 直接用目前參數跑 20 次批次",
+    "quickStartHint": "或者一鍵立刻啟動 (使用最近一次的設定參數):"
+  },
+  "metric": {
+    "avgWaitForSeat": "平均等待座位 (分)",
+    "avgWaitForOrder": "平均等待點餐 (分)",
+    "avgTotalStayTime": "平均停留時間 (分)",
+    "catInteractionRate": "貓咪互動率",
+    "avgCatVisitsPerCustomer": "平均每位顧客被幾隻貓拜訪",
+    "noCatVisitRate": "完全沒被貓拜訪比例",
+    "seatUtilization": "座位利用率",
+    "staffUtilization": "店員利用率",
+    "catUtilization": "貓咪互動利用率",
+    "totalCustomersServed": "總服務人數",
+    "totalCustomersArrived": "總到達人數",
+    "abandonRate": "放棄等待比例",
+    "waitForSeatP50": "等位 P50 (分)",
+    "waitForSeatP95": "等位 P95 (分)",
+    "waitForSeatP99": "等位 P99 (分)",
+    "waitForOrderP50": "等餐 P50 (分)",
+    "waitForOrderP95": "等餐 P95 (分)",
+    "waitForOrderP99": "等餐 P99 (分)",
+    "catWelfareScore": "貓咪福祉指數 (0-5)",
+    "customerSatisfactionScore": "顧客滿意度 (0-1)"
+  }
+}

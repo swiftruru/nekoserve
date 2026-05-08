@@ -1,5 +1,6 @@
 {
   "settings": "Settings",
+  "liveMode": "Live Mode",
   "results": "Results",
   "eventlog": "Event Log",
   "playback": "Playback",

@@ -29,6 +29,55 @@ function delay(ms: number): Promise<void> {
   return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve()
 }
 
+// Per-process LCG used by the mock-jitter path. Seeded from env so
+// successive runs of the same screenshot test produce comparable
+// histograms.
+let mockJitterSeed = 0
+function mockRand(): number {
+  if (mockJitterSeed === 0) {
+    const envSeed = Number(process.env.NEKOSERVE_E2E_SIMULATION_JITTER_SEED ?? '')
+    mockJitterSeed = (Number.isFinite(envSeed) && envSeed > 0
+      ? envSeed
+      : (Date.now() & 0xffffffff)) >>> 0
+  }
+  mockJitterSeed = (mockJitterSeed * 1664525 + 1013904223) >>> 0
+  return (mockJitterSeed >>> 8) / 0x01000000
+}
+function mockGauss(mean: number, sd: number): number {
+  const u1 = Math.max(1e-9, mockRand())
+  const u2 = mockRand()
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+  const v = mean + sd * z
+  return Number.isFinite(v) ? v : mean
+}
+
+/**
+ * Add small Gaussian jitter to every numeric metric in the fixture so
+ * batch screenshots show realistic curves and histograms. Off by
+ * default; opt-in via NEKOSERVE_E2E_SIMULATION_JITTER=1.
+ */
+function jitterMetrics(metrics: Record<string, number>): Record<string, number> {
+  const out: Record<string, number> = { ...metrics }
+  for (const k of Object.keys(metrics)) {
+    const v = metrics[k]
+    if (typeof v !== 'number' || !Number.isFinite(v) || v === 0) continue
+    const lk = k.toLowerCase()
+    const cv = lk.includes('rate') || lk.includes('utilization') ? 0.08
+             : lk.includes('p9') ? 0.12
+             : 0.10
+    let nv = mockGauss(v, Math.abs(v) * cv)
+    if (lk.includes('rate') || lk.includes('utilization') || k === 'customerSatisfactionScore') {
+      nv = Math.min(1, Math.max(0, nv))
+    } else if (k === 'catWelfareScore') {
+      nv = Math.min(5, Math.max(0, nv))
+    } else if (lk.includes('wait') || lk.includes('time') || lk.startsWith('total')) {
+      nv = Math.max(0, nv)
+    }
+    out[k] = nv
+  }
+  return out
+}
+
 async function runMockSimulator(config: SimulationConfig): Promise<SimulationResult> {
   const delayMs = readDelay()
   const mockError = process.env.NEKOSERVE_E2E_SIMULATION_ERROR as SimulatorError['type'] | undefined
@@ -52,8 +101,12 @@ async function runMockSimulator(config: SimulationConfig): Promise<SimulationRes
 
   try {
     const result = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as SimulationResult
+    const jitter = process.env.NEKOSERVE_E2E_SIMULATION_JITTER === '1'
     return {
       ...result,
+      metrics: jitter && result.metrics
+        ? jitterMetrics(result.metrics as unknown as Record<string, number>) as unknown as SimulationResult['metrics']
+        : result.metrics,
       config: {
         ...result.config,
         ...config,

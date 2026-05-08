@@ -1,0 +1,183 @@
+{
+  "title": "Live Convergence Mode",
+  "subtitle": "Watch as you run: cumulative means settle and the distribution grows from a sparse bar chart into a bell shape. Each completed run adds a point, helping you answer the \"how many runs is enough?\" question.",
+  "toggle": "Live Convergence",
+  "close": "Close",
+  "progress": "Completed {{completed}} / {{total}} runs",
+  "metricLabel": "Metric:",
+  "cumulativeMean": "Cumulative mean",
+  "ci95": "95% CI half-width",
+  "sampleCount": "Completed n",
+  "errorPrefix": "Error",
+  "convergenceHint": "✓ Stable: cumulative mean changed by less than {{percent}}% over the last {{window}} runs. You can stop here.",
+  "convergenceWaiting": "Not yet converged: the cumulative mean is still moving — keep accumulating samples.",
+  "chart": {
+    "empty": "Waiting for first sample...",
+    "xMaxLabel": "Target N = {{n}}",
+    "xMaxLabelTooltip": "Capital N = the total replications you planned to run (set in Settings → Batch). The chart extends to this value.",
+    "xAxisTitle": "Run #",
+    "firstRunLabel": "Run 1 = {{value}}",
+    "currentMeanLabel": "Current mean = {{value}}",
+    "hint": "Orange line: cumulative mean. Light-orange band: 95% CI. The band tightens as 1/√n.",
+    "help": {
+      "summary": "ℹ️ How to read this chart (cumulative-mean convergence)",
+      "axesTitle": "Axes",
+      "xAxis": "X axis = which run we are at. Each completed run adds a point.",
+      "yAxis": "Y axis = the average of the metric across runs 1..n so far.",
+      "elementsTitle": "What you see",
+      "elementOrangeLine": "Orange line: the cumulative mean. It updates after every run.",
+      "elementBand": "Light-orange band: 95% CI. The true value sits inside this range with 95% probability. Band shrinks as samples grow.",
+      "elementBlip": "Pulsing orange dot at the right: the most recent run.",
+      "elementGrayDashed": "Gray dashed horizontal line: run 1's lone value. Useful for comparing one run vs many.",
+      "elementRedLine": "Red horizontal line: the current cumulative mean.",
+      "elementGreenZone": "Light-green region: where the curve was detected as stable.",
+      "howToReadTitle": "How to interpret",
+      "howRead1": "First ~30 runs swing wildly → result not yet trustworthy.",
+      "howRead2": "Band tightens steadily → answer becomes more precise (1/√n shrinkage).",
+      "howRead3": "Once the green stable zone appears (last 100 runs change < 1%), you can stop.",
+      "howRead4": "If run 1 (gray dashed) is far from the current mean (red line), it proves a single run can mislead.",
+      "howRead5": "Hover any point on the curve to see that run's exact mean and CI.",
+      "notationTitle": "N vs n (statistical convention)",
+      "notationN": "**Capital N** = total runs you planned (e.g. Target N=50). Set in Settings → Batch replications.",
+      "notationLowerN": "**Lowercase n** = runs completed so far (e.g. n=42 means 42 runs done). Grows as the batch progresses.",
+      "notationWhyDifferent": "Mid-run (e.g. 30/50): N=50, n=30. After completion they match (n=N=50)."
+    }
+  },
+  "histogram": {
+    "title": "{{metric}} distribution",
+    "totalCount": "Completed n = {{n}}",
+    "totalCountTooltip": "Lowercase n = the number of samples collected so far (= replications completed).",
+    "binTooltip": "[{{from}}, {{to}}): {{count}} runs",
+    "meanLabel": "mean = {{value}}",
+    "hint": "Each completed run drops a sample into a bin. Sparse at low n; bell-shaped as n grows.",
+    "tooltipCount": "Count",
+    "tooltipDensity": "Density",
+    "help": {
+      "summary": "ℹ️ How to read this chart (distribution)",
+      "axesTitle": "Axes",
+      "xAxis": "X axis = the metric's value range (low to high).",
+      "yAxis": "Y axis = how many runs landed in each value range. Tall bar = common value.",
+      "elementsTitle": "What you see",
+      "elementBars": "Orange bars: the histogram, splitting samples into 20 bins.",
+      "elementKde": "Dark-orange smooth curve: KDE (kernel density estimate) — the smoothed continuous shape. The more samples, the smoother it gets.",
+      "elementMedian": "Black dashed 'Median': 50% of runs lie to the left, 50% to the right.",
+      "elementP5P95": "Gray dashed P5 / P95: the 5% and 95% quantiles. The middle 90% lives between them (range shown top-right).",
+      "elementMeanRed": "Red dashed 'mean': the cumulative mean. Far from the median ⇒ skewed distribution.",
+      "elementShape": "Bottom-right 'Distribution shape': automatic skewness/kurtosis verdict in plain language.",
+      "howToReadTitle": "How to interpret",
+      "howRead1": "Bell-shaped (symmetric) → near-normal, results are concentrated and predictable.",
+      "howRead2": "Right-skewed (long tail right) → occasional very large values (waiting times often look this way).",
+      "howRead3": "Left-skewed (long tail left) → occasional very small values.",
+      "howRead4": "Long tail → heavy outliers, treat carefully (many random processes do this).",
+      "howRead5": "Mean far from median → distribution is skewed, looking only at the mean is misleading.",
+      "howRead6": "Hover any bar to see its count, density, and total n.",
+      "notationTitle": "N vs n (statistical convention)",
+      "notationN": "**Capital N** = total runs you planned (set in Settings → Batch replications).",
+      "notationLowerN": "**Lowercase n** = samples collected so far (= rows feeding this histogram).",
+      "notationWhyDifferent": "While running, N > n (e.g. target N=50, current n=30 means 20 left). After completion n=N."
+    }
+  },
+  "status": {
+    "idle": "Idle",
+    "running": "Running",
+    "paused": "Paused",
+    "done": "Done",
+    "stopped": "Stopped",
+    "error": "Error"
+  },
+  "controls": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop"
+  },
+  "bootstrap": {
+    "subtitle": "Batch starting. The cat animation begins as soon as run 1 completes; the cumulative-mean curve grows alongside.",
+    "runningFirst": "Running first simulation...",
+    "runningHint": "Cat SVG animation will start in a moment"
+  },
+  "scenePanel": {
+    "title": "Current Run Animation",
+    "runLabel": "Run {{index}}",
+    "minUnit": "min",
+    "thumbnailsLabel": "Completed runs",
+    "thumbnailHint": "Click any chip to switch the animation to that run",
+    "expand": "▼ Expand",
+    "collapse": "Collapse the scene panel; charts go full-width",
+    "collapseShort": "Collapse",
+    "replay": "Restart this run's animation from the beginning",
+    "replayShort": "Replay"
+  },
+  "convergence": {
+    "celebration": "Stable! You can stop here."
+  },
+  "annotations": {
+    "ciShrinkage": "shrinking 1/√n"
+  },
+  "shape": {
+    "label": "Distribution shape",
+    "tooFew": "Too few samples (need ≥ 8)",
+    "narrow": "✓ Narrow (low spread)",
+    "normal": "✓ Approximately normal",
+    "rightSkewed": "→ Right-skewed (long tail right)",
+    "leftSkewed": "← Left-skewed (long tail left)",
+    "longTail": "⚠ Long-tail distribution (heavy outliers)",
+    "centralRange": "Middle 90%: [{{lo}}, {{hi}}]",
+    "p5Label": "P5",
+    "p50Label": "Median",
+    "p95Label": "P95",
+    "kdeLegend": "Smoothed density (KDE)"
+  },
+  "smallMultiples": {
+    "title": "Multi-metric live panel",
+    "hint": "Every completed run adds a point to all charts at once. Click any to drill in.",
+    "back": "← Back to grid",
+    "configureButton": "Pick metrics",
+    "configureTitle": "Which metrics to display?",
+    "configureHint": "Pick at least 1. Your selection is remembered.",
+    "metricsCount": "{{count}} metrics"
+  },
+  "counter": {
+    "label": "samples"
+  },
+  "replay": {
+    "button": "Replay curves",
+    "title": "Redraw all curves growing from n=1 to the end",
+    "stopShort": "Stop"
+  },
+  "emptyState": {
+    "title": "No batch run yet",
+    "lead": "Live Mode is for asking \"after N runs, has the answer settled?\"",
+    "needBatch": "Drawing the cumulative-mean curve and the distribution shape needs **at least 2 runs**.",
+    "singleRunHint": "For a single run, use Playback → 🎓 Learning Mode instead — those cards (event clock, queue length, Little's Law, utilization) are real-time signals *inside* one simulation.",
+    "howToStart": "How to start a batch run",
+    "step1": "Go to the Settings page",
+    "step2": "Toggle on Batch mode",
+    "step3": "Set the run count (N=20 minimum; N=50 shows convergence well)",
+    "step4": "Hit Run — the app will bring you back here automatically",
+    "goSettings": "Go to Settings",
+    "quickStartBatch": "🚀 Run a 20-replica batch with current params",
+    "quickStartHint": "Or kick one off right now (reuses your last config):"
+  },
+  "metric": {
+    "avgWaitForSeat": "Avg wait for seat (min)",
+    "avgWaitForOrder": "Avg wait for order (min)",
+    "avgTotalStayTime": "Avg total stay (min)",
+    "catInteractionRate": "Cat interaction rate",
+    "avgCatVisitsPerCustomer": "Avg cat visits per customer",
+    "noCatVisitRate": "No-cat-visit rate",
+    "seatUtilization": "Seat utilization",
+    "staffUtilization": "Staff utilization",
+    "catUtilization": "Cat utilization",
+    "totalCustomersServed": "Total served",
+    "totalCustomersArrived": "Total arrived",
+    "abandonRate": "Abandon rate",
+    "waitForSeatP50": "Wait-for-seat P50 (min)",
+    "waitForSeatP95": "Wait-for-seat P95 (min)",
+    "waitForSeatP99": "Wait-for-seat P99 (min)",
+    "waitForOrderP50": "Wait-for-order P50 (min)",
+    "waitForOrderP95": "Wait-for-order P95 (min)",
+    "waitForOrderP99": "Wait-for-order P99 (min)",
+    "catWelfareScore": "Cat welfare score (0-5)",
+    "customerSatisfactionScore": "Customer satisfaction (0-1)"
+  }
+}

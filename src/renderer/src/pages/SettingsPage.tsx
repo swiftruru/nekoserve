@@ -485,6 +485,42 @@ export default function SettingsPage({
             />
           </div>
 
+          {/* ── Batch hint card (v5 discoverability) ────
+              Tells users *why* batch mode matters before they see the
+              two mode toggles. Shown only when batch mode is currently
+              off — once they've turned it on, the hint becomes noise. */}
+          {onRunBatch && !batchMode && !sweepMode && (
+            <div className="mt-4 rounded-xl border-2 border-dashed border-orange-300 dark:border-orange-500/50 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/10 dark:to-yellow-900/10 p-4">
+              <div className="text-sm font-bold text-orange-800 dark:text-orange-300 mb-1">
+                {t('settings:batchHint.title')}
+              </div>
+              <p className="text-[13px] text-gray-700 dark:text-bark-200 leading-relaxed mb-2">
+                {t('settings:batchHint.lead')}
+              </p>
+              <p className="text-[12px] text-gray-600 dark:text-bark-300 leading-relaxed mb-1">
+                {t('settings:batchHint.explain1')}
+              </p>
+              <p className="text-[12px] text-gray-600 dark:text-bark-300 leading-relaxed mb-3">
+                {t('settings:batchHint.explain2')}
+              </p>
+              <div className="rounded-lg bg-white/70 dark:bg-bark-800/50 border border-orange-200 dark:border-bark-600 p-3">
+                <div className="text-[11px] font-semibold text-orange-700 dark:text-orange-400 mb-1.5">
+                  {t('settings:batchHint.comparisonTitle')}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[12px]">
+                  <div className="flex items-start gap-1.5 text-gray-600 dark:text-bark-300">
+                    <span>•</span>
+                    <span>{t('settings:batchHint.compareSingle')}</span>
+                  </div>
+                  <div className="flex items-start gap-1.5 text-orange-700 dark:text-orange-300 font-medium">
+                    <span>•</span>
+                    <span>{t('settings:batchHint.compareBatch')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── Advanced run modes ─────────────────────── */}
           {onRunBatch && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -76,6 +76,7 @@ First-launch tips for unsigned builds:
 | Page | Description |
 |------|-------------|
 | **⚙️ Simulation Settings** | 14 configurable parameters, 3 built-in scenario presets, custom presets persisted in `localStorage`, per-parameter **design rationale**, plus **batch mode** (multi-seed replication with CI) and **sensitivity analysis** (parameter sweep) toggles |
+| **⚡ Live Mode** (v2.4.0) | Streaming batch-replication page: launch N runs and watch the cumulative-mean curve climb, the 95% CI band tighten as `1/√n`, and the histogram morph from one bar into a bell. Auto-detects "stable" and tells you when you can stop. Multi-metric small-multiples grid + a live SVG café animation that cycles through every completed run as it lands. |
 | **📊 Statistics Results** | 4 themed sections with Hero Verdict, Bottleneck callout, count-up KPIs, 7+ visualizations, Kingman theory callout, 14-term glossary tooltips, **persistent history panel**, **batch CI display**, **sweep chart**, **What-If Explorer**, **print/PDF export**, and **scenario config diff** in comparison view |
 | **📋 Event Log** | Full simulation trace with 15 typed event codes, chip filter, localized keyword search, row highlight synced to the Playback cursor |
 | **🎞️ Simulation Playback** | Animated replay of the event log on an SVG café floor plan. Characters walk through real aisles (no more ghosting through walls), ambient decorations react to time of day, and an optional side-by-side **Live Learning Mode** overlay shows four live DES concept cards (Event-driven clock, Queue length, Little's Law, Utilization) with a Beginner / Pro level toggle |
@@ -153,6 +154,28 @@ The architecture is one pure reducer `replayUpTo(ctx, simTime)` in [`src/rendere
 **Dramatic event moments** (v0.5.0) — `CUSTOMER_ABANDON` now plays a full 1-sim-minute mini-skit: the customer **stomps three times in place**, **angry smoke trails above their head** for the whole walk, they **slowly storm out the bottom aisle**, **slam through the front door** with a scaleX wobble + fade, and leave a **dust cloud** at the door. Implemented as a new `'abandonDrama'` scene-pulse kind with its own 1-sim-minute TTL; `PULSE_TTL_MIN` became a per-kind `Record` to support the mixed-duration world.
 
 **Ambient scene decorations** (v0.5.0) — the background now has time-of-day-aware atmosphere: 14 🌸 cherry blossom petals drift diagonally across the whole scene (always on), 9 🧶 yarn balls hang from the ceiling with a gentle sway (always on), 3 🦋 butterflies flutter in a figure-8 during the first ~45% of sim time, and 7 ✨ fireflies twinkle with a yellow glow during the final ~40%. All pure CSS keyframes, zero React re-render cost, disabled by `prefers-reduced-motion`.
+
+### Live Convergence Mode (v2.4.0)
+
+v2.4.0 adds a brand-new **⚡ Live Mode** page that turns batch replication from "press run, wait, look at one CI" into a streaming, classroom-friendly experience. Launch N replications and immediately watch the cumulative-mean curve climb, the 95% CI band tighten as `1/√n`, and the histogram morph from one sparse bar into a bell shape — the *"how many runs is enough?"* question becomes something a student can see, not just trust.
+
+**📈 Cumulative-mean chart with live CI band** — `CumulativeMeanChart` draws an orange cumulative-mean line and a light-orange 95% CI band that visibly contracts as `1/√n`. A pulsing dot marks the most recent run; a gray dashed reference line shows run 1's lone value (so the gap between "trust one run" and "trust the average" is literally drawn); a green stable zone auto-shades the segment where the cumulative mean changed by less than 1% over the trailing 100 runs.
+
+**📊 Live histogram + KDE smoother + shape verdict** — `LiveHistogram` renders 20 bins with an overlaid KDE (`utils/kde.ts`), median + P5 + P95 reference lines, and an auto-classified shape verdict in the corner ("approximately normal", "right-skewed (long tail right)", "long-tail distribution (heavy outliers)" — driven by `utils/distributionShape.ts`). The bell shape emerges live as samples accumulate.
+
+**🎯 Convergence detector + celebration** — `utils/convergence.ts` watches the trailing 100 cumulative means and flips to "stable" when the relative change drops below 1%. When that happens the chart shades a green zone, a hint banner tells the user "✓ Stable: you can stop here", and a one-shot `ConfettiBurst` plays. Threshold and window are surfaced in the hint copy, so it's a teachable signal rather than a magic light.
+
+**🐱 Live SVG café animation that cycles through completed runs** — while the batch runs, the left half of the page plays the same playback animation as the regular Playback page, but cycles through every completed run as it lands. A horizontal `RunThumbnailStrip` lets the user click any past run to scrub to that one. The cycling is gated on playback being paused / ended so we never yank the scene mid-replay.
+
+**📐 Multi-metric small-multiples** — a grid of mini cumulative-mean charts (default 6 metrics, configurable, persisted via `MetricSelectionPanel`). Click any tile to drill into the full chart + histogram view for that metric. 21 KPIs available: wait-for-seat / wait-for-order means and percentiles, total stay, abandon rate, all three utilisations, cat-interaction rate, cat-welfare score, customer-satisfaction score, etc.
+
+**▶️ Streaming runner with pause / stop + partial commit** — `useLiveRunner` drives one replication at a time and pumps results into a Zustand `liveBatchStore`. The runner exposes pause / resume / stop, surfaces per-run errors without aborting the batch, and hands a partial-results array to the commit step when the user stops early — so a 50-run batch the user halts at run 27 still lands a valid 27-run summary on the Results page.
+
+**🔁 Replay curves** — a "Replay curves" button redraws every cumulative-mean / histogram bin from `n=1` to the end, animating the growth — useful for showing the convergence story to an audience after the batch is done.
+
+**💡 Discoverability nudges** — a Settings batchHint card explains *"1 run → one dot (no idea if accurate). 20 runs → a curve + CI band (see stability)"* above the batch / sweep toggles when both are off. A one-time `BatchPromoBanner` on the Playback page nudges single-run users toward the new mode with a one-click "🚀 Run 20-replica batch now" CTA. Both hide permanently once the user runs their first batch.
+
+**📚 N vs n notation glossary** — two new tooltipped terms (`bigN` / `lowerN`) so chart copy can use the statistical convention — **N** = total planned, **n** = completed so far — without confusing first-time viewers.
 
 ### Hirsch 2025 fidelity audit (v2.3.0)
 

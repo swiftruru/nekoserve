@@ -157,6 +157,14 @@
         "label": "Kingman's approximation",
         "def": "A simple formula for estimating queue wait time. It shows wait grows proportional to utilization divided by (1 minus utilization) — so once utilization nears 100%, wait times explode. Derived by John Kingman in 1961."
       },
+      "bigN": {
+        "label": "Capital N (target total)",
+        "def": "The total number of simulations you planned to run. Set in Settings → Batch replications. The chart extends to X = N. Example: if you launched a batch of 50, N=50."
+      },
+      "lowerN": {
+        "label": "Lowercase n (samples completed)",
+        "def": "How many runs have completed and been folded into the statistics so far. Grows from 1 up to N. Example: mid-batch n=25, N=50; after completion n=N=50. Statistics textbooks use lowercase n for sample size."
+      },
       "littlesLaw": {
         "label": "Little's Law",
         "def": "The foundational identity of queueing theory: average number in system = arrival rate × average stay time. It holds regardless of the complexity of the system or the shape of the probability distributions. Proven by John Little in 1961."

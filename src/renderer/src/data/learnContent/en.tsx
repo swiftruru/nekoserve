@@ -1176,11 +1176,832 @@ export const LEARN_CONTENT_EN: LearnContent = {
   // ══════════════════════════════════════════════════════════
   // The "How it Works" page is itself a long-form learning essay, so the sidebar
   // deliberately has no extra notes for it; readers focus on the main content.
-  howitworks: [],
+  howitworks: [
+    {
+      id: 'how-paradigms',
+      icon: '🗺️',
+      title: 'Simulation paradigms: DES, ABM, SD',
+      content: (
+        <div>
+          <P>Computer simulation has three main paradigms; the right choice depends on what behavior the study aims to observe:</P>
+          <UL>
+            <LI>
+              <B>Discrete-Event Simulation (DES)</B>: NekoServe's paradigm.
+              Time advances by jumping to the next scheduled event. Best for resource queues and process flows
+              (queues, manufacturing, ERs).
+            </LI>
+            <LI>
+              <B>Agent-Based Modeling (ABM)</B>: each entity has autonomous decision logic; global behavior emerges.
+              Best for emergent phenomena (epidemics, markets, ecosystems).
+            </LI>
+            <LI>
+              <B>System Dynamics (SD)</B>: differential equations over stocks and flows in continuous time.
+              Best for strategic-level long-term trends (population, climate, industry policy).
+            </LI>
+          </UL>
+          <Note>
+            NekoServe is DES-skeleton plus a touch of ABM (autonomous cat behavior).
+            Hybrid paradigms are increasingly common.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-fel',
+      icon: '⏭️',
+      title: 'FEL data structure',
+      content: (
+        <div>
+          <P>The <B>Future Event List (FEL)</B> needs two operations:</P>
+          <UL>
+            <LI><B>Insert</B> a new event with timestamp</LI>
+            <LI><B>Pop</B> the next (smallest-timestamp) event</LI>
+          </UL>
+          <P>This is the classic <B>priority queue</B> problem. Common implementations:</P>
+          <UL>
+            <LI><B>Binary heap</B>: O(log n) insert/pop. Used by SimPy.</LI>
+            <LI><B>Balanced BST</B>: also O(log n), larger constants but supports range queries.</LI>
+            <LI><B>Skip list</B>: expected O(log n), simpler to write.</LI>
+            <LI><B>Calendar Queue</B>: expected O(1) but needs dynamic bucket management; works when event density is uniform.</LI>
+          </UL>
+          <Example>
+            10000 events × log(10000) ≈ 13 comparisons. A laptop processes millions of events per second.
+            That's why NekoServe's 720-min run with 4700 events finishes in under a second.
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'how-poisson-exponential',
+      icon: '🎯',
+      title: 'Why Poisson / exponential by default?',
+      content: (
+        <div>
+          <P>
+            Queueing theory's textbook defaults are <B>Poisson arrivals</B> and <B>exponential service times</B>.
+            Not arbitrary — both have special mathematical properties.
+          </P>
+          <P><B>Memoryless property</B>: the exponential is the unique continuous memoryless distribution.</P>
+          <Formula>
+            P(X &gt; s + t | X &gt; s) = P(X &gt; t)
+          </Formula>
+          <P>
+            Meaning: if you've already waited s minutes, the chance of waiting t more is the same as starting fresh.
+            This makes the system <B>Markovian</B>; closed-form analytical results (M/M/1, M/M/c) all rest on this.
+          </P>
+          <Note>
+            Real service times rarely follow a pure exponential (there's usually a minimum service time).
+            NekoServe uses fixed order/prep time plus normal jitter — closer to reality, but
+            no longer matches M/M/c closed form, hence the need for DES.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-warmup',
+      icon: '🔥',
+      title: 'Warm-up period',
+      content: (
+        <div>
+          <P>
+            At t=0 the system is <B>empty</B>: no customers, no queues. Early observations are biased by this
+            initial condition and do not represent steady state.
+          </P>
+          <P>
+            <B>Fix</B>: run long enough, then discard the first W minutes. Compute statistics on [W, T] only.
+            That W is the warm-up period.
+          </P>
+          <P>
+            <B>Welch's plot method</B>: run N independent replications, take a moving average of each,
+            overlay them, and find the point where the curves "go flat". Everything after is steady state;
+            everything before is warm-up.
+          </P>
+          <Example>
+            NekoServe's 720-minute day usually takes 30–60 minutes to warm up
+            (customers arrive gradually, seats start filling). Cat-behavior warm-up is shorter
+            (cats are already in the cafe).
+          </Example>
+          <Note>
+            Short-horizon (terminating) simulations <B>don't always need warm-up removal</B>.
+            If the research question is "what's the experience in the first hour?", the warm-up is part of the study itself.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-verification-validation',
+      icon: '✅',
+      title: 'Verification vs Validation',
+      content: (
+        <div>
+          <P>Two key checks for simulation research (Sargent, 2013):</P>
+          <UL>
+            <LI>
+              <B>Verification</B>: "Does the program faithfully implement the model?"
+              i.e. "Is my code right?". Methods: unit tests, edge cases, Little's Law consistency checks.
+            </LI>
+            <LI>
+              <B>Validation</B>: "Does the model faithfully reflect reality?"
+              i.e. "Is my model right?". Methods: compare to empirical data, expert review, sensitivity analysis.
+            </LI>
+          </UL>
+          <P>
+            NekoServe's "Validation" page does both:
+            Verification (check that simulator matches Hirsch paper numbers) +
+            Validation (confirm cat behavior shares match field observations).
+          </P>
+          <Note>
+            In my own papers I document both. Many writers conflate them, but separating them lets reviewers
+            see the methodology faster.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-output-analysis',
+      icon: '📑',
+      title: 'Output analysis: terminating vs steady-state',
+      content: (
+        <div>
+          <P>The right statistical method depends on the scenario:</P>
+          <UL>
+            <LI>
+              <B>Terminating</B>: clear start and end (e.g. 9:00-21:00 business day).
+              Replications are independent — sample mean + t-distribution CI works directly.
+            </LI>
+            <LI>
+              <B>Steady-state</B>: long-running, looking at long-term behavior (e.g. 24/7 call center).
+              Need warm-up removal, and may need <B>batch means</B> or the <B>regenerative method</B>
+              to handle sample correlation.
+            </LI>
+          </UL>
+          <Note>
+            NekoServe is a <B>terminating simulation</B> (fixed daily hours).
+            The Live Mode page's batch + CI band is the standard analysis for terminating cases.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-crn',
+      icon: '🎰',
+      title: 'Common Random Numbers (CRN)',
+      content: (
+        <div>
+          <P>
+            To compare "3 staff vs 4 staff" fairly, use the <B>same arrival sequence</B> for both —
+            change only the staff count, see the result delta. That's CRN.
+          </P>
+          <P>
+            CRN is a <B>variance reduction technique</B>: two alternatives share a seed,
+            so the difference is "purely from the parameter", noise is much smaller, and fewer samples are needed.
+          </P>
+          <Formula>
+            Var(A − B) = Var(A) + Var(B) − 2·Cov(A, B)
+          </Formula>
+          <P>Under CRN Cov(A, B) is positive, so the variance of the difference is smaller than independent runs.</P>
+          <Note>
+            NekoServe's sweep mode is exactly CRN: same baseSeed, only parameters vary.
+            The resulting parameter sensitivity estimate is far more accurate than independent-seed equivalents.
+          </Note>
+        </div>
+      ),
+    },
+  ],
 
-  citations: [],
+  citations: [
+    {
+      id: 'cite-how-to-read',
+      icon: '📖',
+      title: 'How to read an academic paper effectively',
+      content: (
+        <div>
+          <P>
+            Papers are not novels — don't read them cover to cover. Use the <B>three-pass approach (Keshav, 2013)</B>:
+          </P>
+          <UL>
+            <LI>
+              <B>Pass 1 (5-10 min)</B>: read the <B>title, abstract, conclusion</B> and figure captions.
+              Decide if the paper is relevant. Most papers stop here.
+            </LI>
+            <LI>
+              <B>Pass 2 (~1 hr)</B>: read intro, method, results sections — the <B>first and last paragraphs only</B> — and study every figure.
+              Pull out the main claims and evidence; skip the math.
+            </LI>
+            <LI>
+              <B>Pass 3 (4-5 hrs)</B>: word-by-word, redo key derivations and experiments yourself.
+              I reserve this for papers I'll review, cite heavily, or reproduce.
+            </LI>
+          </UL>
+          <Example>
+            Of the 8 papers cited in NekoServe, I used Pass 3 only on Hirsch 2025 (because I needed to reimplement the 9-state ethogram).
+            The rest stopped at Pass 2. Don't deep-read everything; you'll run out of time.
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-source-types',
+      icon: '🏛️',
+      title: 'Journal vs conference vs preprint',
+      content: (
+        <div>
+          <UL>
+            <LI>
+              <B>Peer-reviewed journal</B>: 2-4 anonymous experts review.
+              Cycle time 6 months to 2 years. <B>Highest quality bar in academia</B>.
+              E.g. Animal Cognition, Operations Research.
+            </LI>
+            <LI>
+              <B>Conference</B>: dominant in computer science.
+              Faster cycle (1-3 months) but acceptance is still selective.
+              Often has a follow-up journal version. E.g. WSC (Winter Simulation Conference).
+            </LI>
+            <LI>
+              <B>Preprint</B>: posted directly to arXiv, bioRxiv etc with <B>no review</B>.
+              Newest but unverified — I cite these carefully and label them as preprints.
+            </LI>
+            <LI>
+              <B>Theses (MSc / PhD)</B>: depth varies; quality depends on advisor and institution.
+              No peer review, but oral defense provides some scrutiny.
+            </LI>
+            <LI>
+              <B>White papers / technical reports</B>: industry/government, not peer-reviewed.
+              Cite explicitly so readers can judge.
+            </LI>
+          </UL>
+          <Note>
+            All 8 papers in NekoServe are peer-reviewed. But in the user manual I also cite SimPy docs (technical doc) and Wikipedia (terminology cleanup).
+            <B>Different source types deserve different framing in the prose</B>.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-peer-review',
+      icon: '🔍',
+      title: 'What peer review actually is',
+      content: (
+        <div>
+          <P>
+            <B>Peer review</B> is academia's quality gate, but not bulletproof:
+          </P>
+          <UL>
+            <LI>2-4 anonymous experts review (typically double-blind)</LI>
+            <LI>They recommend accept / minor revision / major revision / reject</LI>
+            <LI>Editor makes the final call, sometimes after extra opinions</LI>
+          </UL>
+          <P><B>Limitations</B>:</P>
+          <UL>
+            <LI>Reviewers are <B>peers</B> — possible competition, possible blind spots</LI>
+            <LI>Doesn't guarantee reproducibility (the reproducibility crisis is real)</LI>
+            <LI>Novel ideas may be rejected; incremental work is easier to publish (publication bias)</LI>
+            <LI>Slow: from submission to publication typically over 1 year</LI>
+          </UL>
+          <Note>
+            So <B>citing a peer-reviewed paper ≠ it must be correct</B>.
+            Methodology, sample size, and effect magnitude still need independent judgement.
+            But peer-reviewed work is more reliable than non-reviewed — that baseline matters.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-citation-styles',
+      icon: '📝',
+      title: 'Common citation styles',
+      content: (
+        <div>
+          <P>Different fields use different formats. Quick reference for what each looks like:</P>
+          <UL>
+            <LI>
+              <B>APA (American Psychological Association)</B>: dominant in social sciences.
+              Format: Author, A. A. (Year). Title. <i>Journal</i>, vol(issue), pages.
+            </LI>
+            <LI><B>MLA</B>: humanities. Emphasizes author names and page numbers.</LI>
+            <LI><B>Chicago / Turabian</B>: history, interdisciplinary. Footnote and author-date variants.</LI>
+            <LI>
+              <B>IEEE / Vancouver (numeric)</B>: CS, medicine.
+              Citations as [1], [2]; references listed in citation order.
+            </LI>
+            <LI>
+              <B>BibTeX</B>: not a style, a <B>data format</B> for LaTeX. One .bib file exports all the above styles.
+            </LI>
+          </UL>
+          <Example>
+            NekoServe's PDF docs use APA 7th — interdisciplinary fit (psychology, OR, animal behavior) and clean reference lists.
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-evaluating-source',
+      icon: '⚖️',
+      title: 'Evaluating source credibility',
+      content: (
+        <div>
+          <P>"Published" doesn't equal "good". Evaluate on multiple axes:</P>
+          <UL>
+            <LI>
+              <B>Recency</B>: fast-moving fields (AI, Web) get stale in 3 years;
+              slow-moving (queueing theory, pure math) papers from 50 years ago are still classics.
+            </LI>
+            <LI>
+              <B>Journal prestige</B>: see <B>Journal Impact Factor (JIF)</B> and
+              <B>SJR (SCImago Journal Rank)</B>. High IF ≠ paper is necessarily good.
+            </LI>
+            <LI>
+              <B>Citation count</B>: Google Scholar shows it. High = recognized in the field,
+              but older papers accumulate naturally — compare "citations per year" for fairness.
+            </LI>
+            <LI>
+              <B>Sample size</B>: n=10 vs n=10000 are radically different.
+              Social science often has n &lt; 50 — beware overgeneralization.
+            </LI>
+            <LI>
+              <B>Conflict of interest</B>: are authors funded by related companies?
+              Modern papers must disclose.
+            </LI>
+            <LI>
+              <B>Retraction status</B>: check Retraction Watch.
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-tools',
+      icon: '🛠️',
+      title: 'Reference management tools',
+      content: (
+        <div>
+          <P>Manual reference management doesn't scale. Notes on tools I've used / seen others use:</P>
+          <UL>
+            <LI>
+              <B>EndNote</B>: my main tool. NTUNHS (my university) library provides a campus-wide license,
+              so I download it from the library site at no personal cost.
+              Long-established paid software with the most complete Word integration —
+              one-click insert citation, auto-update bibliography, swap journal styles.
+            </LI>
+            <LI>
+              <B>Mendeley (Elsevier)</B>: free baseline. Browser extension to grab papers,
+              PDF annotation sync, social features.
+            </LI>
+            <LI>
+              <B>Google Scholar</B>: not a manager — a <B>search engine</B>.
+              Click "Cite" to copy a citation in APA, MLA, Chicago etc. Handy for one-offs.
+            </LI>
+            <LI>
+              <B>Connected Papers</B> (connectedpapers.com): visualizes paper-paper relationships;
+              I use it to find "papers related to this one".
+            </LI>
+          </UL>
+          <Note>
+            For NekoServe's PDF docs I lean on EndNote's Word plugin
+            (<B>Cite While You Write</B>) for one-click citation insertion and style switching,
+            plus the browser extension (<B>Capture Reference</B>) for grabbing paper metadata.
+            Once that toolchain is in place, bibliography work takes less than half the time.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-literature-review',
+      icon: '📚',
+      title: 'How to write a literature review',
+      content: (
+        <div>
+          <P>
+            A literature review is not a paper-by-paper recap — it's a <B>narrative</B>
+            arguing from "how others tackled this problem" to "why a new paper is needed".
+          </P>
+          <UL>
+            <LI><B>Theme-based grouping</B>, not chronological. Group papers by what problem they solve.</LI>
+            <LI><B>Find the gap</B>: end each group with "but they didn't solve X" — X is the new paper's contribution.</LI>
+            <LI><B>Summarize, don't transcribe</B>: condense each paper's claim into the writer's own words.</LI>
+            <LI><B>Be critical</B>: don't just say what they did, say what their limits are.</LI>
+            <LI><B>10-30 papers is enough</B> for an undergrad thesis. Depth beats breadth.</LI>
+          </UL>
+          <Example>
+            NekoServe's Citations page is itself a mini literature review:
+            Little's Law (theory) → queueing empirics → pet-cafe-specific behavior.
+            Each of the 8 papers is connected to a specific NekoServe design decision.
+          </Example>
+        </div>
+      ),
+    },
+  ],
 
-  validation: [],
+  validation: [
+    {
+      id: 'val-purpose',
+      icon: '🎯',
+      title: 'Why bother with validation',
+      content: (
+        <div>
+          <P>
+            No matter how elegant the simulator's code, if its outputs disagree with reality, it's <B>science fiction</B>.
+            This page exists to answer one question: "Should this simulation be trusted?"
+          </P>
+          <P>Sargent's framework splits "is it right" into two:</P>
+          <UL>
+            <LI><B>Verification</B>: does the code faithfully implement the model I designed? (Is my code right?)</LI>
+            <LI><B>Validation</B>: does the model faithfully reflect reality? (Is my model right?)</LI>
+          </UL>
+          <P>
+            This page primarily handles <B>Validation</B>: it compares the simulator's cat-behavior shares
+            against the 12,505 scans Hirsch et al. (2025) collected at the Stockholm cat cafe.
+          </P>
+          <Note>
+            For research publication this page is my "claim of faithfulness" — without it,
+            reviewers can only take my word; with it, reviewers can read the numbers themselves.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-wilson-ci',
+      icon: '📐',
+      title: 'Why Wilson Score CI replaces Wald',
+      content: (
+        <div>
+          <P>The textbook starting point for a proportion's 95% CI is the <B>Wald CI</B>:</P>
+          <Formula>
+            CI<sub>Wald</sub> = p̂ ± z × √(p̂(1−p̂) / n)
+          </Formula>
+          <P>Simple but with two fatal problems:</P>
+          <UL>
+            <LI>Near 0 or 1, the CI lower bound can drop below 0 or upper exceed 1 (probabilities can't escape [0, 1]).</LI>
+            <LI>At p̂ = 0 the CI degenerates to [0, 0] regardless of n — clearly wrong.</LI>
+          </UL>
+          <P>
+            <B>Wilson Score CI (1927)</B> rearranges by solving for the bounds in z, giving:
+          </P>
+          <Formula>
+            CI<sub>Wilson</sub> = (p̂ + z²/2n ± z√(p̂(1−p̂)/n + z²/4n²)) / (1 + z²/n)
+          </Formula>
+          <UL>
+            <LI>Bounds stay inside [0, 1] automatically.</LI>
+            <LI>p̂ = 0 still gives a positive-width CI (n=10 ≠ n=100), matching intuition.</LI>
+            <LI>Far more accurate at small n than Wald.</LI>
+          </UL>
+          <Note>
+            I picked Wilson over Clopper-Pearson because Wilson is cheaper to compute,
+            and its boundary behavior is "narrower but still correct" — fine for live charts.
+            Clopper-Pearson is the conservative choice, more appropriate for clinical trials.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-goodness-of-fit',
+      icon: '📊',
+      title: 'Goodness-of-fit tests',
+      content: (
+        <div>
+          <P>
+            "Sim proportion lies inside Wilson CI" judges <B>one indicator</B> at a time.
+            Judging the whole distribution requires a formal <B>goodness-of-fit test</B>:
+          </P>
+          <UL>
+            <LI>
+              <B>Chi-square</B>: compares observed vs expected counts via χ² = Σ(O−E)²/E.
+              For 9 categories, df = 8. Each cell needs expected ≥ 5.
+            </LI>
+            <LI>
+              <B>Kolmogorov-Smirnov (KS) test</B>: compares two CDFs by their max distance.
+              Used for continuous variables (e.g. wait-time distribution).
+            </LI>
+            <LI>
+              <B>Anderson-Darling</B>: tail-sensitive variant of KS, good for "is this normal?" checks.
+            </LI>
+          </UL>
+          <P>
+            Validation Mode's "composite score 80" is a simplified overall indicator, not a strict χ² test.
+            Adding χ² is on the wishlist, but isn't always needed; depends on research rigor required.
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'val-overfitting',
+      icon: '⚠️',
+      title: 'Overfitting risk',
+      content: (
+        <div>
+          <P>
+            It's tempting to tune simulation params until they match Hirsch 2025 perfectly,
+            but matching ≠ the simulator is good — could just be <B>overfit to that one paper</B>.
+          </P>
+          <P>Symptoms of overfitting:</P>
+          <UL>
+            <LI>Tuning 15+ params to push 9 behavior shares all inside CI → degrees of freedom exhausted, no explanatory power.</LI>
+            <LI>Apply same params to a different paper (e.g. Taiwan cafe data), sees big mismatch.</LI>
+            <LI>Composite 100 score, but extreme scenarios (0 staff, 50 cats) still output reasonable numbers → suspiciously over-fitted.</LI>
+          </UL>
+          <Note>
+            I deliberately use Hirsch's <B>probabilities</B> (state time shares) only,
+            without back-fitting "magic adjusters" to match any specific output distribution.
+            The simulator's plausibility flows <B>from probabilities to distribution</B>, not reverse-calibrated.
+            That's why some metrics (e.g. cat-cat interaction rate) aren't perfect — I prefer honest gaps over forced fits.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-multiple-comparisons',
+      icon: '🎲',
+      title: 'Multiple comparisons trap',
+      content: (
+        <div>
+          <P>
+            Validation Mode compares 9 behavior categories simultaneously, each with 95% CI —
+            and there's a hidden statistical pitfall here.
+          </P>
+          <P>
+            <B>Single test false-positive rate is 5%</B>.
+            With 9 independent comparisons, the chance of <B>not making any error</B> is 0.95⁹ ≈ 63%.
+            So the family-wise error rate is ~37%, well above 5%.
+          </P>
+          <Formula>
+            P(all pass | H₀ true) = (1 − α)<sup>k</sup>
+          </Formula>
+          <P>Correction methods:</P>
+          <UL>
+            <LI><B>Bonferroni</B>: each test uses α/k = 0.05/9 ≈ 0.0056 (i.e. 99.4% CI). Most conservative.</LI>
+            <LI><B>Holm-Bonferroni</B>: improvement on Bonferroni, higher power.</LI>
+            <LI><B>FDR (False Discovery Rate)</B>: Benjamini-Hochberg method, suited for many comparisons.</LI>
+          </UL>
+          <Note>
+            Validation Mode currently uses single 95% CI judgement without multiple-comparison correction —
+            a weakness for strict publication. For a formal paper version I'd add Bonferroni or FDR.
+            The "composite 80 score" here is a rough indicator, primarily for intuitive sanity checking.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-field-observation-limits',
+      icon: '🔬',
+      title: 'Limits of field-observation data',
+      content: (
+        <div>
+          <P>
+            Comparing simulation to "real observation" sounds rigorous, but <B>real observations have biases too</B>:
+          </P>
+          <UL>
+            <LI>
+              <B>Observer bias</B>: same behavior, observer A says "exploring", B says "moving".
+              Hirsch used <B>two-observer blind coding</B>, kappa = 0.83 is decent but imperfect.
+            </LI>
+            <LI>
+              <B>Scan sampling vs continuous sampling</B>: Hirsch sampled at 1-minute intervals,
+              so brief behaviors (play, cat-cat interaction) may be undercounted — "playing 0.3%" is plausibly an underestimate.
+            </LI>
+            <LI>
+              <B>Observation hours</B>: Hirsch covers daytime 11:00-19:00. Late-night cat behavior is out of scope.
+            </LI>
+            <LI>
+              <B>Single venue</B>: one Stockholm cafe. Cultural differences (Taiwan visitors more proactive?) aren't captured.
+            </LI>
+          </UL>
+          <Note>
+            When the simulation diverges from Hirsch, sometimes it's not the sim that's wrong but the data being limited.
+            Honest research lists both: data limits and simulation approximations.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-choosing-benchmark',
+      icon: '🏆',
+      title: 'How I picked the validation benchmark',
+      content: (
+        <div>
+          <P>
+            "Which paper to use as ground truth" is itself a quality decision.
+            My reasons for picking Hirsch 2025:
+          </P>
+          <UL>
+            <LI><B>Peer-reviewed</B>: published in Animals (MDPI), not a preprint.</LI>
+            <LI><B>Sufficient sample size</B>: 12,505 scans, big enough that CIs are tight and tests are meaningful.</LI>
+            <LI>
+              <B>Methodological transparency</B>: published the ethogram definitions, coding rules, and raw data —
+              high reproducibility.
+            </LI>
+            <LI>
+              <B>Setting fit</B>: a commercial cat cafe (not a lab cattery), close to NekoServe's modeled scenario.
+            </LI>
+            <LI>
+              <B>Recency</B>: 2025 publication, methods aligned with modern animal behavior science.
+            </LI>
+          </UL>
+          <Note>
+            If only an n=50 study existed, I'd say honestly "small sample, indicative only"
+            rather than forcing it as ground truth. <B>No perfect benchmark</B> is the norm —
+            research must explain the chosen benchmark's limitations.
+          </Note>
+        </div>
+      ),
+    },
+  ],
+
+  // ══════════════════════════════════════════════════════════
+  // Live Mode page
+  // ══════════════════════════════════════════════════════════
+  liveMode: [
+    {
+      id: 'live-monte-carlo',
+      icon: '🎲',
+      title: 'What is Monte Carlo simulation?',
+      content: (
+        <div>
+          <P>
+            <B>Monte Carlo simulation</B> estimates a system's average behavior by running many
+            randomized trials. A single run produces ONE answer (possibly an outlier);
+            averaging across N runs converges to the true expected value.
+          </P>
+          <P>
+            Each NekoServe run uses a different seed (<code>baseSeed + i</code>),
+            so customer arrivals, cat behavior, and service times all vary slightly per run.
+            The resulting metrics differ each time.
+          </P>
+          <Example>
+            <B>Example</B>: One run says "avg wait 8.3 min", another says 11.1, a third says 6.7.
+            One run alone can't reveal the true mean; 50 runs of cumulative averaging will settle near the truth.
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'live-cumulative-curve',
+      icon: '📈',
+      title: 'Cumulative-mean convergence curve',
+      content: (
+        <div>
+          <P>
+            The main visual: each completed run plots a point where Y is the mean across all samples up to that point.
+          </P>
+          <Formula>
+            mean<sub>n</sub> = (X<sub>1</sub> + X<sub>2</sub> + ... + X<sub>n</sub>) / n
+          </Formula>
+          <P>
+            By the <B>Law of Large Numbers</B>, mean<sub>n</sub> → μ as n → ∞.
+          </P>
+          <UL>
+            <LI>First ~30 runs swing wildly — too few samples</LI>
+            <LI>Curve flattens as more samples drown out individual variation</LI>
+            <LI>Last 100 runs change &lt; 1% → auto-flagged stable, region tinted green</LI>
+          </UL>
+          <Note>
+            ⚠️ Cumulative mean is <B>not monotonic</B>. Each new sample can pull the mean either way,
+            but the magnitude shrinks with n. A late-stage "jump" usually means an outlier landed.
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'live-confidence-interval',
+      icon: '📏',
+      title: '95% confidence interval (CI band)',
+      content: (
+        <div>
+          <P>
+            The light-orange band is the <B>95% CI</B>: the true value lies within it 95% of the time.
+          </P>
+          <Formula>
+            CI<sub>95%</sub> = mean ± t<sub>n-1, 0.025</sub> × (s / √n)
+          </Formula>
+          <UL>
+            <LI>n=2: t = 12.7, band is wide (we know almost nothing)</LI>
+            <LI>n=30: t ≈ 2.04, band is roughly 1.96·SE</LI>
+            <LI>n=1000: band is very narrow, high confidence</LI>
+          </UL>
+          <P>
+            The band shrinks as <B>1/√n</B> — halving requires 4× samples; 10× shrink requires 100× samples.
+            This is why studies need large samples.
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-distribution-shape',
+      icon: '🔔',
+      title: 'Distribution shape (KDE)',
+      content: (
+        <div>
+          <P>
+            The dark-orange smooth curve over the histogram is a <B>Kernel Density Estimate</B>:
+            it turns the bars into a continuous density so the shape becomes readable.
+          </P>
+          <P>NekoServe uses a <B>Gaussian kernel</B> with Silverman's bandwidth:</P>
+          <Formula>h = 1.06 × σ × n<sup>-1/5</sup></Formula>
+          <P><B>Auto verdicts</B> (bottom-right):</P>
+          <UL>
+            <LI><B>✓ Approximately normal</B>: symmetric bell, predictable</LI>
+            <LI><B>→ Right-skewed</B>: long tail right (e.g. wait times)</LI>
+            <LI><B>← Left-skewed</B>: long tail left</LI>
+            <LI><B>⚠ Long-tail</B>: heavy outliers (high kurtosis)</LI>
+          </UL>
+          <Formula>
+            skewness = m<sub>3</sub> / σ³ ;&nbsp; kurtosis = m<sub>4</sub> / σ⁴ - 3
+          </Formula>
+          <P>Normal: skew=0, kurt=0. Exponential: skew=2, kurt=6.</P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-percentiles',
+      icon: '📊',
+      title: 'P5 / P50 / P95 quantiles',
+      content: (
+        <div>
+          <P>Three dashed lines on the histogram:</P>
+          <UL>
+            <LI><B>P5 (gray)</B>: 5% of samples lie to the left</LI>
+            <LI><B>P50 / median (black, thicker)</B>: 50% on each side — the typical value</LI>
+            <LI><B>P95 (gray)</B>: 95% left, 5% right</LI>
+          </UL>
+          <P>
+            [P5, P95] is the <B>middle 90% range</B> (shown top-right) — "where most outcomes actually fall".
+          </P>
+          <Note>
+            <B>Median far from mean</B> ⇒ skewed distribution. For skewed data the mean is misleading;
+            report median + middle 90% to describe what users actually experience.
+          </Note>
+          <Example>
+            Avg wait = 8 min but P95 = 25 min → 5% of customers wait 25+ min.
+            That tail directly shapes user experience.
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'live-batch-vs-single',
+      icon: '⚖️',
+      title: 'Single vs batch: Crystal Ball idea',
+      content: (
+        <div>
+          <P>
+            <B>Crystal Ball</B> (a risk-analysis tool) popularized the idea that a simulation's result is
+            not a number but a distribution. Decisions should be informed by the shape.
+          </P>
+          <UL>
+            <LI><B>One run</B> → one dot → no idea if accurate</LI>
+            <LI><B>20-run batch</B> → curve + CI band → see stability</LI>
+            <LI><B>Distribution chart</B> → see tail risk</LI>
+          </UL>
+          <P>
+            This page brings that workflow to the cat cafe sim: the
+            <B> cumulative-mean curve</B> answers "how many runs is enough?", the
+            <B> distribution + KDE</B> answers "what shape does the result take?".
+            Together they answer "can I trust this answer?"
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-N-vs-n',
+      icon: 'ℹ️',
+      title: 'N vs n',
+      content: (
+        <div>
+          <P>Statistical convention:</P>
+          <UL>
+            <LI><B>Capital N</B> = total runs planned for the batch. The chart extends to X = N.</LI>
+            <LI><B>Lowercase n</B> = runs completed so far, growing from 1 to N.</LI>
+          </UL>
+          <Example>
+            Mid-run: target N=50, current n=30 → 20 left.<br/>
+            After completion: n = N = 50.
+          </Example>
+          <P>
+            The n in the CI formula is always the current sample count, which is why the band tightens as runs land.
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-reproducibility',
+      icon: '🔁',
+      title: 'Reproducibility',
+      content: (
+        <div>
+          <P>
+            NekoServe batches are <B>fully reproducible</B>: same baseSeed run twice produces
+            pixel-identical curves on every chart.
+          </P>
+          <P>
+            Run <i>i</i>'s seed is <code>baseSeed + i</code>, so the random sequence is fully determined by baseSeed.
+            Pause/resume/stop don't affect reproducibility (as long as baseSeed is unchanged).
+          </P>
+          <Note>
+            Crucial for research: recording the baseSeed in the paper lets a reviewer reproducing it get identical results.
+          </Note>
+        </div>
+      ),
+    },
+  ],
 
   about: [
     {

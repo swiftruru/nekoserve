@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Page, SimulationConfig, EventType } from './types'
+import type { Page, SimulationConfig, EventType, SimulationResult } from './types'
 import { useSimulation } from './hooks/useSimulation'
+import { useLiveRunner } from './hooks/useLiveRunner'
 import { SCENARIOS } from './data/scenarios'
 import { useConfigStore } from './store/configStore'
 import SettingsPage from './pages/SettingsPage'
 import ResultsPage from './pages/ResultsPage'
 import EventLogPage from './pages/EventLogPage'
 import PlaybackPage, { PlaybackPageEmpty } from './pages/PlaybackPage'
+import LiveBatchPage from './pages/LiveBatchPage'
+import { useLiveBatchStore } from './store/liveBatchStore'
 import HowItWorksPage from './pages/HowItWorksPage'
 import CitationsPage from './pages/CitationsPage'
 import ValidationPage from './pages/ValidationPage'
@@ -53,6 +56,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'settings',   icon: '⚙️' },
+  { id: 'liveMode',   icon: '⚡' },
   { id: 'playback',   icon: '🎞️' },
   { id: 'results',    icon: '📊' },
   { id: 'eventlog',   icon: '📋' },
@@ -90,8 +94,26 @@ export default function App() {
   const {
     status, result, error, elapsed, history,
     batchResult, batchProgress, simProgress, sweepResult,
-    run, runBatch, runSweep, cancel, reset, clearSimProgress, clearHistory, deleteHistoryEntry, renameHistoryEntry, togglePinHistoryEntry, loadHistoryResult,
+    run, runSweep, cancel, reset, clearSimProgress, clearHistory, deleteHistoryEntry, renameHistoryEntry, togglePinHistoryEntry, loadHistoryResult,
+    commitLiveBatch, beginLiveBatch, setLiveFirstRun,
   } = useSimulation()
+  const liveRunner = useLiveRunner()
+
+  // ── Live cat cycling: each completed batch run becomes the next
+  //    candidate animation. We swap only when the current playback
+  //    has ended (or hasn't started yet) so the user sees gradual
+  //    variation rather than mid-replay jumps. The pending result is
+  //    held in a ref to avoid re-renders; playbackPlaying is state so
+  //    the swap effect re-evaluates the moment it flips false.
+  const pendingSwapRef = useRef<SimulationResult | null>(null)
+  const [playbackPlaying, setPlaybackPlaying] = useState(false)
+  // Bumped every time onAfterRun stashes a new pending result, so the
+  // swap effect re-evaluates even when playbackPlaying didn't change.
+  const [pendingSwapTick, setPendingSwapTick] = useState(0)
+  // Index (within liveBatchStore.runs) of the run currently displayed
+  // in LiveScenePanel. Updated by App when swapping result via the
+  // pending mechanism, or by the user clicking a thumbnail.
+  const [liveSelectedRunIndex, setLiveSelectedRunIndex] = useState(0)
   const update = useUpdateCheck()
 
   // v2.0 Sprint 1 follow-up: mirror simulation status/result/error into
@@ -188,20 +210,69 @@ export default function App() {
     })
   }
 
+  // Whenever playback is paused/ended AND a newer run has become
+  // available, hand the pending result over to PlaybackPage so the cat
+  // scene swaps to the latest run and re-arms autoplay from t=0.
+  useEffect(() => {
+    if (playbackPlaying) return
+    const next = pendingSwapRef.current
+    if (!next) return
+    pendingSwapRef.current = null
+    setLiveFirstRun(next)
+    setPlaybackTime(0)
+    setPlaybackAutoStartPending(true)
+    // Update the live page's "currently shown run" index to the run we
+    // just swapped in. The store's runs array is appended to as runs
+    // complete, so the swap target is always the latest (length - 1).
+    setLiveSelectedRunIndex(useLiveBatchStore.getState().runs.length - 1)
+  }, [playbackPlaying, pendingSwapTick, setLiveFirstRun])
+
   function handleRunBatch(cfg: SimulationConfig, replicationCount: number, label: string) {
     const start = Date.now()
     setConfig(cfg)
-    runBatch(cfg, replicationCount, label).then((succeeded) => {
-      if (!succeeded) {
-        clearSimProgress()
-        return
-      }
-      const secs = ((Date.now() - start) / 1000).toFixed(1)
-      toast(t('settings:batch.complete', { count: replicationCount, seconds: secs }))
-      setPlaybackTime(0)
-      setPlaybackAutoStartPending(true)
-      setPage('playback')
-      dismissIndicatorAfterPageSettle()
+    // v3 redesign: switch to the standalone Live Mode page. The runner
+    // streams curves into liveBatchStore; once the first run lands we
+    // hydrate `result` so the embedded LiveScenePanel starts animating
+    // run #1 while runs 2..N continue in the background.
+    setPage('liveMode')
+    setLiveSelectedRunIndex(0)
+    pendingSwapRef.current = null
+    beginLiveBatch()
+    void liveRunner.start({
+      config: cfg,
+      total: replicationCount,
+      label,
+      onFirstRun: (firstResult) => {
+        setLiveFirstRun(firstResult)
+        setLiveSelectedRunIndex(0)
+      },
+      onAfterRun: (latestResult, runIndex) => {
+        // Schedule a swap to this run's animation. The first run is
+        // already committed via onFirstRun above; for runs 2..N we hold
+        // the latest in pendingSwapRef and bump pendingSwapTick so the
+        // swap effect re-evaluates. The effect's playbackPlaying gate
+        // ensures we don't yank the user mid-replay.
+        if (runIndex === 0) return
+        pendingSwapRef.current = latestResult
+        setPendingSwapTick((t) => t + 1)
+      },
+      onComplete: (runs, outcome) => {
+        if (outcome === 'error' || runs.length === 0) {
+          clearSimProgress()
+          return
+        }
+        // Commit whatever runs we have — partial batches from a 'stopped'
+        // outcome still produce a valid (smaller) summary.
+        void commitLiveBatch(cfg, runs, label).then((ok) => {
+          if (!ok) {
+            clearSimProgress()
+            return
+          }
+          const secs = ((Date.now() - start) / 1000).toFixed(1)
+          toast(t('settings:batch.complete', { count: runs.length, seconds: secs }))
+          dismissIndicatorAfterPageSettle()
+        })
+      },
     })
   }
 
@@ -218,6 +289,26 @@ export default function App() {
       setPage('results')
       dismissIndicatorAfterPageSettle()
     })
+  }
+
+  function handleQuickStartBatch() {
+    // One-click "promote me to batch mode": reuse the current config
+    // and run 20 replications. Lets users discover Live Mode without
+    // hunting for the batch toggle in SettingsPage. Skip if already
+    // running.
+    if (status === 'running') return
+    const label = t('settings:batch.quickStartLabel', { defaultValue: '即時歷程 (20x)' })
+    handleRunBatch(config, 20, label)
+  }
+
+  function handleSelectLiveRun(index: number) {
+    const runs = useLiveBatchStore.getState().runs
+    const target = runs[index]
+    if (!target) return
+    setLiveSelectedRunIndex(index)
+    setLiveFirstRun(target)
+    setPlaybackTime(0)
+    setPlaybackAutoStartPending(true)
   }
 
   function handleSkipToResults() {
@@ -473,6 +564,16 @@ export default function App() {
                 batchProgress={batchProgress}
               />
             )}
+            {page === 'liveMode' && (
+              <LiveBatchPage
+                result={result}
+                runner={liveRunner}
+                onSelectRun={handleSelectLiveRun}
+                selectedRunIndex={liveSelectedRunIndex}
+                onNavigateSettings={() => setPage('settings')}
+                onQuickStartBatch={handleQuickStartBatch}
+              />
+            )}
             {page === 'results' && result && (
               <ResultsPage
                 result={result}
@@ -507,6 +608,8 @@ export default function App() {
                   onSkipToResults={handleSkipToResults}
                   fullscreen={fullscreen}
                   onToggleFullscreen={() => setFullscreen((v) => !v)}
+                  onPlayingChange={setPlaybackPlaying}
+                  onQuickStartBatch={handleQuickStartBatch}
                 />
               ) : (
                 <PlaybackPageEmpty />

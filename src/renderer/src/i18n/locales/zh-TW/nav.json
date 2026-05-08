@@ -1,5 +1,6 @@
 {
   "settings": "模擬設定",
+  "liveMode": "即時歷程",
   "results": "統計結果",
   "eventlog": "事件紀錄",
   "playback": "模擬回放",

@@ -58,6 +58,23 @@ interface UseSimulationReturn extends SimulationState {
   run: (config: SimulationConfig, label?: string) => Promise<boolean>
   runBatch: (config: SimulationConfig, replicationCount: number, label?: string) => Promise<boolean>
   runSweep: (config: SimulationConfig, paramKey: keyof SimulationConfig, from: number, to: number, step: number, replications: number) => Promise<boolean>
+  /**
+   * Commit results streamed by the live runner. Mirrors the post-loop tail
+   * of runBatch: builds a BatchSummary, persists the representative run to
+   * history, and flips state to 'success'. Called by App after
+   * useLiveRunner.start completes so the existing Results / Playback
+   * pages keep working unchanged.
+   */
+  commitLiveBatch: (config: SimulationConfig, runs: SimulationResult[], label?: string) => Promise<boolean>
+  /** Mark the simulation as 'running' for the global indicator while the
+   *  live runner owns the actual loop. Pairs with commitLiveBatch. */
+  beginLiveBatch: () => void
+  /** Hydrate `result` mid-batch so PlaybackPage's CafeScene can start
+   *  playing the first completed run while the live runner continues to
+   *  pump more samples into liveBatchStore. The eventual commitLiveBatch
+   *  will overwrite result with the representative run (which is the
+   *  same first run by convention). */
+  setLiveFirstRun: (result: SimulationResult) => void
   cancel: () => void
   reset: () => void
   /** Dismiss the global run indicator. Call this after the destination
@@ -362,6 +379,81 @@ export function useSimulation(): UseSimulationReturn {
     return true
   }, [])
 
+  const beginLiveBatch = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      status: 'running',
+      result: null,
+      error: null,
+      elapsed: 0,
+      batchResult: null,
+      batchProgress: null,
+      simProgress: null,
+    }))
+  }, [])
+
+  const setLiveFirstRun = useCallback((result: SimulationResult) => {
+    setState((prev) => ({ ...prev, result }))
+  }, [])
+
+  const commitLiveBatch = useCallback(async (
+    config: SimulationConfig,
+    runs: SimulationResult[],
+    label?: string,
+  ) => {
+    if (runs.length === 0) {
+      setState((prev) => ({
+        ...prev,
+        status: 'error',
+        error: { error: 'No runs to commit', type: 'UNKNOWN_ERROR' },
+        batchProgress: null,
+      }))
+      return false
+    }
+
+    const summary = buildBatchSummary(runs)
+    const batchResult: BatchResult = {
+      config,
+      runs,
+      summary,
+      replicationCount: runs.length,
+    }
+    const representativeResult = runs[0]
+
+    const runLabel =
+      label ?? i18n.t('results:runLabelFallback', { index: '?' })
+    const saveResult = await dbSave(representativeResult, runLabel).catch(() => null)
+    const persisted = saveResult?.entry ?? null
+    const evictedIds = saveResult?.evictedIds ?? []
+
+    setState((prev) => {
+      const actualLabel =
+        label ?? i18n.t('results:runLabelFallback', { index: prev.history.length + 1 })
+      const newEntry: HistoryEntry = persisted
+        ? toHistoryEntry({ ...persisted, label: actualLabel })
+        : { id: Date.now(), timestamp: Date.now(), result: representativeResult, label: actualLabel, pinned: false }
+
+      if (persisted && actualLabel !== runLabel) {
+        dbUpdateLabel(persisted.id, actualLabel).catch(() => {})
+      }
+
+      const survivingHistory = evictedIds.length > 0
+        ? prev.history.filter((e) => !evictedIds.includes(e.id))
+        : prev.history
+
+      return {
+        ...prev,
+        status: 'success',
+        result: representativeResult,
+        error: null,
+        history: [...survivingHistory, newEntry],
+        batchResult,
+        batchProgress: null,
+      }
+    })
+    return true
+  }, [])
+
   const runSweep = useCallback(async (
     config: SimulationConfig,
     paramKey: keyof SimulationConfig,
@@ -539,6 +631,9 @@ export function useSimulation(): UseSimulationReturn {
     run,
     runBatch,
     runSweep,
+    commitLiveBatch,
+    beginLiveBatch,
+    setLiveFirstRun,
     cancel,
     reset,
     clearSimProgress,

@@ -1127,11 +1127,889 @@ export const LEARN_CONTENT_ZH_TW: LearnContent = {
   // ══════════════════════════════════════════════════════════
   // The "運作原理" page is itself a long-form learning essay, so the sidebar
   // deliberately has no extra notes for it; readers focus on the main content.
-  howitworks: [],
+  howitworks: [
+    {
+      id: 'how-paradigms',
+      icon: '🗺️',
+      title: '模擬範式比較:DES、ABM、SD',
+      content: (
+        <div>
+          <P>
+            電腦模擬有三大主流範式,選哪一種取決於「想看什麼問題」:
+          </P>
+          <UL>
+            <LI>
+              <B>離散事件模擬 (DES)</B>:NekoServe 用的範式。系統在事件之間靜止,
+              事件清單推動時間。適合「資源排隊、流程追蹤」類問題 (排隊、製造業、急診室)。
+            </LI>
+            <LI>
+              <B>代理人基模型 (Agent-Based, ABM)</B>:每個體有自主決策邏輯,
+              全局行為從個體互動湧現。適合「群體湧現現象」(疫情擴散、市場、生態系)。
+            </LI>
+            <LI>
+              <B>系統動力學 (System Dynamics, SD)</B>:用微分方程描述存量/流量,
+              連續時間。適合「策略層、長期趨勢」(人口、氣候、產業政策)。
+            </LI>
+          </UL>
+          <Note>
+            NekoServe 的貓咖場景剛好同時帶了 DES 骨架 (顧客排隊) 與 ABM 味道 (貓咪自主行為),
+            混合範式越來越常見。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-fel',
+      icon: '⏭️',
+      title: 'FEL 的資料結構',
+      content: (
+        <div>
+          <P>
+            <B>Future Event List (FEL)</B> 必須支援兩種操作:
+          </P>
+          <UL>
+            <LI><B>插入</B>新事件 (帶時間戳)</LI>
+            <LI><B>取出</B>下一個 (時間戳最小) 的事件並移除</LI>
+          </UL>
+          <P>
+            這是經典的<B>優先佇列 (priority queue)</B> 問題,常見實作:
+          </P>
+          <UL>
+            <LI><B>二元堆積 (binary heap)</B>:插入/取出皆 O(log n)。SimPy 使用此實作。</LI>
+            <LI><B>平衡二元搜尋樹</B>:同樣 O(log n),但常數較大,但支援查詢任意時間點。</LI>
+            <LI><B>跳表 (skip list)</B>:期望 O(log n),寫起來簡單。</LI>
+            <LI><B>Calendar Queue</B>:期望 O(1),但需要動態 bucket 管理,適合事件密度均勻場景。</LI>
+          </UL>
+          <Example>
+            10000 個事件 × log(10000) ≈ 13 次比較,普通筆電一秒內可推進百萬個事件。這也是為什麼 NekoServe 跑 720 分鐘 4700 個事件不到 1 秒就完成。
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'how-poisson-exponential',
+      icon: '🎯',
+      title: '為什麼預設用泊松/指數分配',
+      content: (
+        <div>
+          <P>
+            排隊論的「教科書預設」是<B>顧客抵達服從泊松過程</B>、
+            <B>服務時間服從指數分配</B>。
+            這不是隨便挑的 — 兩者在數學上有特殊性質。
+          </P>
+          <P>
+            <B>無記憶性 (Memoryless property)</B>:指數分配是唯一的連續無記憶分配。
+          </P>
+          <Formula>
+            P(X &gt; s + t | X &gt; s) = P(X &gt; t)
+          </Formula>
+          <P>
+            意思:已經等了 s 分鐘,還要等 t 分鐘的機率,跟剛開始等 t 分鐘的機率一樣。
+            這個性質讓系統<B>馬可夫化</B>,大量解析解 (M/M/1, M/M/c) 都建立在此假設上。
+          </P>
+          <Note>
+            真實世界的服務時間通常不是純指數 (常有最小服務時間)。
+            NekoServe 的點餐+製作時間是固定加常態小擾動,更接近實際,但也因此<B>無法用 M/M/c 解析公式精確預測</B>,需要 DES。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-warmup',
+      icon: '🔥',
+      title: '暖機期 (Warm-up Period)',
+      content: (
+        <div>
+          <P>
+            模擬剛開始時,系統是<B>空的</B>:沒有顧客、沒有隊伍。
+            前幾分鐘的觀測值 (例如「等位時間」) 受這個初始條件污染,不能代表穩態。
+          </P>
+          <P>
+            <B>解法</B>:跑足夠長,然後丟掉前 W 分鐘的數據,只用 [W, T] 區間統計。這個 W 叫暖機期。
+          </P>
+          <P>
+            <B>Welch 圖示法</B>:跑 N 條獨立實驗,每條取移動平均,把 N 條疊圖。
+            眼睛看哪邊「曲線變平」,那點之後就是穩態,前面是暖機期。
+          </P>
+          <Example>
+            NekoServe 720 分鐘的營業日通常前 30~60 分鐘是暖機 (顧客陸續到達、座位開始被佔)。
+            觀察貓咪行為的話暖機更短 (貓咪一開始就在店裡)。
+          </Example>
+          <Note>
+            短期 (有限時間段) 模擬<B>不一定要去暖機</B> — 如果問題本身是「開店前一小時體驗如何」,那暖機期就是研究對象的一部分。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-verification-validation',
+      icon: '✅',
+      title: 'Verification vs Validation',
+      content: (
+        <div>
+          <P>
+            模擬研究的兩個關鍵檢驗 (Sargent, 2013):
+          </P>
+          <UL>
+            <LI>
+              <B>驗證 (Verification)</B>:「程式有沒有忠實實作模型?」
+              答的是「我寫的 code 對不對」。方法:單元測試、邊界條件、Little's Law 一致性檢查。
+            </LI>
+            <LI>
+              <B>驗實 (Validation)</B>:「模型有沒有忠實反映真實世界?」
+              答的是「我的模型對不對」。方法:跟實際資料比對、專家檢視、敏感度分析。
+            </LI>
+          </UL>
+          <P>
+            NekoServe 的「驗證模式」頁同時做兩件事:
+            Verification (檢查模擬器跟 Hirsch 論文的數字一致) +
+            Validation (確認模擬產生的貓咪行為比例符合田野觀察)。
+          </P>
+          <Note>
+            我做研究時兩個都會分開寫進論文。看了不少論文把這兩件事混為一談,但分開描述能讓審稿者更快看出整個方法到底是什麼。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-output-analysis',
+      icon: '📑',
+      title: '模擬輸出分析:有限期 vs 穩態',
+      content: (
+        <div>
+          <P>
+            模擬的「正確統計方式」依場景不同:
+          </P>
+          <UL>
+            <LI>
+              <B>有限期模擬 (Terminating)</B>:有明確開始與結束 (例如 9:00-21:00 營業日)。
+              N 次重複各自獨立,直接用樣本平均 + t 分布 CI。
+            </LI>
+            <LI>
+              <B>穩態模擬 (Steady-state)</B>:長期執行,關心穩態行為 (例如客服中心 24/7)。
+              要去暖機,還可能要用<B>批次平均法 (batch means)</B> 或<B>regenerative method</B> 處理樣本相關性。
+            </LI>
+          </UL>
+          <Note>
+            NekoServe 屬於<B>有限期模擬</B>(每天開店時間固定)。
+            「即時歷程」頁的批次重複 + CI 帶就是有限期分析的標準做法。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'how-crn',
+      icon: '🎰',
+      title: '共同隨機數 (Common Random Numbers, CRN)',
+      content: (
+        <div>
+          <P>
+            想比較「店員 3 人 vs 4 人」哪個好?最公平的做法是用<B>同一批顧客抵達序列</B>,
+            只改店員數,看結果差異。這就是 CRN。
+          </P>
+          <P>
+            CRN 是一種<B>變異數縮減技術 (Variance Reduction Technique)</B>:
+            兩個替代方案共享同一個隨機種子,差異就「純粹來自參數」,雜訊小很多,需要的樣本數也少。
+          </P>
+          <Formula>
+            Var(A − B) = Var(A) + Var(B) − 2·Cov(A, B)
+          </Formula>
+          <P>
+            Cov(A, B) 在 CRN 下會是正的,所以差異的變異數會比獨立模擬小。
+          </P>
+          <Note>
+            NekoServe 的 sweep 模式就是 CRN:同一個 baseSeed,只變動參數,
+            得到的「參數靈敏度」比每組獨立 seed 的版本準很多。
+          </Note>
+        </div>
+      ),
+    },
+  ],
 
-  citations: [],
+  citations: [
+    {
+      id: 'cite-how-to-read',
+      icon: '📖',
+      title: '怎麼有效讀一篇學術論文',
+      content: (
+        <div>
+          <P>
+            學術論文不是小說,不該從頭讀到尾。我自己採用<B>三遍法 (Keshav, 2013)</B>:
+          </P>
+          <UL>
+            <LI>
+              <B>第一遍 (5-10 分鐘)</B>:讀<B>標題、摘要、結論</B>,看圖表標題。
+              判斷這篇是否相關,值不值得繼續。多數論文到這裡就可以放棄。
+            </LI>
+            <LI>
+              <B>第二遍 (1 小時)</B>:讀引言、方法、結果章節的<B>第一段與最後一段</B>,看每張圖。
+              抓出論文的主要 claim 與證據,但跳過數學細節。
+            </LI>
+            <LI>
+              <B>第三遍 (4-5 小時)</B>:逐字讀,自己重做關鍵推導與實驗。
+              只有要審稿、要寫文獻探討、或要重現實驗的論文才值得這樣讀。
+            </LI>
+          </UL>
+          <Example>
+            NekoServe 引用的 8 篇論文中,Hirsch 2025 我用了第三遍法 (因為要重現 9 狀態 ethogram),
+            其他論文大多停在第二遍。不要每篇都精讀,時間不夠。
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-source-types',
+      icon: '🏛️',
+      title: '期刊、會議、預印本:差在哪?',
+      content: (
+        <div>
+          <UL>
+            <LI>
+              <B>同儕審查期刊 (Peer-reviewed journal)</B>:同領域 2-4 位專家匿名審查。
+              審查週期 6 個月到 2 年。<B>學界品質最高保證</B>。
+              例:Animal Cognition、Operations Research。
+            </LI>
+            <LI>
+              <B>學術會議 (Conference)</B>:電腦科學主流。
+              審查週期較短 (1-3 個月),但被接受門檻仍高。
+              通常會有後續期刊版。例:WSC (Winter Simulation Conference)。
+            </LI>
+            <LI>
+              <B>預印本 (Preprint)</B>:論文寫完後直接發布到 arXiv、bioRxiv 等網站,
+              <B>不經審查</B>。最新但未驗證,引用要謹慎標註「preprint」。
+            </LI>
+            <LI>
+              <B>學位論文</B>:碩博論文。深度可變,品質視指導教授與學校而定。
+              通常沒有同儕審查,但有口試委員把關。
+            </LI>
+            <LI>
+              <B>白皮書/技術報告</B>:企業或政府的非審查文件。
+              引用時要清楚標明,讀者可以自行判斷可信度。
+            </LI>
+          </UL>
+          <Note>
+            NekoServe 引用的 8 篇都是同儕審查論文,但寫進 PDF 模擬器使用手冊時,
+            我也會引用 SimPy 官方文件 (技術文件) 跟 Wikipedia (用來釐清術語)。
+            <B>來源類型不同,引用語氣也應該不同</B>。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-peer-review',
+      icon: '🔍',
+      title: '同儕審查的真實面貌',
+      content: (
+        <div>
+          <P>
+            <B>同儕審查 (Peer Review)</B> 是學界品質的守門員,但不是萬能:
+          </P>
+          <UL>
+            <LI><B>2-4 位專家</B>匿名審查 (大多是雙盲:作者、審稿人互不知對方)</LI>
+            <LI>給出 accept / minor revision / major revision / reject 的審查意見</LI>
+            <LI>編輯做最終決定,有時會徵詢額外專家</LI>
+          </UL>
+          <P>
+            <B>限制</B>:
+          </P>
+          <UL>
+            <LI>審稿人是<B>同行</B>,可能有競爭關係或盲點</LI>
+            <LI>無法保證實驗結果可重現 (重現性危機,reproducibility crisis)</LI>
+            <LI>新穎觀點容易被退稿;漸進式工作較容易發表 (publication bias)</LI>
+            <LI>速度慢:一篇論文從投稿到上線常超過 1 年</LI>
+          </UL>
+          <Note>
+            因此<B>引用一篇有同儕審查的論文 ≠ 它必定正確</B>。
+            還是要自己判斷方法、樣本量、效應大小是否合理。
+            不過已審查的文獻仍然比未審查的可靠,這個基線要建立起來。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-citation-styles',
+      icon: '📝',
+      title: '常見引用格式',
+      content: (
+        <div>
+          <P>
+            不同學科有不同引用格式。看到引用就要能判斷是哪種:
+          </P>
+          <UL>
+            <LI>
+              <B>APA (American Psychological Association)</B>:社會科學主流。
+              格式:Author, A. A. (Year). Title. <i>Journal</i>, vol(issue), pages.
+            </LI>
+            <LI>
+              <B>MLA (Modern Language Association)</B>:人文學科。
+              重視作者姓名與頁碼。
+            </LI>
+            <LI>
+              <B>Chicago / Turabian</B>:歷史、跨領域。有腳註版與作者-年代版兩種。
+            </LI>
+            <LI>
+              <B>IEEE / Vancouver (數字制)</B>:電腦科學、醫學。
+              引用用編號 [1]、[2] 表示,參考文獻按出現順序排。
+            </LI>
+            <LI>
+              <B>BibTeX</B>:不是引用格式,是 LaTeX 的引用<B>資料庫格式</B>。
+              一個 .bib 檔可以匯出所有上述格式。
+            </LI>
+          </UL>
+          <Example>
+            NekoServe 的 PDF 文件用 APA 7th。
+            為什麼選 APA?因為跨領域 (心理學、運籌學、動物學) 都接受、
+            參考文獻清單最清楚易讀。
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-evaluating-source',
+      icon: '⚖️',
+      title: '評估文獻的可信度',
+      content: (
+        <div>
+          <P>
+            一篇論文不是「有出版就一定好」。評估時看幾個面向:
+          </P>
+          <UL>
+            <LI>
+              <B>年代</B>:領域變動快的 (AI、Web) 三年就過時;
+              變動慢的 (排隊論、純數學) 50 年前的論文仍是經典。
+            </LI>
+            <LI>
+              <B>期刊聲望</B>:看 <B>Journal Impact Factor (JIF)</B> 與
+              <B>SJR (SCImago Journal Rank)</B>。但 IF 高 ≠ 論文必然好。
+            </LI>
+            <LI>
+              <B>引用次數</B>:Google Scholar 顯示。被引用多代表領域認可度高,
+              但年代越早、累積越多,要看「年均引用」比較公平。
+            </LI>
+            <LI>
+              <B>樣本量</B>:n=10 的人類研究跟 n=10000 的差距很大。
+              社會科學常見 n &lt; 50 的研究,要小心過度推論。
+            </LI>
+            <LI>
+              <B>利益衝突 (Conflict of Interest)</B>:作者是否受相關公司資助?
+              現代論文必須揭露。
+            </LI>
+            <LI>
+              <B>是否被撤稿 (Retracted)</B>:用 Retraction Watch 查可信度。
+            </LI>
+          </UL>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-tools',
+      icon: '🛠️',
+      title: '管理參考文獻的工具',
+      content: (
+        <div>
+          <P>
+            手動管理文獻幾乎無法擴展。我整理一下自己用過跟看過別人用的工具:
+          </P>
+          <UL>
+            <LI>
+              <B>EndNote</B>:我自己主要用這個。國立台北護理健康大學圖書館有提供校園授權,
+              從圖書館網站登入就能下載安裝,不必自費。
+              老牌付費軟體,跟 Word 整合最完整 — 一鍵插入引用、自動更新文獻清單、切換不同期刊格式。
+            </LI>
+            <LI>
+              <B>Mendeley (Elsevier 旗下)</B>:免費基本版。瀏覽器擴充抓論文、
+              PDF 註記同步、社交功能。
+            </LI>
+            <LI>
+              <B>Google Scholar</B>:不是管理工具,是<B>搜尋引擎</B>。
+              點「引用」按鈕可以一鍵複製多種格式 (APA、MLA、Chicago...),臨時用很方便。
+            </LI>
+            <LI>
+              <B>Connected Papers</B> (connectedpapers.com):視覺化文獻間關聯,
+              用來找「這篇論文相關的其他論文」。
+            </LI>
+          </UL>
+          <Note>
+            寫 NekoServe 的 PDF 文件時主要靠 EndNote 的 Word 外掛
+            (<B>Cite While You Write</B>) 一鍵插入引用、切換期刊格式,
+            瀏覽器擴充 (<B>Capture Reference</B>) 抓論文 metadata。
+            學會這套工具鏈之後,引用清單的時間省了一半以上。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'cite-literature-review',
+      icon: '📚',
+      title: '怎麼寫文獻探討',
+      content: (
+        <div>
+          <P>
+            論文的「文獻探討 (Literature Review)」不是把讀過的論文一篇篇說一遍,
+            而是<B>建構一個敘事</B>:從前人怎麼解這個問題,推導到「為什麼還需要寫這篇新論文」。
+          </P>
+          <UL>
+            <LI><B>主題分群</B>:不要按時間順序。把論文按「他們想解什麼問題」分群。</LI>
+            <LI><B>找空缺 (Gap)</B>:每個群結尾說「但他們沒解決 X」,X 就是新論文的貢獻入口。</LI>
+            <LI><B>引用要摘要,不抄寫</B>:用自己的話濃縮論文的 claim。</LI>
+            <LI><B>批判性</B>:不只說「他們做了什麼」,還要說「他們的方法有什麼限制」。</LI>
+            <LI><B>10-30 篇就夠</B>:大學專題論文不必引用 200 篇。深度比廣度重要。</LI>
+          </UL>
+          <Example>
+            NekoServe 的「文獻依據」頁就是一個迷你文獻探討:
+            從 Little's Law (理論基礎) → 排隊實證 → 寵物咖啡廳特殊行為,
+            把 8 篇論文編成一條故事線,每篇都連接到「為什麼這篇支撐 NekoServe 的某個設計」。
+          </Example>
+        </div>
+      ),
+    },
+  ],
 
-  validation: [],
+  validation: [
+    {
+      id: 'val-purpose',
+      icon: '🎯',
+      title: '為什麼要做驗證',
+      content: (
+        <div>
+          <P>
+            模擬器寫得再漂亮,如果產出的數字跟現實對不上就是<B>科幻小說</B>。
+            驗證模式存在的目的是回答一個問題:「我這個模擬,值得相信嗎?」
+          </P>
+          <P>
+            學界把「對不對」拆成兩件事 (Sargent 框架):
+          </P>
+          <UL>
+            <LI><B>Verification (程式驗證)</B>:程式碼有沒有忠實實作我設計的模型? (對嗎,我的 code?)</LI>
+            <LI><B>Validation (模型驗實)</B>:這個模型有沒有忠實反映現實世界? (對嗎,我的模型?)</LI>
+          </UL>
+          <P>
+            這頁主要做 <B>Validation</B>:把模擬器產生的貓咪行為比例,
+            跟 Hirsch et al. (2025) 在斯德哥爾摩貓咖實際觀察的 12,505 筆掃描比對。
+          </P>
+          <Note>
+            做研究發表時這頁等於我的「真實性聲明」 — 沒有它,
+            審稿者只能信我的話;有它,審稿者可以自己看數字。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-wilson-ci',
+      icon: '📐',
+      title: 'Wilson Score CI 為何取代 Wald',
+      content: (
+        <div>
+          <P>
+            比例 p̂ 的 95% 信賴區間,教科書最早教的是 <B>Wald CI</B>:
+          </P>
+          <Formula>
+            CI<sub>Wald</sub> = p̂ ± z × √(p̂(1−p̂) / n)
+          </Formula>
+          <P>
+            簡單但有兩個致命問題:
+          </P>
+          <UL>
+            <LI>p̂ 接近 0 或 1 時,CI 下緣可能 &lt; 0,上緣可能 &gt; 1 (機率不該超出 [0, 1])</LI>
+            <LI>p̂ = 0 時 CI 退化成 [0, 0],n 再大都一樣 — 顯然不合理</LI>
+          </UL>
+          <P>
+            <B>Wilson Score CI (1927)</B> 把 z 放回式子重新解二次方程,得到:
+          </P>
+          <Formula>
+            CI<sub>Wilson</sub> = (p̂ + z²/2n ± z√(p̂(1−p̂)/n + z²/4n²)) / (1 + z²/n)
+          </Formula>
+          <UL>
+            <LI>邊界自動限制在 [0, 1] 內,不會超出</LI>
+            <LI>p̂ = 0 時 CI 仍有正寬度,符合直覺 (n=10 跟 n=100 不該一樣)</LI>
+            <LI>小 n 時遠比 Wald 準</LI>
+          </UL>
+          <Note>
+            我選 Wilson Score 而不是 Clopper-Pearson 是因為 Wilson 的計算量小、
+            邊界行為比 CP「更窄但仍正確」,適合即時繪圖。
+            CP 是「保守」(conservative) 的選擇,要做臨床試驗才該用。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-goodness-of-fit',
+      icon: '📊',
+      title: 'Goodness-of-Fit 檢定',
+      content: (
+        <div>
+          <P>
+            「模擬比例落在 Wilson CI 內」是<B>單個指標</B>的判斷。
+            要判斷整體分布是否吻合,需要正式的<B>適配度檢定 (goodness-of-fit test)</B>:
+          </P>
+          <UL>
+            <LI>
+              <B>卡方檢定 (Chi-square)</B>:比較觀察次數 vs 預期次數,
+              統計量 χ² = Σ(O−E)²/E。9 個類別的話自由度 = 8。
+              要求每個 cell 預期次數 ≥ 5。
+            </LI>
+            <LI>
+              <B>Kolmogorov-Smirnov (KS) test</B>:比較兩個累積分布函數的最大差異。
+              連續變數用 (例:等待時間分布)。
+            </LI>
+            <LI>
+              <B>Anderson-Darling</B>:KS 的尾巴敏感版本,適合檢驗「分配是否常態」。
+            </LI>
+          </UL>
+          <P>
+            驗證模式的「合成分數 80 分」是個簡化的整體指標,不是嚴格的 χ² 檢定。
+            未來想加 χ² 檢定,但不一定每次都需要,看研究嚴謹度。
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'val-overfitting',
+      icon: '⚠️',
+      title: '過適 (Overfitting) 的風險',
+      content: (
+        <div>
+          <P>
+            把模擬參數調到「跟 Hirsch 2025 完全吻合」很容易,但這不一定代表模擬是好的 —
+            可能只是 <B>overfit 到那一篇論文</B>。
+          </P>
+          <P>
+            過適的徵兆:
+          </P>
+          <UL>
+            <LI>調整 15+ 個參數讓 9 個行為比例都壓在 CI 內 → 自由度被吃光,失去解釋力</LI>
+            <LI>換一篇論文 (例如台灣的貓咖) 套同一組參數,落差大</LI>
+            <LI>合成分數 100 分但極端情境 (店員 0 人、貓咪 50 隻) 仍給出合理數字 → 太硬塞</LI>
+          </UL>
+          <Note>
+            我設計參數時刻意只用 Hirsch 提供的<B>機率</B>(每個狀態的時間佔比),
+            沒有反推「魔法調整器」讓哪個分布吻合。
+            模擬的合理性是<B>從機率推到分布</B>,不是反過來校的。
+            這就是為什麼有些指標 (如貓-貓互動率) 不完美,但我寧可保留誠實的差距。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-multiple-comparisons',
+      icon: '🎲',
+      title: '多重比較問題 (Multiple Comparisons)',
+      content: (
+        <div>
+          <P>
+            驗證模式同時比 9 個行為類別,每個用 95% CI 判斷 — 這裡藏著一個統計學陷阱。
+          </P>
+          <P>
+            <B>單個檢定犯錯機率 5%</B> (false positive)。
+            獨立比 9 個類別,<B>整體不犯錯</B>機率是 0.95⁹ ≈ 63%。
+            也就是說<B>整體犯錯機率 37%</B>,遠高於 5%。
+          </P>
+          <Formula>
+            P(全部通過 | H₀ 真) = (1 − α)<sup>k</sup>
+          </Formula>
+          <P>
+            修正方法:
+          </P>
+          <UL>
+            <LI><B>Bonferroni 修正</B>:每個檢定用 α/k = 0.05/9 ≈ 0.0056 (即 99.4% CI)。最保守。</LI>
+            <LI><B>Holm-Bonferroni</B>:Bonferroni 改良版,功效較高。</LI>
+            <LI><B>FDR (False Discovery Rate)</B>:Benjamini-Hochberg 法,適合大量比較。</LI>
+          </UL>
+          <Note>
+            驗證模式目前用單一 95% CI 判斷,沒做多重比較修正 — 這在嚴格的論文裡是缺點。
+            未來如果要寫成正式論文,會考慮加 Bonferroni 或 FDR。
+            這頁的「合成分數 80 分」也是粗略指標,主要給直觀檢查用。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-field-observation-limits',
+      icon: '🔬',
+      title: '田野觀察數據的限制',
+      content: (
+        <div>
+          <P>
+            把模擬跟「真實觀察」對照聽起來很厲害,但<B>真實觀察本身也有偏誤</B>:
+          </P>
+          <UL>
+            <LI>
+              <B>觀察者偏誤 (Observer Bias)</B>:同一個行為,A 觀察員寫「探索」,
+              B 觀察員寫「移動」。Hirsch 用<B>雙人盲評</B>降低,
+              kappa = 0.83 算不錯但不完美。
+            </LI>
+            <LI>
+              <B>掃描採樣 (Scan Sampling) vs 連續採樣</B>:Hirsch 用 1 分鐘間隔掃描,
+              快速行為 (玩耍、貓貓互動) 可能漏測,所以「玩耍佔 0.3%」可能是低估。
+            </LI>
+            <LI>
+              <B>觀察時段</B>:Hirsch 是白天 11:00-19:00,排除半夜。半夜的貓咪行為不在範圍內。
+            </LI>
+            <LI>
+              <B>單一場域</B>:斯德哥爾摩一家貓咖。文化差異 (台灣的客人通常更會主動互動?) 沒被包含。
+            </LI>
+          </UL>
+          <Note>
+            模擬跟 Hirsch 不完全吻合,有時候不是模擬錯,是觀察數據本身有限。
+            做研究時要兩面誠實:列出觀察數據的限制,也列出模擬的近似。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'val-choosing-benchmark',
+      icon: '🏆',
+      title: '怎麼選驗證基準',
+      content: (
+        <div>
+          <P>
+            「拿哪一篇論文當 ground truth」這個決定,本身就影響驗證的品質。
+            我選 Hirsch 2025 的考量:
+          </P>
+          <UL>
+            <LI>
+              <B>同儕審查</B>:Animals (MDPI) 期刊,不是預印本。
+            </LI>
+            <LI>
+              <B>樣本量足夠</B>:12,505 筆掃描,n 大到 CI 夠窄,有檢定意義。
+            </LI>
+            <LI>
+              <B>方法透明</B>:論文公開了 ethogram 定義、編碼規則、原始數據,可重現性高。
+            </LI>
+            <LI>
+              <B>場域貼近</B>:商業貓咖 (不是實驗室養貓研究),情境跟 NekoServe 模擬的目標貼近。
+            </LI>
+            <LI>
+              <B>近期</B>:2025 年發表,概念跟方法跟得上現代動物行為學。
+            </LI>
+          </UL>
+          <Note>
+            如果只能找到一篇樣本量 50 的研究,我會誠實說「樣本量小,結果僅供參考」,
+            不會強行用它當 ground truth。<B>沒有完美基準</B>是常態,
+            研究時要說清楚自己用的基準有什麼限制。
+          </Note>
+        </div>
+      ),
+    },
+  ],
+
+  // ══════════════════════════════════════════════════════════
+  // 即時歷程頁
+  // ══════════════════════════════════════════════════════════
+  liveMode: [
+    {
+      id: 'live-monte-carlo',
+      icon: '🎲',
+      title: '什麼是蒙地卡羅模擬？',
+      content: (
+        <div>
+          <P>
+            <B>蒙地卡羅模擬</B>是用「跑很多次隨機實驗」來估算一個系統的平均行為。
+            單次模擬只能給出「一個答案」(可能剛好極端);
+            跑 N 次之後取平均,才能逼近「真實的期望值」。
+          </P>
+          <P>
+            NekoServe 每次模擬會用不同的隨機種子 (<code>baseSeed + i</code>),
+            讓每次的顧客抵達時刻、貓咪行為、店員服務時間都微微不同 — 模擬出的指標 (滿意度、福祉、等待時間等) 因此會在每次跑出來都不一樣。
+          </P>
+          <Example>
+            <B>例子</B>:跑 1 次「平均等位 8.3 分鐘」,跑第 2 次可能是 11.1 分,第 3 次 6.7 分。
+            單看一次無法判斷真正的平均,跑 50 次取累積平均才會穩定到「真值」附近。
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'live-cumulative-curve',
+      icon: '📈',
+      title: '累積平均收斂曲線',
+      content: (
+        <div>
+          <P>
+            這頁的主視覺是<B>累積平均隨次數演化的折線</B>:每跑完一次模擬,
+            把當下所有樣本的平均值畫成一個點,曲線就會多長一段。
+          </P>
+          <Formula>
+            mean<sub>n</sub> = (X<sub>1</sub> + X<sub>2</sub> + ... + X<sub>n</sub>) / n
+          </Formula>
+          <P>
+            根據<B>大數法則 (Law of Large Numbers)</B>:當 n → ∞,
+            mean<sub>n</sub> 會收斂到真實的期望值 μ。
+          </P>
+          <UL>
+            <LI>前 30 次震盪劇烈 → 樣本太少,還在抓不到真相</LI>
+            <LI>之後逐漸平穩 → 樣本量提供的資訊壓制了個別的隨機波動</LI>
+            <LI>近 100 次相對變化 &lt; 1% → 自動判定收斂,曲線塗淡綠</LI>
+          </UL>
+          <Note>
+            ⚠️ 累積平均<B>不是單調收斂</B>。
+            每個新樣本都可能把均值往任一方向拉,只是隨 n 增大波動越小。
+            如果觀察到曲線在後段忽然「跳一下」,通常是抽到一個離群值 — 這正是批次模式的價值:揭露這指標「偶發但有量」的特性。
+          </Note>
+        </div>
+      ),
+    },
+    {
+      id: 'live-confidence-interval',
+      icon: '📏',
+      title: '95% 信賴區間 (CI 帶)',
+      content: (
+        <div>
+          <P>
+            折線旁邊的淡橘色帶是 <B>95% 信賴區間</B>:代表「真實值有 95% 機率落在這個範圍內」。
+          </P>
+          <Formula>
+            CI<sub>95%</sub> = mean ± t<sub>n-1, 0.025</sub> × (s / √n)
+          </Formula>
+          <P>
+            其中 <B>s</B> 是樣本標準差,<B>n</B> 是樣本數,
+            <B>t</B> 是 Student-t 分布的臨界值 (n &gt; 40 時近似 1.96 = 標準常態)。
+          </P>
+          <UL>
+            <LI>n=2 時 t = 12.7,帶很寬 (我們對真值幾乎沒概念)</LI>
+            <LI>n=30 時 t ≈ 2.04,帶收窄到約 1.96 倍 SE</LI>
+            <LI>n=1000 時帶非常窄,我們很有把握</LI>
+          </UL>
+          <P>
+            CI 帶以 <B>1/√n 的速度收窄</B> — 想讓 CI 寬度減半,要 4 倍樣本;減到 1/10,要 100 倍樣本。
+            這就是「為什麼研究通常需要大樣本」。
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-distribution-shape',
+      icon: '🔔',
+      title: '分配形狀曲線 (KDE)',
+      content: (
+        <div>
+          <P>
+            histogram 上面那條深橘色平滑曲線是 <B>核密度估計 (Kernel Density Estimation, KDE)</B>。
+            把離散的長條圖還原成連續的機率密度,可以更清楚讀出「分配的形狀」。
+          </P>
+          <P>
+            NekoServe 用<B>高斯核</B>,bandwidth 由 Silverman's rule 自動選:
+          </P>
+          <Formula>h = 1.06 × σ × n<sup>-1/5</sup></Formula>
+          <P>
+            <B>形狀判讀</B>(右下角自動標籤):
+          </P>
+          <UL>
+            <LI><B>✓ 接近常態</B>:對稱鐘形,結果集中可預測 (例:貓咪福祉指數)</LI>
+            <LI><B>→ 右偏</B>:長尾在右,偶爾出現極大值 (例:等待時間,大多數人快速入座但偶爾排很久)</LI>
+            <LI><B>← 左偏</B>:長尾在左 (例:成功率,大多很高但偶爾失敗)</LI>
+            <LI><B>⚠ 長尾</B>:極端值偏多,要小心 (高 kurtosis)</LI>
+          </UL>
+          <P>
+            數值用 <B>Fisher-Pearson 偏度 (skewness)</B> 與 <B>excess kurtosis</B> 判斷:
+          </P>
+          <Formula>
+            skewness = m<sub>3</sub> / σ³ ;&nbsp; kurtosis = m<sub>4</sub> / σ⁴ - 3
+          </Formula>
+          <P>
+            常態分配:skewness=0, kurtosis=0;指數分配:skewness=2, kurtosis=6。
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-percentiles',
+      icon: '📊',
+      title: 'P5 / P50 / P95 分位數',
+      content: (
+        <div>
+          <P>
+            histogram 上的三條虛線標出三個關鍵分位數:
+          </P>
+          <UL>
+            <LI><B>P5 (灰)</B>:5% 的樣本落在這條線左邊</LI>
+            <LI><B>P50 / 中位數 (黑粗)</B>:50% 在左、50% 在右,代表「典型值」</LI>
+            <LI><B>P95 (灰)</B>:95% 在左、只有 5% 在右</LI>
+          </UL>
+          <P>
+            P5 與 P95 之間是<B>中間 90% 的樣本範圍</B>,圖右上角會顯示具體區間 [a, b]。
+            這是「絕大多數情況下的結果範圍」。
+          </P>
+          <Note>
+            <B>中位數 vs 平均</B>差很多 → 分配偏態。
+            分配偏態時,單看「平均」會誤導;改看「中位數 + 中間 90%」才能描述「大多數人實際遇到的情況」。
+          </Note>
+          <Example>
+            <B>例子</B>:平均等位 8 分鐘,P95 = 25 分鐘 — 雖然平均不算長,
+            但 5% 的客人會等超過 25 分鐘,這對體驗有直接影響。
+          </Example>
+        </div>
+      ),
+    },
+    {
+      id: 'live-batch-vs-single',
+      icon: '⚖️',
+      title: '單次 vs 批次:Crystal Ball 概念',
+      content: (
+        <div>
+          <P>
+            <B>Crystal Ball</B> (一款風險分析軟體) 推廣了一個重要觀念:模擬結果不是「一個數」,
+            是「一個分配」。要用分配的形狀回答決策問題。
+          </P>
+          <UL>
+            <LI><B>單次模擬</B> → 一個點 → 不知道準不準</LI>
+            <LI><B>20 次批次</B> → 一條曲線 + CI 帶 → 看出穩定性</LI>
+            <LI><B>分配圖</B> → 看出極端值風險</LI>
+          </UL>
+          <P>
+            這頁就是把 Crystal Ball 的核心視覺帶進貓咖模擬:
+            <B>累積平均曲線</B> 回答「跑幾次才夠」,
+            <B>分配 + KDE</B> 回答「結果長什麼形狀」,
+            兩者並列回答「我能不能信這個答案」。
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-N-vs-n',
+      icon: 'ℹ️',
+      title: 'N 跟 n 的差別',
+      content: (
+        <div>
+          <P>
+            統計教科書的慣例:
+          </P>
+          <UL>
+            <LI><B>大寫 N</B> = 計劃要跑的總次數 (在模擬設定設的 batch replications)。圖表會延伸到 X = N。</LI>
+            <LI><B>小寫 n</B> = 目前已完成的樣本數,隨進度從 1 長到 N。</LI>
+          </UL>
+          <Example>
+            進行中:目標 N=50, 目前 n=30 → 還剩 20 次。<br/>
+            跑完後:n = N = 50。
+          </Example>
+          <P>
+            CI 公式裡的 n 永遠是「目前的樣本數」 (因為估計量是用目前手上的樣本算的),
+            這也是為什麼 CI 帶會隨 n 增加而收窄。
+          </P>
+        </div>
+      ),
+    },
+    {
+      id: 'live-reproducibility',
+      icon: '🔁',
+      title: '可重現性 (Reproducibility)',
+      content: (
+        <div>
+          <P>
+            NekoServe 的批次模擬<B>完全可重現</B>:用同樣的 baseSeed 跑兩次,
+            6 張小折線的軌跡會像素級重合。
+          </P>
+          <P>
+            原理:第 i 次模擬使用的 seed = <code>baseSeed + i</code>,所以隨機序列由 baseSeed 完全決定。
+            暫停/繼續、停止重啟都不影響可重現性 (只要 baseSeed 沒變)。
+          </P>
+          <Note>
+            這對研究至關重要:把 baseSeed 寫進論文,別人重跑就會得到完全一樣的結果,可被驗證。
+          </Note>
+        </div>
+      ),
+    },
+  ],
 
   about: [
     {

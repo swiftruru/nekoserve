@@ -85,6 +85,12 @@
     "stayTime": "Stay time",
     "close": "Close"
   },
+  "batchPromo": {
+    "title": "💡 Want to know if this result is stable?",
+    "body": "You just watched one simulation. To judge whether the answer is reliable, run 20 replications — the cumulative-mean convergence curve and distribution shape will tell you (Crystal Ball-style).",
+    "cta": "🚀 Run 20-replica batch now",
+    "dismiss": "Don't show again"
+  },
   "a11y": {
     "seat": "Seat {{n}}, {{status}}",
     "occupied": "occupied",

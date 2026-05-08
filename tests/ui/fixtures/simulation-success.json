@@ -34,7 +34,9 @@
     "waitForSeatP99": 0,
     "waitForOrderP50": 8,
     "waitForOrderP95": 8,
-    "waitForOrderP99": 8
+    "waitForOrderP99": 8,
+    "customerSatisfactionScore": 0.72,
+    "catWelfareScore": 3.4
   },
   "eventLog": [
     {

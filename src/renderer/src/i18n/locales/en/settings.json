@@ -425,7 +425,17 @@
     "replications": "Replications",
     "runButton": "▶ Run {{count}} replications",
     "progress": "Replicating ({{completed}} / {{total}})",
-    "complete": "Batch complete: {{count}} replications in {{seconds}}s"
+    "complete": "Batch complete: {{count}} replications in {{seconds}}s",
+    "quickStartLabel": "Live Mode ({{count}}x)"
+  },
+  "batchHint": {
+    "title": "💡 Want to see curves converge? Enable batch mode",
+    "lead": "A single run gives you ONE answer. A batch tells you HOW STABLE that answer is.",
+    "explain1": "When enabled, we run the same config N times (different seeds) and jump you to the Live Mode page.",
+    "explain2": "Live Mode shows how the cumulative mean settles and what shape the distribution takes (Crystal Ball-style).",
+    "comparisonTitle": "1 run vs N runs",
+    "compareSingle": "1 run → one dot (no idea if accurate)",
+    "compareBatch": "20 runs → a curve + CI band (see stability)"
   },
   "sweep": {
     "toggle": "Sensitivity analysis",

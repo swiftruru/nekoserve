@@ -425,7 +425,17 @@
     "replications": "重複次數",
     "runButton": "▶ 執行 {{count}} 次重複",
     "progress": "重複模擬中 ({{completed}} / {{total}})",
-    "complete": "批次完成: {{count}} 次重複, 耗時 {{seconds}} 秒"
+    "complete": "批次完成: {{count}} 次重複, 耗時 {{seconds}} 秒",
+    "quickStartLabel": "即時歷程 ({{count}}x)"
+  },
+  "batchHint": {
+    "title": "💡 想看曲線收斂嗎？啟用批次模式",
+    "lead": "一次模擬只能告訴你「一個答案」,多次模擬告訴你「答案有多穩」。",
+    "explain1": "啟用批次模式後,系統會用同一組設定跑 N 次模擬 (種子不同),自動切到「即時歷程」頁。",
+    "explain2": "即時歷程頁會展示累積平均如何隨次數收斂、分配形狀如何成形 (Crystal Ball 概念)。",
+    "comparisonTitle": "1 次 vs N 次",
+    "compareSingle": "1 次 → 一個點 (不知道準不準)",
+    "compareBatch": "20 次 → 一條曲線 + 信賴區間 (看出穩定性)"
   },
   "sweep": {
     "toggle": "敏感度分析",
