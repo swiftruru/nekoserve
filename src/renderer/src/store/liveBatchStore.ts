@@ -17,6 +17,8 @@
 
 import { create } from 'zustand'
 import type { SimulationConfig, SimulationResult, MetricSummary } from '../types'
+import type { ThresholdConfig } from '../utils/exceedance'
+import { THRESHOLD_DEFAULTS } from '../data/thresholdDefaults'
 
 /** All numeric metric keys we track curves for. Mirrors the METRIC_KEYS
  *  list in useSimulation.ts; kept duplicated rather than shared because
@@ -73,6 +75,11 @@ interface LiveBatchState {
   startedAt: number | null
   finishedAt: number | null
   errorMessage: string | null
+  /** Per-metric pass/fail bars for the exceedance-probability feature.
+   *  Keys absent from the record mean "no threshold set, don't draw a
+   *  line or compute P(X >= bar)". Seeded from THRESHOLD_DEFAULTS on
+   *  init and on reset(). */
+  thresholds: Partial<Record<LiveMetricKey, ThresholdConfig>>
 
   // ── actions ──
   start: (config: SimulationConfig, total: number, label: string) => void
@@ -84,6 +91,10 @@ interface LiveBatchState {
   fail: (msg: string) => void
   reset: () => void
   setSelectedMetric: (key: LiveMetricKey) => void
+  /** Set or clear one metric's threshold. Pass `null` to clear. */
+  setThreshold: (key: LiveMetricKey, cfg: ThresholdConfig | null) => void
+  /** Restore all thresholds to THRESHOLD_DEFAULTS. */
+  resetThresholds: () => void
 }
 
 const T_TABLE: Record<number, number> = {
@@ -119,7 +130,7 @@ function emptySeries(): Record<string, ConvergencePoint[]> {
 const INITIAL: Pick<LiveBatchState,
   'status' | 'total' | 'currentIndex' | 'runs' | 'stats' | 'series' |
   'selectedMetric' | 'config' | 'baseSeed' | 'label' |
-  'startedAt' | 'finishedAt' | 'errorMessage'
+  'startedAt' | 'finishedAt' | 'errorMessage' | 'thresholds'
 > = {
   status: 'idle',
   total: 0,
@@ -134,6 +145,7 @@ const INITIAL: Pick<LiveBatchState,
   startedAt: null,
   finishedAt: null,
   errorMessage: null,
+  thresholds: { ...THRESHOLD_DEFAULTS },
 }
 
 export const useLiveBatchStore = create<LiveBatchState>((set) => ({
@@ -187,6 +199,13 @@ export const useLiveBatchStore = create<LiveBatchState>((set) => ({
   fail: (msg) => set({ status: 'error', errorMessage: msg, finishedAt: Date.now() }),
   reset: () => set({ ...INITIAL, stats: emptyStats(), series: emptySeries() }),
   setSelectedMetric: (key) => set({ selectedMetric: key }),
+  setThreshold: (key, cfg) => set((prev) => {
+    const next = { ...prev.thresholds }
+    if (cfg === null) delete next[key]
+    else next[key] = cfg
+    return { thresholds: next }
+  }),
+  resetThresholds: () => set({ thresholds: { ...THRESHOLD_DEFAULTS } }),
 }))
 
 /** True while a run is mid-flight (running OR paused), false otherwise.

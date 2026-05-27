@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ConvergencePoint } from '../../store/liveBatchStore'
 import { TermTooltip } from '../results/TermTooltip'
+import { type ThresholdConfig, passesThreshold } from '../../utils/exceedance'
 
 interface Props {
   series: ConvergencePoint[]
@@ -16,7 +17,16 @@ interface Props {
    *  + CI band + blip + current-mean line stay so the visual identity
    *  reads at a glance even at 240×120. */
   compact?: boolean
+  /** Optional pass/fail bar. When set, draws a horizontal orange dashed
+   *  line at the threshold value (in metric units, plotted on the Y
+   *  axis) so the reader sees where the cumulative mean has to clear. */
+  threshold?: ThresholdConfig
+  /** Pass fraction in [0, 1]. Displayed alongside the threshold label in
+   *  full mode. Ignored in compact mode (no space). */
+  exceedanceProb?: number
 }
+
+const THRESHOLD_STROKE = '#E05A2B'
 
 const FULL_DIMS = {
   W: 720, H: 240,
@@ -31,6 +41,7 @@ const COMPACT_DIMS = {
 
 export default function CumulativeMeanChart({
   series, total, metricLabel, convergedAt, convergenceWindow, compact = false,
+  threshold, exceedanceProb,
 }: Props) {
   const { t } = useTranslation(['liveOverlay'])
   const dims = compact ? COMPACT_DIMS : FULL_DIMS
@@ -309,6 +320,84 @@ export default function CumulativeMeanChart({
           opacity={0.6}
           style={{ transition: 'y1 280ms ease-out, y2 280ms ease-out' }}
         />
+
+        {/* Threshold horizontal line. Lives on the metric (Y) axis here
+            -- crossing this line is "the cumulative mean reached the
+            pass bar". Compact mode shows the line only; the label
+            would overlap the corner legend at small sizes. */}
+        {threshold && (() => {
+          // Skip when bar is far outside the visible band (a flat-zero
+          // metric with bar=15 would otherwise smear the chart edge).
+          if (threshold.value < yMin - (yMax - yMin) * 0.5) return null
+          if (threshold.value > yMax + (yMax - yMin) * 0.5) return null
+          const rawY = yScale(threshold.value)
+          const ty = Math.max(PADDING_TOP, Math.min(CHART_H - PADDING_BOTTOM, rawY))
+          const labelText = compact
+            ? `${threshold.direction === 'gte' ? '≥' : '≤'} ${threshold.value.toFixed(2)}`
+            : t(threshold.direction === 'gte'
+                ? 'liveOverlay:chart.thresholdLabelGte'
+                : 'liveOverlay:chart.thresholdLabelLte', {
+                  value: threshold.value.toFixed(2),
+                  percent: exceedanceProb != null
+                    ? (exceedanceProb * 100).toFixed(1) : '—',
+                })
+          return (
+            <g pointerEvents="none">
+              <line
+                x1={PADDING_LEFT} y1={ty}
+                x2={CHART_W - PADDING_RIGHT} y2={ty}
+                stroke={THRESHOLD_STROKE}
+                strokeDasharray="4 3"
+                strokeWidth={1.5}
+              />
+              {!compact && (
+                <text
+                  x={PADDING_LEFT + 4}
+                  y={ty - 3}
+                  fontSize={11}
+                  fontWeight={700}
+                  fill={THRESHOLD_STROKE}
+                >
+                  {labelText}
+                </text>
+              )}
+            </g>
+          )
+        })()}
+
+        {/* Compact mode pass/fail chip: tucked into the bottom-right
+            corner so the user can scan all small-multiples at once and
+            spot which metrics are still failing the bar. The cumulative
+            mean is the source of truth here (not the latest sample)
+            since the page is about long-run behaviour. */}
+        {compact && threshold && (() => {
+          const passes = passesThreshold(last.mean, threshold)
+          const chipW = 22
+          const chipH = 14
+          const chipX = CHART_W - PADDING_RIGHT - chipW - 2
+          const chipY = CHART_H - PADDING_BOTTOM - chipH - 2
+          return (
+            <g pointerEvents="none">
+              <rect
+                x={chipX} y={chipY}
+                width={chipW} height={chipH}
+                rx={3}
+                fill={passes ? '#16a34a' : '#9ca3af'}
+                opacity={0.9}
+              />
+              <text
+                x={chipX + chipW / 2}
+                y={chipY + chipH - 3}
+                fontSize={10}
+                fontWeight={700}
+                fill="#ffffff"
+                textAnchor="middle"
+              >
+                {passes ? '✓' : '✗'}
+              </text>
+            </g>
+          )
+        })()}
 
         {/* Static legend in the top-right corner: red current-mean
             value on top, gray first-run value below. Pinning these to

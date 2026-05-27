@@ -8,6 +8,9 @@
   "cumulativeMean": "目前累積平均",
   "ci95": "95% 信賴區間",
   "sampleCount": "已完成樣本數 n",
+  "exceedanceProb": "P(X {{sign}} {{value}})",
+  "exceedanceProbEmpty": "未設及格門檻",
+  "exceedanceCount": "{{count}} / {{total}} 次達標",
   "errorPrefix": "錯誤",
   "convergenceHint": "✓ 結果已穩定：近 {{window}} 次累積平均的相對變化小於 {{percent}}%，可以考慮停止。",
   "convergenceWaiting": "尚未收斂：累積平均還在變動，繼續累積樣本。",
@@ -18,6 +21,8 @@
     "xAxisTitle": "模擬次數",
     "firstRunLabel": "第 1 次 = {{value}}",
     "currentMeanLabel": "目前平均 = {{value}}",
+    "thresholdLabelGte": "及格 ≥ {{value}} ({{percent}}% 達標)",
+    "thresholdLabelLte": "及格 ≤ {{value}} ({{percent}}% 達標)",
     "hint": "橘色折線是「累積平均」,淡橘色帶是 95% 信賴區間。隨著 n 增加,帶會以 1/√n 速度收窄。",
     "help": {
       "summary": "ℹ️ 怎麼看這張圖 (累積平均收斂曲線)",
@@ -49,6 +54,8 @@
     "totalCountTooltip": "小寫 n = 目前已收集到的樣本數 (= 已完成的模擬次數)。",
     "binTooltip": "[{{from}}, {{to}}) 共 {{count}} 筆",
     "meanLabel": "平均 = {{value}}",
+    "thresholdLabelGte": "≥ {{value}}: {{percent}}%",
+    "thresholdLabelLte": "≤ {{value}}: {{percent}}%",
     "hint": "每跑一次模擬就累加一筆樣本到對應 bin。樣本少時稀疏,樣本多時收斂為鐘形。",
     "tooltipCount": "次數",
     "tooltipDensity": "密度",
@@ -63,6 +70,7 @@
       "elementMedian": "黑色虛線「中位數」：50% 的模擬結果落在線左邊,50% 落在右邊。",
       "elementP5P95": "灰色虛線 P5 / P95：5% / 95% 分位數。中間 90% 的結果落在這兩線之間 (圖右上角顯示區間)。",
       "elementMeanRed": "紅色虛線「平均」：平均值。如果跟中位數差很多,代表分配偏一邊。",
+      "elementThreshold": "橘紅虛線「及格門檻」：你設的及格線。線右側 (或左側) 淡藍綠的面積就是「達標機率」,等於 P(X ≥ 門檻) 或 P(X ≤ 門檻)。",
       "elementShape": "右下角「分配形狀」：自動判讀偏度與峰度,給你白話結論。",
       "howToReadTitle": "怎麼判讀",
       "howRead1": "鐘形 (對稱) → 接近常態,結果集中可預測。",
@@ -89,6 +97,24 @@
     "pause": "暫停",
     "resume": "繼續",
     "stop": "停止"
+  },
+  "thresholdControl": {
+    "title": "及格門檻",
+    "gteShort": "越高越好",
+    "lteShort": "越低越好",
+    "directionLabel": "方向",
+    "valueLabel": "門檻數值",
+    "placeholder": "輸入數值",
+    "clear": "清除",
+    "hint": "改動立即重算 P(X 達標),不用重跑模擬"
+  },
+  "globalThresholdBar": {
+    "title": "及格門檻總覽",
+    "setCount": "已設 {{count}} / {{total}}",
+    "expand": "展開",
+    "collapse": "收合",
+    "hint": "一次設定所有指標的及格線。輸入空值會清除該指標的門檻。",
+    "resetAll": "全部復原預設"
   },
   "bootstrap": {
     "subtitle": "批次模式啟動中。第 1 次模擬跑完後，左邊會開始播動畫；右邊的累積平均曲線跟著一起長。",

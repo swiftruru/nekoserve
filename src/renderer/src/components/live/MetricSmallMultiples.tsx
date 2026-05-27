@@ -38,6 +38,7 @@ export default function MetricSmallMultiples({ metrics, onFocus, displayLimit }:
   const currentIndex = useLiveBatchStore((s) => s.currentIndex)
   const series = useLiveBatchStore((s) => s.series)
   const stats = useLiveBatchStore((s) => s.stats)
+  const thresholds = useLiveBatchStore((s) => s.thresholds)
   const isReplaying = displayLimit != null
 
   if (metrics.length === 0) {
@@ -88,6 +89,7 @@ export default function MetricSmallMultiples({ metrics, onFocus, displayLimit }:
               metricLabel={metricLabel}
               convergedAt={convergedAt}
               convergenceWindow={CONVERGENCE_WINDOW}
+              threshold={thresholds[key]}
               compact
             />
             {/* Numeric readout strip below each mini chart so the user

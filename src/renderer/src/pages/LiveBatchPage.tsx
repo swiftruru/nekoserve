@@ -15,10 +15,13 @@ import ConfettiBurst from '../components/live/ConfettiBurst'
 import MetricSmallMultiples from '../components/live/MetricSmallMultiples'
 import MetricSelectionPanel from '../components/live/MetricSelectionPanel'
 import OdometerCounter from '../components/live/OdometerCounter'
+import GlobalThresholdBar from '../components/live/GlobalThresholdBar'
 import { TermTooltip } from '../components/results/TermTooltip'
 import {
   detectConvergedAt, CONVERGENCE_WINDOW, CONVERGENCE_THRESHOLD,
 } from '../utils/convergence'
+import { calcExceedProb, type ThresholdConfig } from '../utils/exceedance'
+import { getThresholdStep, getThresholdBounds } from '../data/thresholdDefaults'
 
 interface Props {
   /** Currently displayed run. Null while the first run is still being
@@ -295,6 +298,19 @@ export default function LiveBatchPage({
     [focusedMetric, detailSeries],
   )
 
+  // Threshold + exceedance probability for the focused metric. Reading
+  // the whole thresholds map (not a per-key slice) is intentional: the
+  // GlobalThresholdBar edits arbitrary keys and we want the detail view
+  // to react to its own key changing without a stale-key closure.
+  const thresholds = useLiveBatchStore((s) => s.thresholds)
+  const focusedThreshold = focusedMetric ? thresholds[focusedMetric] : undefined
+  const exceedance = useMemo(
+    () => focusedThreshold
+      ? calcExceedProb(detailSamples, focusedThreshold.value, focusedThreshold.direction)
+      : null,
+    [detailSamples, focusedThreshold],
+  )
+
   const canReplay = runs.length >= 2
 
   return (
@@ -427,6 +443,11 @@ export default function LiveBatchPage({
         </div>
       )}
 
+      {/* Global pass-bar editor: collapsed by default. Lets the user
+          set thresholds for every visible metric without first
+          drilling into each one. */}
+      <GlobalThresholdBar metrics={selectedMetrics} />
+
       {/* ── Main: scene + chart area ─────────────────────────── */}
       <div className={
         sceneCollapsed
@@ -513,8 +534,11 @@ export default function LiveBatchPage({
             </>
           ) : (
             <>
-              {/* Detail readouts */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* Detail readouts. The 4th cell (P(X >= bar)) is the
+                  threshold-exceedance feature: it answers "of N runs,
+                  how many cleared the pass bar?" — something the mean
+                  alone can't tell you. */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <Readout
                   label={t('liveOverlay:cumulativeMean')}
                   value={detailStat && detailStat.n > 0 ? formatNumber(detailStat.mean) : '—'}
@@ -537,7 +561,35 @@ export default function LiveBatchPage({
                   }
                   value={detailStat ? String(detailStat.n) : '0'}
                 />
+                <Readout
+                  label={
+                    focusedThreshold
+                      ? t('liveOverlay:exceedanceProb', {
+                          sign: focusedThreshold.direction === 'gte' ? '≥' : '≤',
+                          value: formatNumber(focusedThreshold.value),
+                        })
+                      : t('liveOverlay:exceedanceProbEmpty')
+                  }
+                  value={focusedThreshold && exceedance && exceedance.total > 0
+                    ? `${(exceedance.probability * 100).toFixed(1)}%`
+                    : '—'}
+                  hint={focusedThreshold && exceedance && exceedance.total > 0
+                    ? t('liveOverlay:exceedanceCount', {
+                        count: exceedance.count,
+                        total: exceedance.total,
+                      })
+                    : undefined}
+                />
               </div>
+
+              {/* Pass-bar editor: live-updates the line on both charts
+                  and the readout above without re-running the sim. */}
+              {focusedMetric && (
+                <ThresholdControl
+                  metric={focusedMetric}
+                  threshold={focusedThreshold}
+                />
+              )}
 
               {/* Convergence banner (per-metric, only in detail view) */}
               {detailSeries.length >= CONVERGENCE_WINDOW && (
@@ -561,11 +613,15 @@ export default function LiveBatchPage({
                 metricLabel={detailLabel}
                 convergedAt={detailConvergedAt}
                 convergenceWindow={CONVERGENCE_WINDOW}
+                threshold={focusedThreshold}
+                exceedanceProb={exceedance?.probability}
               />
               <LiveHistogram
                 values={detailSamples}
                 metricLabel={detailLabel}
                 cumulativeMean={detailStat && detailStat.n > 0 ? detailStat.mean : null}
+                threshold={focusedThreshold}
+                exceedanceProb={exceedance?.probability}
               />
             </>
           )}
@@ -625,6 +681,112 @@ function Readout({ label, value, hint }: { label: React.ReactNode; value: string
       {hint && (
         <div className="text-[10px] text-orange-600 dark:text-orange-300 mt-0.5">↘ {hint}</div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Per-metric pass-bar editor. Lives directly above the charts in the
+ * detail view. Edits a single key on liveBatchStore.thresholds; every
+ * other consumer (histogram line, cumulative-mean line, P(X >= bar)
+ * readout, small multiples chips) is reactive on the same key so
+ * dragging the number updates the whole page in one frame.
+ */
+function ThresholdControl({
+  metric,
+  threshold,
+}: {
+  metric: LiveMetricKey
+  threshold: ThresholdConfig | undefined
+}) {
+  const { t } = useTranslation('liveOverlay')
+  const setThreshold = useLiveBatchStore((s) => s.setThreshold)
+  const step = getThresholdStep(metric)
+  const bounds = getThresholdBounds(metric)
+  // When no threshold is set we still render the editor with sensible
+  // placeholders so the user can opt in by typing a value.
+  const value = threshold?.value ?? ''
+  const direction = threshold?.direction ?? 'gte'
+
+  const handleValueChange = (raw: string) => {
+    if (raw === '') {
+      setThreshold(metric, null)
+      return
+    }
+    const num = Number(raw)
+    if (!Number.isFinite(num)) return
+    let clamped = num
+    if (bounds.min !== undefined && clamped < bounds.min) clamped = bounds.min
+    if (bounds.max !== undefined && clamped > bounds.max) clamped = bounds.max
+    setThreshold(metric, { value: clamped, direction })
+  }
+
+  const handleDirection = (next: 'gte' | 'lte') => {
+    if (!threshold) return
+    setThreshold(metric, { value: threshold.value, direction: next })
+  }
+
+  return (
+    <div className="rounded-lg border border-orange-200 dark:border-bark-600 bg-orange-50/60 dark:bg-bark-700/30 px-3 py-2 flex flex-wrap items-center gap-2 text-sm">
+      <span className="font-semibold text-orange-700 dark:text-orange-400">
+        ⛳ {t('thresholdControl.title')}
+      </span>
+      <div className="flex items-center gap-1" role="group" aria-label={t('thresholdControl.directionLabel')}>
+        <button
+          type="button"
+          onClick={() => handleDirection('gte')}
+          disabled={!threshold}
+          aria-pressed={direction === 'gte'}
+          className={
+            'px-2 py-1 rounded text-xs font-semibold border transition-colors ' +
+            (direction === 'gte'
+              ? 'bg-orange-500 text-white border-orange-600'
+              : 'bg-white dark:bg-bark-700 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-bark-500 hover:bg-orange-50 dark:hover:bg-bark-600') +
+            (!threshold ? ' opacity-50 cursor-not-allowed' : '')
+          }
+        >
+          ≥ {t('thresholdControl.gteShort')}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDirection('lte')}
+          disabled={!threshold}
+          aria-pressed={direction === 'lte'}
+          className={
+            'px-2 py-1 rounded text-xs font-semibold border transition-colors ' +
+            (direction === 'lte'
+              ? 'bg-orange-500 text-white border-orange-600'
+              : 'bg-white dark:bg-bark-700 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-bark-500 hover:bg-orange-50 dark:hover:bg-bark-600') +
+            (!threshold ? ' opacity-50 cursor-not-allowed' : '')
+          }
+        >
+          ≤ {t('thresholdControl.lteShort')}
+        </button>
+      </div>
+      <input
+        type="number"
+        value={value}
+        step={step}
+        min={bounds.min}
+        max={bounds.max}
+        onChange={(e) => handleValueChange(e.target.value)}
+        placeholder={t('thresholdControl.placeholder')}
+        className="w-24 px-2 py-1 rounded border border-orange-300 dark:border-bark-500 bg-white dark:bg-bark-700 text-gray-800 dark:text-bark-100 tabular-nums focus:outline-none focus:ring-2 focus:ring-orange-400"
+        aria-label={t('thresholdControl.valueLabel')}
+        data-testid="live-threshold-input"
+      />
+      {threshold && (
+        <button
+          type="button"
+          onClick={() => setThreshold(metric, null)}
+          className="text-xs text-gray-500 dark:text-bark-300 hover:text-orange-700 dark:hover:text-orange-400 underline"
+        >
+          {t('thresholdControl.clear')}
+        </button>
+      )}
+      <span className="text-[11px] text-gray-500 dark:text-bark-300 ml-auto">
+        {t('thresholdControl.hint')}
+      </span>
     </div>
   )
 }

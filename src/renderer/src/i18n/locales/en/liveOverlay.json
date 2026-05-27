@@ -8,6 +8,9 @@
   "cumulativeMean": "Cumulative mean",
   "ci95": "95% CI half-width",
   "sampleCount": "Completed n",
+  "exceedanceProb": "P(X {{sign}} {{value}})",
+  "exceedanceProbEmpty": "No pass bar set",
+  "exceedanceCount": "{{count}} / {{total}} runs pass",
   "errorPrefix": "Error",
   "convergenceHint": "✓ Stable: cumulative mean changed by less than {{percent}}% over the last {{window}} runs. You can stop here.",
   "convergenceWaiting": "Not yet converged: the cumulative mean is still moving — keep accumulating samples.",
@@ -18,6 +21,8 @@
     "xAxisTitle": "Run #",
     "firstRunLabel": "Run 1 = {{value}}",
     "currentMeanLabel": "Current mean = {{value}}",
+    "thresholdLabelGte": "Pass bar ≥ {{value}} ({{percent}}% passing)",
+    "thresholdLabelLte": "Pass bar ≤ {{value}} ({{percent}}% passing)",
     "hint": "Orange line: cumulative mean. Light-orange band: 95% CI. The band tightens as 1/√n.",
     "help": {
       "summary": "ℹ️ How to read this chart (cumulative-mean convergence)",
@@ -49,6 +54,8 @@
     "totalCountTooltip": "Lowercase n = the number of samples collected so far (= replications completed).",
     "binTooltip": "[{{from}}, {{to}}): {{count}} runs",
     "meanLabel": "mean = {{value}}",
+    "thresholdLabelGte": "≥ {{value}}: {{percent}}%",
+    "thresholdLabelLte": "≤ {{value}}: {{percent}}%",
     "hint": "Each completed run drops a sample into a bin. Sparse at low n; bell-shaped as n grows.",
     "tooltipCount": "Count",
     "tooltipDensity": "Density",
@@ -63,6 +70,7 @@
       "elementMedian": "Black dashed 'Median': 50% of runs lie to the left, 50% to the right.",
       "elementP5P95": "Gray dashed P5 / P95: the 5% and 95% quantiles. The middle 90% lives between them (range shown top-right).",
       "elementMeanRed": "Red dashed 'mean': the cumulative mean. Far from the median ⇒ skewed distribution.",
+      "elementThreshold": "Orange dashed 'pass bar': your acceptance threshold. The faint teal area on the passing side equals the passing probability, P(X ≥ bar) or P(X ≤ bar).",
       "elementShape": "Bottom-right 'Distribution shape': automatic skewness/kurtosis verdict in plain language.",
       "howToReadTitle": "How to interpret",
       "howRead1": "Bell-shaped (symmetric) → near-normal, results are concentrated and predictable.",
@@ -89,6 +97,24 @@
     "pause": "Pause",
     "resume": "Resume",
     "stop": "Stop"
+  },
+  "thresholdControl": {
+    "title": "Pass bar",
+    "gteShort": "higher is better",
+    "lteShort": "lower is better",
+    "directionLabel": "Direction",
+    "valueLabel": "Threshold value",
+    "placeholder": "value",
+    "clear": "clear",
+    "hint": "Edits recompute P(X passing) live, no re-run needed"
+  },
+  "globalThresholdBar": {
+    "title": "Pass-bar overview",
+    "setCount": "{{count}} of {{total}} set",
+    "expand": "expand",
+    "collapse": "collapse",
+    "hint": "Set pass bars for every visible metric at once. Clearing the input removes that metric's bar.",
+    "resetAll": "Reset all to defaults"
   },
   "bootstrap": {
     "subtitle": "Batch starting. The cat animation begins as soon as run 1 completes; the cumulative-mean curve grows alongside.",

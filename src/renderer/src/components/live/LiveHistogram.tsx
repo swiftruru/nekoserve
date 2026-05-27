@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { computeKde } from '../../utils/kde'
 import { describeDistribution, classifyShape } from '../../utils/distributionShape'
 import { TermTooltip } from '../results/TermTooltip'
+import type { ThresholdConfig } from '../../utils/exceedance'
 
 interface Props {
   /** Per-run sample values. Order matters only insofar as the LAST one
@@ -11,7 +12,21 @@ interface Props {
   metricLabel: string
   /** Cumulative mean to draw as a vertical reference line. */
   cumulativeMean: number | null
+  /** Optional pass/fail bar. When set, draws a vertical orange dashed
+   *  line at the threshold value and shades the passing side of the
+   *  distribution in faint teal so the reader sees the pass area. */
+  threshold?: ThresholdConfig
+  /** Pass fraction in [0, 1]. Displayed alongside the threshold label
+   *  ("≥ 3.50: 67.3%"). Ignored when `threshold` is undefined. */
+  exceedanceProb?: number
 }
+
+/** Color used for the threshold line + label across charts. Picked so
+ *  it sits on top of the bar orange without blending in. */
+const THRESHOLD_STROKE = '#E05A2B'
+/** Fill for the "passing" half of the distribution. Faint teal so it
+ *  reads as a soft hint, not a competing chart layer. */
+const THRESHOLD_PASS_FILL = 'rgba(36, 123, 123, 0.10)'
 
 const CHART_W = 720
 const CHART_H = 260
@@ -35,7 +50,9 @@ const BIN_COUNT = 20
  * Crystal Ball-style plain-language diagnosis the standalone histogram
  * couldn't deliver on its own.
  */
-export default function LiveHistogram({ values, metricLabel, cumulativeMean }: Props) {
+export default function LiveHistogram({
+  values, metricLabel, cumulativeMean, threshold, exceedanceProb,
+}: Props) {
   const { t } = useTranslation(['liveOverlay'])
 
   const binned = useMemo(() => {
@@ -214,6 +231,30 @@ export default function LiveHistogram({ values, metricLabel, cumulativeMean }: P
           strokeWidth={0.8}
         />
 
+        {/* Threshold "passing side" shading -- rendered before bars so
+            the bars sit on top and the shade reads as a backdrop hint.
+            Clamped to the chart's x-domain: if the bar is off-screen,
+            the entire chart fills (whole distribution passes) or stays
+            empty (none pass). */}
+        {threshold && (() => {
+          const tx = xScale(threshold.value)
+          const clampedTx = Math.max(PADDING_X, Math.min(CHART_W - PADDING_X, tx))
+          const passLeft = threshold.direction === 'gte' ? clampedTx : PADDING_X
+          const passRight = threshold.direction === 'gte' ? CHART_W - PADDING_X : clampedTx
+          const passW = Math.max(0, passRight - passLeft)
+          if (passW <= 0) return null
+          return (
+            <rect
+              x={passLeft}
+              y={PADDING_TOP}
+              width={passW}
+              height={CHART_H - PADDING_TOP - PADDING_BOTTOM}
+              fill={THRESHOLD_PASS_FILL}
+              pointerEvents="none"
+            />
+          )
+        })()}
+
         {/* Histogram bars */}
         {counts.map((c, i) => {
           const h = (c / maxCount) * innerH
@@ -331,6 +372,49 @@ export default function LiveHistogram({ values, metricLabel, cumulativeMean }: P
           </g>
         )}
 
+        {/* Threshold line + label. Drawn on top of mean so the pass-bar
+            stays legible. Label flips to the line's left side near the
+            right edge to avoid clipping. Only rendered when the bar is
+            inside (or close to) the data range. */}
+        {threshold && (() => {
+          const rawTx = xScale(threshold.value)
+          if (rawTx < PADDING_X - 4 || rawTx > CHART_W - PADDING_X + 4) return null
+          const tx = Math.max(PADDING_X, Math.min(CHART_W - PADDING_X, rawTx))
+          const percentText = exceedanceProb != null
+            ? (exceedanceProb * 100).toFixed(1) : '—'
+          const labelKey = threshold.direction === 'gte'
+            ? 'liveOverlay:histogram.thresholdLabelGte'
+            : 'liveOverlay:histogram.thresholdLabelLte'
+          const labelText = t(labelKey, {
+            value: threshold.value.toFixed(2),
+            percent: percentText,
+          })
+          // Rough width estimate: 6.5px per char at fontSize 11.
+          const estW = labelText.length * 6.5 + 6
+          const labelOnLeft = tx + estW > CHART_W - PADDING_X
+          return (
+            <g pointerEvents="none">
+              <line
+                x1={tx} y1={PADDING_TOP}
+                x2={tx} y2={CHART_H - PADDING_BOTTOM}
+                stroke={THRESHOLD_STROKE}
+                strokeDasharray="4 3"
+                strokeWidth={1.5}
+              />
+              <text
+                x={labelOnLeft ? tx - 4 : tx + 4}
+                y={PADDING_TOP + 11}
+                fontSize={11}
+                fontWeight={700}
+                fill={THRESHOLD_STROKE}
+                textAnchor={labelOnLeft ? 'end' : 'start'}
+              >
+                {labelText}
+              </text>
+            </g>
+          )
+        })()}
+
         {/* X-axis ticks */}
         <text x={PADDING_X} y={CHART_H - 12} fontSize={9} className="fill-gray-500 dark:fill-bark-300">
           {lo.toFixed(2)}
@@ -431,6 +515,7 @@ export default function LiveHistogram({ values, metricLabel, cumulativeMean }: P
               <li>{t('liveOverlay:histogram.help.elementMedian')}</li>
               <li>{t('liveOverlay:histogram.help.elementP5P95')}</li>
               <li>{t('liveOverlay:histogram.help.elementMeanRed')}</li>
+              <li>{t('liveOverlay:histogram.help.elementThreshold')}</li>
               <li>{t('liveOverlay:histogram.help.elementShape')}</li>
             </ul>
           </section>
