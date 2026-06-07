@@ -1,4 +1,4 @@
-import type { ScenarioPreset } from '../types'
+import type { ScenarioPreset, SimulationConfig } from '../types'
 
 // Built-in scenarios: `name` and `description` on these presets are only
 // used as a dev-side fallback. The UI resolves display text via the
@@ -105,6 +105,76 @@ export const SCENARIOS: ScenarioPreset[] = [
   },
 ]
 
+// ── Clinic domain presets (v2.6) ──────────────────────────────
+// The clinic runs the SAME engine with cats off (catCount = 0). We reuse the
+// existing config fields with clinic semantics: seatCount = waiting chairs,
+// staffCount = clinicians, orderTime = check-in, preparationTime = triage,
+// diningTime = consultation. The cat-time fields keep harmless positive values
+// (the validator requires > 0) but are unused while catCount = 0.
+const CLINIC_CAT_STUBS = {
+  catInteractionTime: 10,
+  catIdleInterval: 4,
+  catRestProbability: 0,
+  catRestDuration: 15,
+} as const
+
+export const CLINIC_SCENARIOS: ScenarioPreset[] = [
+  {
+    id: 'clinic-weekday',
+    name: 'clinic-weekday',
+    description: '',
+    domainId: 'clinic',
+    config: {
+      seatCount: 8,
+      staffCount: 2,
+      catCount: 0,
+      customerArrivalInterval: 7,
+      orderTime: 2,
+      preparationTime: 3,
+      diningTime: 12,
+      maxWaitTime: 30,
+      simulationDuration: 480,
+      randomSeed: 42,
+      warmUpDuration: 30,
+      ...CLINIC_CAT_STUBS,
+    },
+  },
+  {
+    id: 'clinic-flu-season',
+    name: 'clinic-flu-season',
+    description: '',
+    domainId: 'clinic',
+    config: {
+      seatCount: 10,
+      staffCount: 3,
+      catCount: 0,
+      customerArrivalInterval: 4,
+      orderTime: 2,
+      preparationTime: 3,
+      diningTime: 12,
+      maxWaitTime: 25,
+      simulationDuration: 480,
+      randomSeed: 42,
+      warmUpDuration: 30,
+      ...CLINIC_CAT_STUBS,
+    },
+  },
+]
+
+/** All built-in presets across every domain. */
+export const ALL_SCENARIOS: ScenarioPreset[] = [...SCENARIOS, ...CLINIC_SCENARIOS]
+
+/** Built-in presets belonging to a given domain (missing domainId = cat-cafe). */
+export function scenariosForDomain(domainId: string): ScenarioPreset[] {
+  return ALL_SCENARIOS.filter((s) => (s.domainId ?? 'cat-cafe') === domainId)
+}
+
+/** The default config to seed when a domain becomes active (its first preset). */
+export function getDomainDefaultConfig(domainId: string): SimulationConfig {
+  const presets = scenariosForDomain(domainId)
+  return (presets[0] ?? SCENARIOS[0]).config
+}
+
 export const DEFAULT_CONFIG = SCENARIOS[0].config
 
 /**
@@ -112,7 +182,7 @@ export const DEFAULT_CONFIG = SCENARIOS[0].config
  * in the `scenarios` i18n namespace. User-saved custom scenarios keep their
  * user-typed names verbatim and are not translated.
  */
-export const BUILT_IN_SCENARIO_IDS = SCENARIOS.map((s) => s.id) as readonly string[]
+export const BUILT_IN_SCENARIO_IDS = ALL_SCENARIOS.map((s) => s.id) as readonly string[]
 
 export function isBuiltInScenarioId(id: string): boolean {
   return BUILT_IN_SCENARIO_IDS.includes(id)

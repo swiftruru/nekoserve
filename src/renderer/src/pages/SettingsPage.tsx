@@ -5,6 +5,9 @@ import ParamInput from '../components/ParamInput'
 import ParamRationale from '../components/ParamRationale'
 import ThemedSelect from '../components/ThemedSelect'
 import ScenarioButtons from '../components/ScenarioButtons'
+import DomainSelector from '../components/DomainSelector'
+import { useDomainStore } from '../store/domainStore'
+import { domainHasAmbientAgent, getDomain } from '../data/domains'
 import { useToast } from '../hooks/useToast'
 import {
   loadCustomScenarios,
@@ -41,8 +44,10 @@ export default function SettingsPage({
   error,
   batchProgress,
 }: SettingsPageProps) {
-  const { t } = useTranslation(['settings', 'common', 'errors', 'scenarios'])
+  const { t, i18n } = useTranslation(['settings', 'common', 'errors', 'scenarios'])
   const { toast } = useToast()
+  const activeDomainId = useDomainStore((s) => s.activeDomainId)
+  const hasCats = domainHasAmbientAgent(activeDomainId)
   const [config, setConfig] = useState<SimulationConfig>(initialConfig)
   const [activeScenario, setActiveScenario] = useState<string | null>('hirsch-paper')
   const [showErrorDetail, setShowErrorDetail] = useState(false)
@@ -51,7 +56,9 @@ export default function SettingsPage({
   const [sweepMode, setSweepMode] = useState(false)
 
   type SweepableParam = 'seatCount' | 'staffCount' | 'catCount' | 'customerArrivalInterval' | 'maxWaitTime'
-  const SWEEPABLE_PARAMS: SweepableParam[] = ['seatCount', 'staffCount', 'catCount', 'customerArrivalInterval', 'maxWaitTime']
+  const SWEEPABLE_PARAMS: SweepableParam[] = (
+    ['seatCount', 'staffCount', 'catCount', 'customerArrivalInterval', 'maxWaitTime'] as SweepableParam[]
+  ).filter((p) => hasCats || p !== 'catCount')
   const [sweepParam, setSweepParam] = useState<SweepableParam>('staffCount')
   const [sweepFrom, setSweepFrom] = useState(1)
   const [sweepTo, setSweepTo] = useState(5)
@@ -71,8 +78,16 @@ export default function SettingsPage({
     | 'orderTime' | 'preparationTime' | 'diningTime'
     | 'catInteractionTime' | 'catRestProbability' | 'catRestDuration'
     | 'simulationDuration' | 'randomSeed' | 'warmUpDuration'
-  const paramLabel = (k: ParamKey) => t(`settings:parameters.${k}.label` as const)
+  // Resolve a translation key, preferring a domain-specific override (e.g.
+  // the clinic relabels "座位" as "候診椅") and falling back to the generic key.
+  const tLoose = t as unknown as (key: string) => string
+  const withDomainOverride = (overrideKey: string, fallback: string): string =>
+    i18n.exists(overrideKey) ? tLoose(overrideKey) : tLoose(fallback)
+  const paramLabel = (k: ParamKey) =>
+    withDomainOverride(`settings:parametersByDomain.${activeDomainId}.${k}`, `settings:parameters.${k}.label`)
   const paramHelp = (k: ParamKey) => t(`settings:parameters.${k}.help` as const)
+  const sectionTitle = (k: string) =>
+    withDomainOverride(`settings:sectionsByDomain.${activeDomainId}.${k}`, `settings:sections.${k}`)
   const unitMin = t('common:unit.min')
   const unitPeople = t('common:unit.people')
   const unitSeat = t('common:unit.seat')
@@ -288,6 +303,10 @@ export default function SettingsPage({
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
     >
+      <div className="mb-4">
+        <DomainSelector variant="panel" />
+      </div>
+
       <div className="mb-5" data-onboarding="scenario-bar">
         <ScenarioButtons
           scenarios={scenarios}
@@ -300,7 +319,9 @@ export default function SettingsPage({
         />
       </div>
 
-      {/* ── Academic disclaimer banner ───────────────── */}
+      {/* ── Academic disclaimer banner (cat-café presets are Hirsch-based;
+           it does not apply to other domains, so hide it there) ───────── */}
+      {hasCats && (
       <div className="mb-4 rounded-xl bg-cream-100 dark:bg-bark-800 ring-1 ring-inset ring-orange-200 dark:ring-bark-600 px-4 py-3">
         <p className="text-[12px] font-semibold text-orange-700 dark:text-orange-400">
           {t('settings:academicDisclaimer.title')}
@@ -309,13 +330,14 @@ export default function SettingsPage({
           {t('settings:academicDisclaimer.body')}
         </p>
       </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* ── Café resources ─────────────────────────── */}
         <div className="card">
-          <div className="card-title">{t('settings:sections.cafeResources')}</div>
-          <ParamRationale params={['seatCount', 'staffCount', 'catCount']} />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="card-title">{hasCats ? t('settings:sections.cafeResources') : `${getDomain(activeDomainId)?.emoji ?? ''} ${t('settings:sections.resourcesGeneric')}`.trim()}</div>
+          <ParamRationale params={hasCats ? ['seatCount', 'staffCount', 'catCount'] : ['seatCount', 'staffCount']} />
+          <div className={`grid ${hasCats ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
             <ParamInput
               label={paramLabel('seatCount')}
               value={config.seatCount}
@@ -333,22 +355,26 @@ export default function SettingsPage({
               unit={unitPeople}
               tooltip={paramHelp('staffCount')}
               disabled={isRunning}
+              testIdKey="staffCount"
             />
-            <ParamInput
-              label={paramLabel('catCount')}
-              value={config.catCount}
-              onChange={(v) => set('catCount', Math.max(1, Math.round(v)))}
-              min={1} max={20} step={1}
-              unit={unitCat}
-              tooltip={paramHelp('catCount')}
-              disabled={isRunning}
-            />
+            {hasCats && (
+              <ParamInput
+                label={paramLabel('catCount')}
+                value={config.catCount}
+                onChange={(v) => set('catCount', Math.max(1, Math.round(v)))}
+                min={1} max={20} step={1}
+                unit={unitCat}
+                tooltip={paramHelp('catCount')}
+                disabled={isRunning}
+                testIdKey="catCount"
+              />
+            )}
           </div>
         </div>
 
         {/* ── Customer behavior ──────────────────────── */}
         <div className="card">
-          <div className="card-title">{t('settings:sections.customerBehavior')}</div>
+          <div className="card-title">{sectionTitle('customerBehavior')}</div>
           <ParamRationale params={['customerArrivalInterval', 'maxWaitTime']} />
           <div className="grid grid-cols-2 gap-3">
             <ParamInput
@@ -374,7 +400,7 @@ export default function SettingsPage({
 
         {/* ── Service time ───────────────────────────── */}
         <div className="card">
-          <div className="card-title">{t('settings:sections.serviceTime')}</div>
+          <div className="card-title">{hasCats ? t('settings:sections.serviceTime') : t('settings:sections.serviceTimeGeneric')}</div>
           <ParamRationale params={['orderTime', 'preparationTime', 'diningTime']} />
           <div className="grid grid-cols-3 gap-3">
             <ParamInput
@@ -407,7 +433,8 @@ export default function SettingsPage({
           </div>
         </div>
 
-        {/* ── Cat interaction ────────────────────────── */}
+        {/* ── Cat interaction (only for domains with an ambient agent) ── */}
+        {hasCats && (
         <div className="card">
           <div className="card-title">{t('settings:sections.catInteraction')}</div>
           <ParamRationale
@@ -451,6 +478,7 @@ export default function SettingsPage({
             />
           </div>
         </div>
+        )}
 
         {/* ── Simulation parameters ──────────────────── */}
         <div className="card lg:col-span-2">

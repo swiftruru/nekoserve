@@ -15,5 +15,13 @@
     "name": "Paper sample · Cat nap mode",
     "description": "The paper baseline with most of the 27 cats resting: higher rest probability and longer rest duration, surfacing the interaction-resource bottleneck."
   },
+  "clinic-weekday": {
+    "name": "Clinic · Weekday hours",
+    "description": "A regular clinic day: 8 waiting chairs, 2 clinicians, moderate patient arrivals, running the pure queueing model with no ambient agent."
+  },
+  "clinic-flu-season": {
+    "name": "Clinic · Flu season rush",
+    "description": "Flu-season crowding: dense patient arrivals with extra chairs and clinicians, to stress waiting-room queueing and clinician utilisation."
+  },
   "customDefaultDescription": "Custom preset"
 }

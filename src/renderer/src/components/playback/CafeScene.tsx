@@ -1533,6 +1533,9 @@ export default function CafeScene({
           )}
         </g>
 
+        {/* Cat-room stats only apply to domains with cats (catCount > 0). */}
+        {config.catCount > 0 && (
+        <>
         {/* Cumulative cat-visit counter, parked just below the CAT_ROOM
             rectangle so it reads as a cat-related stat rather than a
             counter-area stat. */}
@@ -1574,6 +1577,8 @@ export default function CafeScene({
             </text>
           )}
         </g>
+        </>
+        )}
 
         {/* Exit flash overlay — only the animation cue; the door graphic
             itself is already rendered in the floor-plan layer. */}

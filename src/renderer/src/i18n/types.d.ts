@@ -13,6 +13,8 @@ import type howItWorks from './locales/zh-TW/howItWorks.json'
 import type playback from './locales/zh-TW/playback.json'
 import type learnMode from './locales/zh-TW/learnMode.json'
 import type challenges from './locales/zh-TW/challenges.json'
+import type domains from './locales/zh-TW/domains.json'
+import type report from './locales/zh-TW/report.json'
 
 declare module 'react-i18next' {
   interface CustomTypeOptions {
@@ -32,6 +34,8 @@ declare module 'react-i18next' {
       playback: typeof playback
       learnMode: typeof learnMode
       challenges: typeof challenges
+      domains: typeof domains
+      report: typeof report
     }
   }
 }

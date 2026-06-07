@@ -1,6 +1,6 @@
 {
   "appName": "NekoServe",
-  "appSubtitle": "貓咪咖啡廳座位與服務模擬系統",
+  "appSubtitle": "服務流程模擬平台 · 目前場景：{{scenario}}",
   "status": {
     "running": "模擬進行中…",
     "success": "模擬完成",

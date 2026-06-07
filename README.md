@@ -789,6 +789,22 @@ nekoserve/
 - [x] Interactive formula explainer: click any symbol to see plain-language explanation (v1.2.0)
 - [x] Floating Beginner/Expert toggle on Results and How-It-Works pages (v1.2.0)
 - [x] CI formula double-render fix in learning content (v1.2.0)
+- [x] Service-domain abstraction + domain selector; cat café reframed as one of several domains (v2.5)
+- [x] Clinic as a second **runnable** domain — same engine, cats off (catCount=0) → pure M/M/c queue (v2.6)
+- [x] One-click research report export, HTML + PDF, domain-aware (v2.6)
+- [x] Domain-aware UI — hide cat panels + Validation tab for non-cat domains, dynamic header subtitle, clinic medical labels (候診椅/醫護/病患/看診) (v2.6)
+
+### 接下來的 TODO (v2.7+)
+
+> 泛用化 / 多場域的後續。最優先是讓「診所」從設定頁一路到報告都一致用醫療用語。
+
+- [ ] **統計結果頁 + 研究報告的場域用語** — 把設定頁那套 `parametersByDomain` / `sectionsByDomain` override 也套到 `results:` 的鍵（config summary、KPI 標籤、圖表軸），讓診所的結果/報告顯示「候診椅 / 醫護 / 病患 / 看診」而不是「座位 / 店員 / 點餐 / 用餐」。目前只有設定頁醫療化了。
+- [ ] **診所參數的 help 提示文字**（paramHelp / 設計依據）仍是咖啡廳用語，需補診所 override。
+- [ ] **非貓場域的驗證模式** — 目前對診所隱藏；做一個通用排隊理論基準（M/M/c 解析值 vs 模擬值）讓診所也能驗證。
+- [ ] **播放頁樓面圖泛用化** — 非貓場域目前仍顯示貓咪咖啡廳樓面圖（純視覺，功能正常）。
+- [ ] 把其餘預覽場域（餐廳 / 銀行 / 沙龍）接上引擎。
+- [ ] （待決定）平台級字眼「服務流程模擬平台 / 服務場域」是否要為醫療情境再軟化；目前保留為系統模擬課的標準學術用語。
+- [ ] （選做，先前提案）成本 / 利潤分析層（薪資 / 營收 / ROI）、精確 Erlang-C + Little's Law 驗證圖。
 
 ---
 

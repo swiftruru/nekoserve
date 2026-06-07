@@ -1,0 +1,11 @@
+# local venv
+.venv/
+# bot/report runtime artefacts
+output/*.csv
+output/*.html
+# python build noise
+__pycache__/
+*.pyc
+
+# debug snapshots from bot misses
+output/debug-*.png

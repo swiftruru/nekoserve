@@ -4,6 +4,7 @@ import fs from 'fs'
 import { registerSimulationHandler } from './simulator-bridge'
 import { setMainLocale, mainStrings, getMainLocale } from './i18n'
 import { registerUpdateHandlers, scheduleAutoCheck } from './updater/update-ipc'
+import { registerRpaHandler } from './rpa-bridge'
 
 const IS_E2E = process.env.NEKOSERVE_E2E === '1'
 const E2E_REMOTE_DEBUGGING_PORT = process.env.NEKOSERVE_E2E_REMOTE_DEBUGGING_PORT
@@ -377,9 +378,51 @@ app.whenReady().then(() => {
     }
   })
 
+  // Research report PDF export. The renderer serializes a self-contained
+  // report HTML (inline CSS + SVG); we render it in an offscreen window and
+  // print it to PDF so the live UI is never disturbed.
+  ipcMain.handle('report:export-pdf', async (_event, html: string): Promise<boolean> => {
+    const parent = BrowserWindow.getFocusedWindow() ?? undefined
+    const tmpFile = path.join(app.getPath('temp'), `nekoserve-report-${Date.now()}.html`)
+    let pdfWin: BrowserWindow | null = null
+    try {
+      fs.writeFileSync(tmpFile, html, 'utf8')
+      pdfWin = new BrowserWindow({
+        show: false,
+        width: 960,
+        height: 1280,
+        webPreferences: { offscreen: false },
+      })
+      await pdfWin.loadFile(tmpFile)
+      // Give recharts SVG + fonts a beat to settle in the fresh window.
+      await new Promise((r) => setTimeout(r, 300))
+      const pdf = await pdfWin.webContents.printToPDF({
+        printBackground: true,
+        pageSize: 'A4',
+        margins: { marginType: 'default' },
+      })
+      const saveOpts = {
+        defaultPath: `nekoserve-report-${Date.now()}.pdf`,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      }
+      const { filePath } = parent
+        ? await dialog.showSaveDialog(parent, saveOpts)
+        : await dialog.showSaveDialog(saveOpts)
+      if (!filePath) return false
+      fs.writeFileSync(filePath, pdf)
+      return true
+    } catch {
+      return false
+    } finally {
+      if (pdfWin && !pdfWin.isDestroyed()) pdfWin.destroy()
+      try { fs.unlinkSync(tmpFile) } catch { /* best-effort cleanup */ }
+    }
+  })
+
   buildAppMenu()
   registerSimulationHandler()
   registerUpdateHandlers()
+  registerRpaHandler()
   createWindow()
   if (!IS_E2E) {
     scheduleAutoCheck()

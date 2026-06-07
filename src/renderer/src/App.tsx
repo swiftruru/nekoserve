@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import type { Page, SimulationConfig, EventType, SimulationResult } from './types'
 import { useSimulation } from './hooks/useSimulation'
 import { useLiveRunner } from './hooks/useLiveRunner'
-import { SCENARIOS } from './data/scenarios'
+import { scenariosForDomain } from './data/scenarios'
+import { domainHasAmbientAgent } from './data/domains'
+import { useDomainStore } from './store/domainStore'
 import { useConfigStore } from './store/configStore'
 import SettingsPage from './pages/SettingsPage'
 import ResultsPage from './pages/ResultsPage'
@@ -18,6 +20,7 @@ import AboutPage from './pages/AboutPage'
 import { useSimulationStore } from './store/simulationStore'
 import LearningPanel from './components/LearningPanel'
 import LanguageSwitcher from './components/LanguageSwitcher'
+import DomainSelector from './components/DomainSelector'
 import PageTransition from './components/PageTransition'
 import GlobalRunIndicator from './components/GlobalRunIndicator'
 import CustomCursor from './components/CustomCursor'
@@ -32,6 +35,8 @@ import OnboardingOverlay from './components/OnboardingOverlay'
 import RouteAnnouncer from './components/RouteAnnouncer'
 import ErrorBoundary from './components/ErrorBoundary'
 import ChallengeDrawer from './components/ChallengeDrawer'
+import RpaModal from './components/RpaModal'
+import RpaFakeCursor from './components/RpaFakeCursor'
 
 const PANEL_KEY = 'nekoserve:learn-panel'
 
@@ -71,10 +76,25 @@ const NAV_ITEMS: NavItem[] = [
 // ──────────────────────────────────────────────────────────────
 
 export default function App() {
-  const { t } = useTranslation(['common', 'nav'])
+  const { t } = useTranslation(['common', 'nav', 'domains'])
   const [page, setPage] = useState<Page>('settings')
+
+  // Reset the main content scroll position when navigating between
+  // tabs. Without this, <main> stays mounted across tab switches and
+  // its scrollTop persists, leaving you partway down a page that just
+  // changed underneath you. (Also a nasty trap for the RPA bot: it
+  // navigates Settings -> About -> Settings and finds the preset row
+  // scrolled past the top of the viewport.)
+  useEffect(() => {
+    const main = document.getElementById('main-content')
+    if (main) main.scrollTop = 0
+  }, [page])
   const config = useConfigStore((s) => s.config)
   const setConfig = useConfigStore((s) => s.setConfig)
+  // Active service domain. Drives scenario scoping and hides cat-specific UI
+  // (validation tab, cat panels) for non-cat domains like the clinic.
+  const activeDomainId = useDomainStore((s) => s.activeDomainId)
+  const hasCats = domainHasAmbientAgent(activeDomainId)
   const [pendingEventFilter, setPendingEventFilter] = useState<EventType[] | null>(null)
   const [panelOpen, setPanelOpen] = useState<boolean>(() => loadPanelState())
   /**
@@ -116,6 +136,18 @@ export default function App() {
   const [liveSelectedRunIndex, setLiveSelectedRunIndex] = useState(0)
   const update = useUpdateCheck()
 
+  // When the user switches service domain, the previous run's results no
+  // longer match the new domain (different config, different metrics). Clear
+  // them and return to Settings. Skip the initial mount so a persisted result
+  // isn't wiped on launch.
+  const prevDomainRef = useRef(activeDomainId)
+  useEffect(() => {
+    if (prevDomainRef.current === activeDomainId) return
+    prevDomainRef.current = activeDomainId
+    reset()
+    setPage('settings')
+  }, [activeDomainId, reset])
+
   // v2.0 Sprint 1 follow-up: mirror simulation status/result/error into
   // the Zustand simulationStore so pages that weren't passed the result
   // as a prop (ValidationPage, future research tools) can read it.
@@ -137,6 +169,7 @@ export default function App() {
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const [challengeDrawerOpen, setChallengeDrawerOpen] = useState(false)
+  const [rpaModalOpen, setRpaModalOpen] = useState(false)
 
   useKeyboardShortcuts({
     '?': () => setOnboardingOpen((v) => !v),
@@ -384,6 +417,13 @@ export default function App() {
         onClose={() => setChallengeDrawerOpen(false)}
         metrics={result?.metrics ?? null}
       />
+      <RpaModal
+        open={rpaModalOpen}
+        onClose={() => setRpaModalOpen(false)}
+      />
+      {/* Fake RPA cursor: floats above everything during a sweep
+          demo. Driven by useRpaCursorStore, push from rpaSweepRunner. */}
+      <RpaFakeCursor />
       <UpdateModal
         visible={update.visible}
         status={update.status}
@@ -406,8 +446,10 @@ export default function App() {
         <span className="text-2xl" role="img" aria-label="cat">🐱</span>
         <div className="min-w-0">
           <h1 className="text-base font-bold text-orange-700 dark:text-orange-400 leading-tight">{t('common:appName')}</h1>
-          <p className="text-xs text-gray-500 dark:text-bark-300 truncate">{t('common:appSubtitle')}</p>
+          <p className="text-xs text-gray-500 dark:text-bark-300 truncate">{t('common:appSubtitle', { scenario: t(`domains:${activeDomainId}.name` as const) })}</p>
         </div>
+
+        <DomainSelector variant="badge" />
 
         <div className="ml-auto flex items-center gap-3">
           {/* Status badge */}
@@ -481,7 +523,7 @@ export default function App() {
       {/* ── Top navigation ──────────────────────────────── */}
       {!fullscreen && (
       <nav className="bg-white dark:bg-bark-800 border-b border-orange-100 dark:border-bark-600 px-4 flex items-center gap-1" role="tablist" aria-label="Navigation">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => hasCats || item.id !== 'validation').map((item) => {
           const needsResult =
             item.id === 'results' ||
             item.id === 'eventlog' ||
@@ -522,6 +564,14 @@ export default function App() {
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setRpaModalOpen(true)}
+            data-testid="rpa-toggle"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-white dark:bg-bark-700 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-bark-500 hover:bg-orange-50 dark:hover:bg-bark-600 transition-colors duration-150"
+          >
+            🤖 {t('about:rpa.headerButton', { defaultValue: 'RPA' })}
+          </button>
+          <button
+            type="button"
             onClick={() => setChallengeDrawerOpen(true)}
             data-testid="challenge-drawer-toggle"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-white dark:bg-bark-700 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-bark-500 hover:bg-purple-50 dark:hover:bg-bark-600 transition-colors duration-150"
@@ -551,8 +601,9 @@ export default function App() {
           <PageTransition pageKey={page}>
             {page === 'settings' && (
               <SettingsPage
+                key={activeDomainId}
                 initialConfig={config}
-                scenarios={SCENARIOS}
+                scenarios={scenariosForDomain(activeDomainId)}
                 onRun={handleRunSimulation}
                 onRunBatch={handleRunBatch}
                 onRunSweep={handleRunSweep}
@@ -616,7 +667,7 @@ export default function App() {
               ))}
             {page === 'howitworks' && <HowItWorksPage />}
             {page === 'citations' && <CitationsPage onNavigate={setPage} />}
-            {page === 'validation' && <ValidationPage onNavigate={setPage} />}
+            {page === 'validation' && hasCats && <ValidationPage onNavigate={setPage} />}
             {page === 'about' && <AboutPage onCheckForUpdate={update.checkManually} updateChecking={update.status === 'checking'} />}
           </PageTransition>
           </ErrorBoundary>

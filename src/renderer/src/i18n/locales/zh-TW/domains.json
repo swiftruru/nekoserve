@@ -1,0 +1,63 @@
+{
+  "sectionLabel": "服務場域",
+  "sectionHint": "選一個服務場域。模擬引擎本身是泛用的排隊流程模型，貓咪咖啡廳只是我第一個完整做起來的場景。",
+  "badgeHint": "目前服務場域",
+  "comingSoon": "即將推出",
+  "activeTag": "進行中",
+  "lockedToast": "「{{name}}」場域還在規劃中，目前先用貓咪咖啡廳展示。",
+  "roleMapTitle": "這個場域怎麼對應到模擬模型",
+  "roleMapHint": "同一套引擎，換個場景就是換一組角色命名而已。",
+  "roadmapNote": "底層已經改成可以接不同服務場域的架構，之後會一個一個把上面這些場景接上引擎。",
+  "archetype": {
+    "resource": "容量資源",
+    "server": "服務人員",
+    "ambientAgent": "環境體驗角色",
+    "customer": "到達顧客"
+  },
+  "cat-cafe": {
+    "name": "貓咪咖啡廳",
+    "tagline": "我完整實作的旗艦場景：座位、店員，再加上會自己跑去找客人互動的貓咪。",
+    "roles": {
+      "resource": "座位",
+      "server": "店員",
+      "ambientAgent": "貓咪",
+      "customer": "顧客"
+    }
+  },
+  "restaurant": {
+    "name": "餐廳 / 拉麵店",
+    "tagline": "桌位、服務生、出餐節奏，最貼近原本的咖啡廳模型。",
+    "roles": {
+      "resource": "桌位",
+      "server": "服務生",
+      "customer": "用餐客"
+    }
+  },
+  "clinic": {
+    "name": "診所 / 候診",
+    "tagline": "候診椅、醫護、看診流程，是服務流程模擬的經典題目。",
+    "roles": {
+      "resource": "候診椅",
+      "server": "醫護人員",
+      "customer": "病患"
+    }
+  },
+  "bank": {
+    "name": "銀行 / 櫃檯",
+    "tagline": "叫號、櫃員、辦理業務，最教科書的 M/M/c 排隊範例。",
+    "roles": {
+      "resource": "等候座",
+      "server": "櫃員",
+      "customer": "客戶"
+    }
+  },
+  "salon": {
+    "name": "美髮 / 美甲沙龍",
+    "tagline": "座位、設計師、預約制，帶有長服務時間的特性。",
+    "roles": {
+      "resource": "座位",
+      "server": "設計師",
+      "customer": "客戶"
+    }
+  }
+}

@@ -1,10 +1,27 @@
 {
   "sections": {
     "cafeResources": "🏠 Café Resources",
+    "resourcesGeneric": "Resources",
     "customerBehavior": "👥 Customer Behavior",
     "serviceTime": "☕ Service Time",
+    "serviceTimeGeneric": "⏱️ Processing Time",
     "catInteraction": "🐱 Cat Interaction",
     "simulationParams": "🎲 Simulation Parameters"
+  },
+  "sectionsByDomain": {
+    "clinic": {
+      "customerBehavior": "👥 Patient Behavior"
+    }
+  },
+  "parametersByDomain": {
+    "clinic": {
+      "seatCount": "Waiting chairs",
+      "staffCount": "Clinicians",
+      "customerArrivalInterval": "Avg patient arrival interval",
+      "orderTime": "Avg check-in time",
+      "preparationTime": "Avg triage / prep time",
+      "diningTime": "Avg consultation time"
+    }
   },
   "academicDisclaimer": {
     "title": "📘 A note about these numbers",

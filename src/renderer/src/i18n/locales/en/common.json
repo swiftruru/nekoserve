@@ -1,6 +1,6 @@
 {
   "appName": "NekoServe",
-  "appSubtitle": "Cat café seat & service simulation",
+  "appSubtitle": "Service-flow simulation platform · Current scenario: {{scenario}}",
   "status": {
     "running": "Simulating…",
     "success": "Simulation complete",

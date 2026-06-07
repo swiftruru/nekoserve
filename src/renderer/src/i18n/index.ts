@@ -19,6 +19,8 @@ import zhTW_challenges from './locales/zh-TW/challenges.json'
 import zhTW_citations from './locales/zh-TW/citations.json'
 import zhTW_validation from './locales/zh-TW/validation.json'
 import zhTW_liveOverlay from './locales/zh-TW/liveOverlay.json'
+import zhTW_domains from './locales/zh-TW/domains.json'
+import zhTW_report from './locales/zh-TW/report.json'
 
 import en_common from './locales/en/common.json'
 import en_nav from './locales/en/nav.json'
@@ -38,6 +40,8 @@ import en_challenges from './locales/en/challenges.json'
 import en_citations from './locales/en/citations.json'
 import en_validation from './locales/en/validation.json'
 import en_liveOverlay from './locales/en/liveOverlay.json'
+import en_domains from './locales/en/domains.json'
+import en_report from './locales/en/report.json'
 
 import { registerFormatters } from './formatters'
 
@@ -66,6 +70,8 @@ export const namespaces = [
   'citations',
   'validation',
   'liveOverlay',
+  'domains',
+  'report',
 ] as const
 
 export const resources = {
@@ -88,6 +94,8 @@ export const resources = {
     citations: zhTW_citations,
     validation: zhTW_validation,
     liveOverlay: zhTW_liveOverlay,
+    domains: zhTW_domains,
+    report: zhTW_report,
   },
   en: {
     common: en_common,
@@ -108,6 +116,8 @@ export const resources = {
     citations: en_citations,
     validation: en_validation,
     liveOverlay: en_liveOverlay,
+    domains: en_domains,
+    report: en_report,
   },
 } as const
 

@@ -120,6 +120,15 @@ export default function AboutPage({ onCheckForUpdate, updateChecking }: AboutPag
           </p>
         </div>
 
+        {/* ── Vision / generalization ───────────────── */}
+        <div className="card">
+          <div className="card-title">{t('about:vision.title')}</div>
+          <div className="text-sm text-gray-700 dark:text-bark-200 space-y-2 leading-relaxed">
+            <p>{t('about:vision.body')}</p>
+            <p>{t('about:vision.roadmap')}</p>
+          </div>
+        </div>
+
         {/* ── Architecture ──────────────────────────── */}
         <div className="card">
           <div className="card-title">{t('about:architecture.title')}</div>

@@ -11,6 +11,10 @@ interface ParamInputProps {
   unit?: string
   disabled?: boolean
   error?: string
+  /** Optional stable id used by data-testid; lets external tools (e.g.
+   *  the RPA auto-capture wizard) find the input by parameter name
+   *  without depending on useId's runtime-generated ids. */
+  testIdKey?: string
 }
 
 /**
@@ -101,6 +105,7 @@ export default function ParamInput({
   unit,
   disabled = false,
   error,
+  testIdKey,
 }: ParamInputProps) {
   const inputId = useId()
   const errorId = useId()
@@ -179,6 +184,7 @@ export default function ParamInput({
           disabled={disabled}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
+          data-testid={testIdKey ? `param-input-${testIdKey}` : undefined}
           className={`
             param-number-input
             w-full rounded-xl border border-orange-100 bg-cream-50

@@ -316,6 +316,12 @@ export interface ScenarioPreset {
   /** 繁體中文情境說明 */
   description: string
   config: SimulationConfig
+  /**
+   * Which service domain this preset belongs to. Missing is treated as
+   * 'cat-cafe' so the original presets need no change. Used to scope the
+   * scenario list to the active domain.
+   */
+  domainId?: string
 }
 
 // ----------------------------------------------------------

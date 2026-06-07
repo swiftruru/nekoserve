@@ -25,6 +25,11 @@
     "title": "📖 專案說明",
     "body": "NekoServe 是一個桌面應用程式，用於模擬貓咪咖啡廳的顧客服務流程。透過離散事件模擬（Discrete Event Simulation），系統可精確重現顧客到達、排隊、入座、點餐、用餐、與貓咪互動直到離開的完整流程，並計算各項服務指標，適合用於教學示範或服務系統分析。v1.0.0 新增批次重複實驗、95% 信賴區間、參數敏感度分析與課堂挑戰功能，讓教學從單次觀察進階到統計推論。"
   },
+  "vision": {
+    "title": "🚀 專案願景",
+    "body": "NekoServe 一開始是為「系統模擬」課程設計的貓咪咖啡廳模擬器，但底層其實是一套泛用的服務流程模擬引擎。我把它重新定位成「服務流程模擬平台」，貓咪咖啡廳是我第一個、也是目前唯一完整實作的服務場域。",
+    "roadmap": "在「模擬設定」頁的服務場域區塊，可以看到我規劃中的延伸場景：餐廳、診所、銀行、沙龍。它們目前還是預覽狀態，但架構已經改成可以逐一接上引擎。這個泛用化方向也是我未來想延伸成論文主題的基礎。"
+  },
   "architecture": {
     "title": "🏗️ 系統架構",
     "simulationLogic": "<strong>模擬邏輯</strong>完全由 Python + SimPy 實作，不在 UI 端重複撰寫。Electron main process 透過 spawn 啟動打包好的 Python executable，以 JSON 格式透過 stdin/stdout 傳遞參數與結果。",
@@ -70,5 +75,44 @@
     "title": "新手導覽",
     "description": "重新體驗首次使用的導覽說明。",
     "button": "重新開始導覽"
+  },
+  "rpa": {
+    "headerButton": "RPA",
+    "close": "關閉",
+    "title": "🤖 RPA 情境掃描（課程外掛）",
+    "description": "用體外 Python + pyautogui 腳本，模擬真人操作 NekoServe 介面，把「貓咪數量 × 店員數量」12 組情境一次跑完並產生比較報表。NekoServe 本身不變，只是多一顆按鈕當入口。",
+    "warningTitle": "⚠️ 按下「啟動」之後",
+    "warning1": "滑鼠跟鍵盤會被腳本接管 5 到 10 分鐘",
+    "warning2": "期間請勿動滑鼠或鍵盤；如要中止，把滑鼠快速甩到螢幕左上角",
+    "warning3": "跑完會自動產生 HTML 報表並在瀏覽器開啟",
+    "scopeAll": "全部 12 組",
+    "scopeOne": "單組煙霧測試（cats3_staff2）",
+    "startButton": "啟動 RPA 掃描",
+    "cancelButton": "中止",
+    "statusIdle": "閒置",
+    "statusStarting": "啟動中⋯",
+    "statusRunningBot": "RPA 機器人執行中（請勿動滑鼠鍵盤）",
+    "statusRunningReport": "整理結果、產生報表中⋯",
+    "statusDone": "✓ 完成，報表已開啟",
+    "statusFailed": "✗ 失敗：{{message}}",
+    "statusCancelled": "已中止",
+    "logHeader": "即時 log（最後 10 行）",
+    "captureTitle": "🖼 第一次使用？先抓 8 張 UI 模板圖",
+    "captureBody": "pyautogui 需要 8 張 UI 元件的小圖才知道要點哪裡。按下方按鈕，會用 macOS 內建十字游標走 8 圈，逐張提示 NekoServe 要切到哪一頁、要框哪一塊。全程不用開 Terminal。",
+    "captureButton": "抓模板圖（8 張）",
+    "captureButtonRedo": "重抓模板圖",
+    "smartCaptureButton": "智慧抓模板圖",
+    "smartCaptureHint": "智慧模式由 NekoServe 自己讀 DOM 知道每顆按鈕在哪，自動切分頁 + 擷取，整個過程約 10 秒。第 6、7 張需要先跑過一次模擬才能抓。",
+    "smartCapturing": "智慧抓圖中⋯",
+    "missingList": "尚缺",
+    "startDisabledHint": "請先抓完 {{count}} 張缺的模板圖",
+    "statusCapturing": "抓模板圖中⋯（請依對話框指示操作）",
+    "copy": "複製 log",
+    "copied": "已複製",
+    "hintTemplatesMissing": "💡 7 張 UI 模板圖還沒抓。請先點上面藍色的「抓模板圖（7 張）」按鈕走完 7 圈，校正通過後再啟動 RPA。",
+    "confirmModalTitle": "確認啟動 RPA 掃描",
+    "confirmModalBody": "腳本即將接管滑鼠鍵盤 5 到 10 分鐘，跑 12 組情境。期間請勿動滑鼠鍵盤；如要中止，把滑鼠快速甩到螢幕左上角。確定要開始嗎？",
+    "confirmModalConfirm": "我準備好了，開始",
+    "confirmModalCancel": "再想想"
   }
 }

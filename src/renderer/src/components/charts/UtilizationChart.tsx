@@ -13,7 +13,8 @@ import { useTranslation } from 'react-i18next'
 interface UtilizationChartProps {
   seatUtilization: number
   staffUtilization: number
-  catUtilization: number
+  /** Omitted for domains without an ambient agent (e.g. clinic). */
+  catUtilization?: number
 }
 
 const COLORS = ['#f97316', '#6366f1', '#ec4899']
@@ -28,7 +29,9 @@ export default function UtilizationChart({
   const data = [
     { name: t('results:charts.utilization.seat'),  value: Math.round(seatUtilization * 100) },
     { name: t('results:charts.utilization.staff'), value: Math.round(staffUtilization * 100) },
-    { name: t('results:charts.utilization.cat'),   value: Math.round(catUtilization * 100) },
+    ...(catUtilization !== undefined
+      ? [{ name: t('results:charts.utilization.cat'), value: Math.round(catUtilization * 100) }]
+      : []),
   ]
 
   const tooltipLabel = t('results:charts.utilization.tooltipLabel')

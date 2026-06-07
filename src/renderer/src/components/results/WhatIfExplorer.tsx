@@ -35,6 +35,11 @@ const COMPARE_METRICS: {
 
 export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplorerProps) {
   const { t } = useTranslation(['results', 'settings', 'common'])
+  // Non-cat domains (clinic) run with catCount = 0: drop the cat slider and
+  // the cat-interaction comparison row.
+  const hasCats = baseConfig.catCount > 0
+  const tweakParams = TWEAK_PARAMS.filter((p) => hasCats || p.key !== 'catCount')
+  const compareMetrics = COMPARE_METRICS.filter((m) => hasCats || m.key !== 'catInteractionRate')
   const [open, setOpen] = useState(false)
   const [tweakConfig, setTweakConfig] = useState<SimulationConfig>(baseConfig)
   const [whatIfMetrics, setWhatIfMetrics] = useState<MetricSummary | null>(null)
@@ -67,7 +72,7 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
     runWhatIf(updated)
   }
 
-  const hasChanges = TWEAK_PARAMS.some(
+  const hasChanges = tweakParams.some(
     ({ key }) => tweakConfig[key] !== baseConfig[key]
   )
 
@@ -112,7 +117,7 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
 
       {/* Sliders */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-        {TWEAK_PARAMS.map(({ key, min, max, step }) => {
+        {tweakParams.map(({ key, min, max, step }) => {
           const changed = tweakConfig[key] !== baseConfig[key]
           return (
             <div key={key}>
@@ -161,7 +166,7 @@ export default function WhatIfExplorer({ baseConfig, baseMetrics }: WhatIfExplor
               </tr>
             </thead>
             <tbody className="divide-y divide-purple-50 dark:divide-purple-800/20">
-              {COMPARE_METRICS.map(({ key, scale, suffix, lowerIsBetter }) => {
+              {compareMetrics.map(({ key, scale, suffix, lowerIsBetter }) => {
                 const base = (baseMetrics[key] as number) * scale
                 const whatIf = (whatIfMetrics[key] as number) * scale
                 const delta = whatIf - base

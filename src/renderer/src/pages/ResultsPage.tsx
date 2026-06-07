@@ -36,7 +36,11 @@ import { buildSnapshotSeries } from '../utils/snapshotSeries'
 import { extractCustomerMetrics } from '../utils/customerMetrics'
 import { extractKeyMoments } from '../utils/keyMoments'
 import { exportResultJSON, exportMetricsCSV, exportBatchSummaryCSV, exportSweepCSV } from '../utils/export'
+import { exportReportHTML, exportReportPDF } from '../utils/report'
 import { useToast } from '../hooks/useToast'
+import { useDomainStore } from '../store/domainStore'
+import { useSimulationStore } from '../store/simulationStore'
+import { isBuiltInScenarioId } from '../data/scenarios'
 
 interface ResultsPageProps {
   result: SimulationResult
@@ -65,9 +69,47 @@ export default function ResultsPage({
   batchResult,
   sweepResult,
 }: ResultsPageProps) {
-  const { t } = useTranslation(['results', 'common'])
+  const { t } = useTranslation(['results', 'common', 'report', 'domains', 'scenarios'])
   const { toast } = useToast()
   const { metrics, config, eventLog } = result
+  // Cat-specific panels only make sense when the run actually had cats.
+  // Non-cat domains (e.g. clinic) run with catCount = 0.
+  const hasCats = config.catCount > 0
+
+  // ── Research report export (HTML + PDF) ─────────────────
+  const activeDomainId = useDomainStore((s) => s.activeDomainId)
+  const lastRunScenarioId = useSimulationStore((s) => s.lastRunScenarioId)
+  const [exportingPdf, setExportingPdf] = useState(false)
+
+  function reportMeta() {
+    const domainLabel = t(`domains:${activeDomainId}.name` as const)
+    const scenarioLabel =
+      lastRunScenarioId && isBuiltInScenarioId(lastRunScenarioId)
+        ? t(`scenarios:${lastRunScenarioId}.name` as const)
+        : lastRunScenarioId ?? t('scenarios:customDefaultDescription')
+    return { domainLabel, scenarioLabel, generatedAt: new Date().toLocaleString() }
+  }
+
+  async function handleExportReportHtml() {
+    try {
+      await exportReportHTML(result, reportMeta())
+      toast(t('common:toast.exportSuccess'))
+    } catch {
+      toast(t('report:exportFailed'), 'error')
+    }
+  }
+
+  async function handleExportReportPdf() {
+    setExportingPdf(true)
+    try {
+      const ok = await exportReportPDF(result, reportMeta())
+      if (ok) toast(t('common:toast.exportSuccess'))
+    } catch {
+      toast(t('report:exportFailed'), 'error')
+    } finally {
+      setExportingPdf(false)
+    }
+  }
   const [selectedForCompare, setSelectedForCompare] = useState<Set<number>>(new Set())
   const [level, setLevel] = useState<LearningLevel>('expert')
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -145,6 +187,7 @@ export default function ResultsPage({
           <button
             type="button"
             onClick={() => { exportMetricsCSV(result); toast(t('common:toast.exportSuccess')) }}
+            data-testid="results-export-metrics-csv"
             className="btn-secondary text-xs px-3 py-1.5"
           >
             {t('results:exportMetricsCsv')}
@@ -155,6 +198,23 @@ export default function ResultsPage({
             className="btn-secondary text-xs px-3 py-1.5"
           >
             {t('results:exportJson')}
+          </button>
+          <button
+            type="button"
+            onClick={handleExportReportHtml}
+            data-testid="results-export-report-html"
+            className="btn-secondary text-xs px-3 py-1.5"
+          >
+            {t('report:exportHtml')}
+          </button>
+          <button
+            type="button"
+            onClick={handleExportReportPdf}
+            disabled={exportingPdf}
+            data-testid="results-export-report-pdf"
+            className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-50"
+          >
+            {exportingPdf ? t('report:exporting') : t('report:exportPdf')}
           </button>
           {selectedForCompare.size >= 2 && (
             <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-3 py-1.5 rounded-lg">
@@ -642,7 +702,7 @@ export default function ResultsPage({
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-3">
-              <div className="grid grid-cols-3 gap-2">
+              <div className={`grid ${hasCats ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
                 <KpiCard
                   label={t('results:kpi.seatUtilization.label')}
                   numeric={(batchSummary ? batchSummary.seatUtilization.mean : metrics.seatUtilization) * 100}
@@ -661,19 +721,21 @@ export default function ResultsPage({
                   highlight={(batchSummary ? batchSummary.staffUtilization.mean : metrics.staffUtilization) > 0.9 ? 'warning' : 'normal'}
                   ci={ciFor('staffUtilization', 100)}
                 />
-                <KpiCard
-                  label={t('results:kpi.catUtilization.label')}
-                  numeric={(batchSummary ? batchSummary.catUtilization.mean : metrics.catUtilization) * 100}
-                  decimals={1}
-                  numericSuffix="%"
-                  icon="😺"
-                  ci={ciFor('catUtilization', 100)}
-                />
+                {hasCats && (
+                  <KpiCard
+                    label={t('results:kpi.catUtilization.label')}
+                    numeric={(batchSummary ? batchSummary.catUtilization.mean : metrics.catUtilization) * 100}
+                    decimals={1}
+                    numericSuffix="%"
+                    icon="😺"
+                    ci={ciFor('catUtilization', 100)}
+                  />
+                )}
               </div>
               <UtilizationChart
                 seatUtilization={metrics.seatUtilization}
                 staffUtilization={metrics.staffUtilization}
-                catUtilization={metrics.catUtilization}
+                catUtilization={hasCats ? metrics.catUtilization : undefined}
               />
             </div>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -687,14 +749,17 @@ export default function ResultsPage({
             <div className="mt-3">
               <RhoCorrectionPanel metrics={metrics} level={level} />
             </div>
-            {/* v2.0 Epic D: cat welfare + Pareto frontier */}
+            {/* v2.0 Epic D: cat welfare + Pareto frontier (cat domains only) */}
+            {hasCats && (
             <div className="mt-3 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3">
               <WelfareSection metrics={metrics} />
               <ParetoFrontier currentMetrics={metrics} history={history} />
             </div>
+            )}
           </ResultsSection>
 
-          {/* ── Section 4: Cat interaction ─────────────────── */}
+          {/* ── Section 4: Cat interaction (cat domains only) ── */}
+          {hasCats && (
           <ResultsSection
             icon="🐱"
             title={t('results:section.cat.title')}
@@ -768,6 +833,7 @@ export default function ResultsPage({
               <PassiveChannelSensitivity baseConfig={config} />
             </div>
           </ResultsSection>
+          )}
 
           {/* ── What-If explorer ──────────────────────────── */}
           <WhatIfExplorer baseConfig={config} baseMetrics={metrics} />
@@ -778,14 +844,14 @@ export default function ResultsPage({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-1 text-sm text-gray-600 dark:text-bark-300">
               <div>{t('results:configSummary.seats')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.seatCount}</span></div>
               <div>{t('results:configSummary.staff')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.staffCount}</span></div>
-              <div>{t('results:configSummary.cats')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catCount}</span></div>
+              {hasCats && <div>{t('results:configSummary.cats')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catCount}</span></div>}
               <div>{t('results:configSummary.arrivalInterval')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.customerArrivalInterval}</span> {unitMin}</div>
               <div>{t('results:configSummary.orderTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.orderTime}</span> {unitMin}</div>
               <div>{t('results:configSummary.preparationTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.preparationTime}</span> {unitMin}</div>
               <div>{t('results:configSummary.diningTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.diningTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.interactionTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catInteractionTime}</span> {unitMin}</div>
-              <div>{t('results:configSummary.restProbability')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catRestProbability}</span></div>
-              <div>{t('results:configSummary.restDuration')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catRestDuration}</span> {unitMin}</div>
+              {hasCats && <div>{t('results:configSummary.interactionTime')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catInteractionTime}</span> {unitMin}</div>}
+              {hasCats && <div>{t('results:configSummary.restProbability')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catRestProbability}</span></div>}
+              {hasCats && <div>{t('results:configSummary.restDuration')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.catRestDuration}</span> {unitMin}</div>}
               <div>{t('results:configSummary.maxWait')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.maxWaitTime}</span> {unitMin}</div>
               <div>{t('results:configSummary.seed')} <span className="font-semibold text-gray-800 dark:text-bark-100">{config.randomSeed}</span></div>
             </div>

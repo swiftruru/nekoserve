@@ -54,8 +54,8 @@ class SimulationConfig:
             raise ValueError("seatCount 必須 >= 1")
         if self.staffCount < 1:
             raise ValueError("staffCount 必須 >= 1")
-        if self.catCount < 1:
-            raise ValueError("catCount 必須 >= 1")
+        if self.catCount < 0:
+            raise ValueError("catCount 不得為負（0 = 無環境代理場域，如診所）")
         if self.customerArrivalInterval <= 0:
             raise ValueError("customerArrivalInterval 必須 > 0")
         if self.orderTime <= 0:

@@ -633,6 +633,10 @@ def run_simulation(config_dict: dict) -> dict:
         return round(sum(lst) / len(lst), 2) if lst else 0.0
 
     def safe_util(busy: float, capacity: int) -> float:
+        # capacity can be 0 for cat-less domains (e.g. clinic runs with
+        # catCount=0). No capacity means no utilization to report.
+        if capacity <= 0:
+            return 0.0
         raw = busy / (capacity * sim_dur) if sim_dur > 0 else 0.0
         return round(min(raw, 1.0), 4)
 

@@ -1,0 +1,63 @@
+{
+  "sectionLabel": "Service domain",
+  "sectionHint": "Pick a service domain. The engine itself is a generic service-flow queueing model; the cat café is just the first scenario I've built out fully.",
+  "badgeHint": "Current service domain",
+  "comingSoon": "Coming soon",
+  "activeTag": "Live",
+  "lockedToast": "The \"{{name}}\" domain is still on the roadmap. For now everything runs on the cat café.",
+  "roleMapTitle": "How this domain maps to the model",
+  "roleMapHint": "Same engine, a new scenario just renames the roles.",
+  "roadmapNote": "The architecture now supports different service domains. I'll wire these scenarios onto the engine one by one.",
+  "archetype": {
+    "resource": "Capacity resource",
+    "server": "Server",
+    "ambientAgent": "Ambient experience agent",
+    "customer": "Arriving customer"
+  },
+  "cat-cafe": {
+    "name": "Cat café",
+    "tagline": "My flagship, fully built scenario: seats, staff, plus cats that wander over to greet customers on their own.",
+    "roles": {
+      "resource": "Seats",
+      "server": "Staff",
+      "ambientAgent": "Cats",
+      "customer": "Customers"
+    }
+  },
+  "restaurant": {
+    "name": "Restaurant / ramen shop",
+    "tagline": "Tables, waiters, and serving cadence: the closest fit to the original café model.",
+    "roles": {
+      "resource": "Tables",
+      "server": "Waiters",
+      "customer": "Diners"
+    }
+  },
+  "clinic": {
+    "name": "Clinic / waiting room",
+    "tagline": "Waiting chairs, clinicians, and visit flow: a classic service-flow problem.",
+    "roles": {
+      "resource": "Waiting chairs",
+      "server": "Clinicians",
+      "customer": "Patients"
+    }
+  },
+  "bank": {
+    "name": "Bank / teller counter",
+    "tagline": "Ticketed queue, tellers, transactions: the textbook M/M/c example.",
+    "roles": {
+      "resource": "Waiting seats",
+      "server": "Tellers",
+      "customer": "Clients"
+    }
+  },
+  "salon": {
+    "name": "Hair / nail salon",
+    "tagline": "Chairs, stylists, and appointments, with long service times.",
+    "roles": {
+      "resource": "Chairs",
+      "server": "Stylists",
+      "customer": "Clients"
+    }
+  }
+}

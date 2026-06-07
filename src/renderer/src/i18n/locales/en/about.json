@@ -25,6 +25,11 @@
     "title": "📖 About the project",
     "body": "NekoServe is a desktop application that simulates the customer service flow of a cat café. Using discrete-event simulation, it faithfully reproduces the full journey of each customer (arrival, queueing, seating, ordering, dining, interacting with cats, and leaving) and computes key service metrics. It is designed for classroom demonstration and service-system analysis. Version 1.0.0 adds batch replication with 95% confidence intervals, parameter sensitivity analysis, and classroom challenges, moving the teaching experience from single-run observation to statistical inference."
   },
+  "vision": {
+    "title": "🚀 Project vision",
+    "body": "NekoServe started as a cat-café simulator for my System Simulation course, but underneath it is a general service-flow simulation engine. I've reframed it as a service-flow simulation platform, with the cat café as the first and currently only fully built service domain.",
+    "roadmap": "The service domain section on the Settings page shows the scenarios I'm planning to add: restaurant, clinic, bank, and salon. They're previews for now, but the architecture is ready to wire them onto the engine one at a time. This generalization direction is also the foundation I want to extend into a thesis topic."
+  },
   "architecture": {
     "title": "🏗️ System architecture",
     "simulationLogic": "<strong>Simulation logic</strong> lives entirely in Python + SimPy and is not duplicated in the UI. The Electron main process spawns the packaged Python executable and exchanges parameters and results as JSON over stdin/stdout.",
@@ -70,5 +75,44 @@
     "title": "Onboarding tour",
     "description": "Replay the first-time user walkthrough.",
     "button": "Restart tour"
+  },
+  "rpa": {
+    "headerButton": "RPA",
+    "close": "Close",
+    "title": "🤖 RPA scenario sweep (course add-on)",
+    "description": "An external Python + pyautogui bot drives NekoServe's UI as if it were a human, running 12 scenarios across catCount × staffCount and generating a comparison report. NekoServe itself is unchanged; this button is just an entry point.",
+    "warningTitle": "⚠️ After you press Start",
+    "warning1": "The bot will take over your mouse and keyboard for 5 to 10 minutes",
+    "warning2": "Do not touch the mouse or keyboard during the run; to abort, slam the mouse into the top-left corner",
+    "warning3": "An HTML report opens automatically in your browser when the sweep finishes",
+    "scopeAll": "All 12 scenarios",
+    "scopeOne": "Single smoke test (cats3_staff2)",
+    "startButton": "Start RPA sweep",
+    "cancelButton": "Abort",
+    "statusIdle": "Idle",
+    "statusStarting": "Starting...",
+    "statusRunningBot": "RPA bot running (do not touch mouse / keyboard)",
+    "statusRunningReport": "Aggregating results, generating report...",
+    "statusDone": "✓ Done, report opened in browser",
+    "statusFailed": "✗ Failed: {{message}}",
+    "statusCancelled": "Cancelled",
+    "logHeader": "Live log (last 10 lines)",
+    "captureTitle": "🖼 First time? Capture the 8 UI templates",
+    "captureBody": "pyautogui needs 8 small PNGs of NekoServe's buttons before it can find them. The button below walks you through 8 captures using the macOS crosshair, with a dialog telling you which tab / scroll position is needed each time. No terminal required.",
+    "captureButton": "Capture templates (8)",
+    "captureButtonRedo": "Re-capture templates",
+    "smartCaptureButton": "Smart capture",
+    "smartCaptureHint": "Smart mode lets NekoServe read its own DOM, navigate between pages, and capture each button automatically. Takes about 10 seconds. Templates 6 and 7 need a finished simulation first.",
+    "smartCapturing": "Smart capturing...",
+    "missingList": "Missing",
+    "startDisabledHint": "Capture the {{count}} missing template(s) first",
+    "statusCapturing": "Capturing templates... (follow the dialog prompts)",
+    "copy": "Copy log",
+    "copied": "Copied",
+    "hintTemplatesMissing": "💡 The 7 UI template PNGs haven't been captured yet. Click the blue \"Capture templates (7)\" button above first; once calibration passes you can start the RPA sweep.",
+    "confirmModalTitle": "Confirm RPA sweep",
+    "confirmModalBody": "The bot will take over your mouse and keyboard for 5 to 10 minutes, running 12 scenarios. Do not touch mouse or keyboard during the run; to abort, slam the mouse into the top-left corner. Ready to start?",
+    "confirmModalConfirm": "Ready, start now",
+    "confirmModalCancel": "Not yet"
   }
 }

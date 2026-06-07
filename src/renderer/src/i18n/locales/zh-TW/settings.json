@@ -1,10 +1,27 @@
 {
   "sections": {
     "cafeResources": "🏠 咖啡廳資源設定",
+    "resourcesGeneric": "資源設定",
     "customerBehavior": "👥 顧客行為設定",
     "serviceTime": "☕ 服務時間設定",
+    "serviceTimeGeneric": "⏱️ 處理時間設定",
     "catInteraction": "🐱 貓咪互動設定",
     "simulationParams": "🎲 模擬參數設定"
+  },
+  "sectionsByDomain": {
+    "clinic": {
+      "customerBehavior": "👥 病患行為設定"
+    }
+  },
+  "parametersByDomain": {
+    "clinic": {
+      "seatCount": "候診椅數量",
+      "staffCount": "醫護人員數",
+      "customerArrivalInterval": "病患平均到達間隔",
+      "orderTime": "報到 / 掛號平均時間",
+      "preparationTime": "檢傷 / 準備平均時間",
+      "diningTime": "看診平均時間"
+    }
   },
   "academicDisclaimer": {
     "title": "📘 關於這些數字，先說在前頭",

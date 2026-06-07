@@ -1,0 +1,24 @@
+{
+  "title": "NekoServe 服務流程模擬研究報告",
+  "meta": {
+    "domain": "服務場域",
+    "scenario": "情境",
+    "generatedAt": "產生時間",
+    "duration": "模擬時長",
+    "seed": "隨機種子"
+  },
+  "section": {
+    "verdict": "總結判讀",
+    "kpis": "關鍵指標",
+    "charts": "圖表分析",
+    "theory": "排隊理論對照",
+    "config": "模擬參數",
+    "methodology": "方法說明"
+  },
+  "methodologyBody": "本報告由 NekoServe 產生。模擬採離散事件模擬（Discrete Event Simulation, SimPy）：顧客到達間隔為指數分佈（Poisson 過程），各項服務時間為常態分佈（標準差為平均的 0.2 倍、最小 1 分鐘）。排隊理論對照使用 Kingman 的 M/M/c 等待時間近似，並附上考量棄單的 ρ 修正（Dbeis & Al-Sahili, 2024）。",
+  "exportHtml": "匯出報告 HTML",
+  "exportPdf": "匯出報告 PDF",
+  "exporting": "產生中⋯",
+  "exportFailed": "報告匯出失敗",
+  "footer": "由 NekoServe 服務流程模擬平台產生"
+}
