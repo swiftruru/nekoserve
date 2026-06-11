@@ -4,6 +4,7 @@ import { computeKde } from '../../utils/kde'
 import { describeDistribution, classifyShape } from '../../utils/distributionShape'
 import { TermTooltip } from '../results/TermTooltip'
 import type { ThresholdConfig } from '../../utils/exceedance'
+import { useThresholdDrag, type ThresholdBounds } from './useThresholdDrag'
 
 interface Props {
   /** Per-run sample values. Order matters only insofar as the LAST one
@@ -19,6 +20,12 @@ interface Props {
   /** Pass fraction in [0, 1]. Displayed alongside the threshold label
    *  ("≥ 3.50: 67.3%"). Ignored when `threshold` is undefined. */
   exceedanceProb?: number
+  /** When provided, the threshold line becomes draggable and writes the
+   *  new value back through this callback. Undefined → read-only line
+   *  (the existing behaviour for non-interactive contexts). */
+  onThresholdChange?: (value: number) => void
+  /** Clamp bounds for dragging. Only used when onThresholdChange is set. */
+  thresholdBounds?: ThresholdBounds
 }
 
 /** Color used for the threshold line + label across charts. Picked so
@@ -52,6 +59,7 @@ const BIN_COUNT = 20
  */
 export default function LiveHistogram({
   values, metricLabel, cumulativeMean, threshold, exceedanceProb,
+  onThresholdChange, thresholdBounds,
 }: Props) {
   const { t } = useTranslation(['liveOverlay'])
 
@@ -105,6 +113,23 @@ export default function LiveHistogram({
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [hoverBinIdx, setHoverBinIdx] = useState<number | null>(null)
 
+  // Threshold drag. Computed here (before the early return) so the hook
+  // runs unconditionally; pxToValue inverts the same x-scale the line is
+  // drawn with, using the histogram's data domain.
+  const innerWForDrag = CHART_W - PADDING_X * 2
+  const domainLo = binned?.lo ?? 0
+  const domainHi = binned?.hi ?? 1
+  const pxToValue = (userX: number) =>
+    domainLo + ((userX - PADDING_X) / Math.max(1e-9, innerWForDrag)) * (domainHi - domainLo)
+  const { dragging, handlers } = useThresholdDrag({
+    svgRef,
+    chartWidth: CHART_W,
+    pxToValue,
+    bounds: thresholdBounds ?? {},
+    onChange: onThresholdChange ?? (() => {}),
+    enabled: !!onThresholdChange && !!threshold,
+  })
+
   if (!binned) {
     return (
       <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure">
@@ -124,6 +149,10 @@ export default function LiveHistogram({
   const { lo, hi, counts, maxCount, latestBinIdx } = binned
   const sampleCount = values.length
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    if (dragging) {
+      setHoverBinIdx(null)
+      return
+    }
     const svg = svgRef.current
     if (!svg) return
     const rect = svg.getBoundingClientRect()
@@ -192,7 +221,7 @@ export default function LiveHistogram({
     : null
 
   return (
-    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={metricLabel}>
+    <div className="rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 p-3" role="figure" aria-label={metricLabel} data-testid="live-histogram">
       <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
         <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">
           {t('liveOverlay:histogram.title', { metric: metricLabel })}
@@ -292,6 +321,24 @@ export default function LiveHistogram({
             opacity={0.15}
           />
         )}
+        {/* Pass-side area-under-curve emphasis: the same KDE band clipped
+            to the passing region and drawn darker, so the reader sees the
+            accumulated area the CDF later reads as a probability. */}
+        {kdeBandPoints && threshold && (() => {
+          const clampedTx = Math.max(PADDING_X, Math.min(CHART_W - PADDING_X, xScale(threshold.value)))
+          const passLeft = threshold.direction === 'gte' ? clampedTx : PADDING_X
+          const passRight = threshold.direction === 'gte' ? CHART_W - PADDING_X : clampedTx
+          const passW = Math.max(0, passRight - passLeft)
+          if (passW <= 0) return null
+          return (
+            <g>
+              <clipPath id="kde-pass-clip">
+                <rect x={passLeft} y={PADDING_TOP} width={passW} height={CHART_H - PADDING_TOP - PADDING_BOTTOM} />
+              </clipPath>
+              <polygon points={kdeBandPoints} fill="#ea580c" opacity={0.3} clipPath="url(#kde-pass-clip)" pointerEvents="none" />
+            </g>
+          )
+        })()}
         {kdePoints && (
           <polyline
             points={kdePoints}
@@ -393,24 +440,44 @@ export default function LiveHistogram({
           const estW = labelText.length * 6.5 + 6
           const labelOnLeft = tx + estW > CHART_W - PADDING_X
           return (
-            <g pointerEvents="none">
-              <line
-                x1={tx} y1={PADDING_TOP}
-                x2={tx} y2={CHART_H - PADDING_BOTTOM}
-                stroke={THRESHOLD_STROKE}
-                strokeDasharray="4 3"
-                strokeWidth={1.5}
-              />
-              <text
-                x={labelOnLeft ? tx - 4 : tx + 4}
-                y={PADDING_TOP + 11}
-                fontSize={11}
-                fontWeight={700}
-                fill={THRESHOLD_STROKE}
-                textAnchor={labelOnLeft ? 'end' : 'start'}
-              >
-                {labelText}
-              </text>
+            <g>
+              <g pointerEvents="none">
+                <line
+                  x1={tx} y1={PADDING_TOP}
+                  x2={tx} y2={CHART_H - PADDING_BOTTOM}
+                  stroke={THRESHOLD_STROKE}
+                  strokeDasharray="4 3"
+                  strokeWidth={1.5}
+                />
+                <text
+                  x={labelOnLeft ? tx - 4 : tx + 4}
+                  y={PADDING_TOP + 11}
+                  fontSize={11}
+                  fontWeight={700}
+                  fill={THRESHOLD_STROKE}
+                  textAnchor={labelOnLeft ? 'end' : 'start'}
+                >
+                  {labelText}
+                </text>
+              </g>
+              {/* Draggable hit-area: widened transparent strip + grip. */}
+              {onThresholdChange && (
+                <g
+                  onPointerDown={handlers.onPointerDown}
+                  onPointerMove={handlers.onPointerMove}
+                  onPointerUp={handlers.onPointerUp}
+                  style={{ cursor: 'ew-resize' }}
+                >
+                  <rect
+                    x={tx - 7}
+                    y={PADDING_TOP}
+                    width={14}
+                    height={CHART_H - PADDING_TOP - PADDING_BOTTOM}
+                    fill="transparent"
+                  />
+                  <rect x={tx - 4} y={CHART_H - PADDING_BOTTOM - 9} width={8} height={9} rx={2} fill={THRESHOLD_STROKE} data-testid="hist-threshold-grip" />
+                </g>
+              )}
             </g>
           )
         })()}

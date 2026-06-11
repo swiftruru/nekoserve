@@ -196,7 +196,7 @@ export default function CumulativeMeanChart({
   const stableX2 = convergedAt !== null ? xScale(last.n) : 0
 
   return (
-    <div className={`rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 ${compact ? 'p-2' : 'p-3'}`} role="figure" aria-label={metricLabel}>
+    <div className={`rounded-xl border border-orange-100 dark:border-bark-600 bg-orange-50/40 dark:bg-bark-700/30 ${compact ? 'p-2' : 'p-3'}`} role="figure" aria-label={metricLabel} data-testid="cumulative-mean-chart">
       <div className="flex items-baseline justify-between mb-1">
         <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-semibold text-orange-700 dark:text-orange-400 truncate`}>
           {metricLabel}

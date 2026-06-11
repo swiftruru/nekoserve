@@ -1,6 +1,6 @@
 {
   "name": "nekoserve",
-  "version": "2.4.0",
+  "version": "2.7.0",
   "description": "🐱 Cat café queuing & service simulation desktop app — Electron + React + SimPy",
   "main": "out/main/index.js",
   "author": "NekoServe",
@@ -21,6 +21,8 @@
     "pack:mac": "electron-builder --mac --config electron-builder.yml",
     "pack:win": "electron-builder --win --config electron-builder.yml",
     "pack:linux": "electron-builder --linux --config electron-builder.yml",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:simulator": "cd simulator-python && python -m pytest tests/ -v",
     "pretest:ui": "npm run ci:build",
     "test:ui": "playwright test",
@@ -60,6 +62,7 @@
     "react-dom": "^18.2.0",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.9"
   }
 }

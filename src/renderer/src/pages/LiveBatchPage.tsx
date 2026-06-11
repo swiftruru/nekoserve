@@ -9,6 +9,8 @@ import {
 import type { LiveRunnerControls } from '../hooks/useLiveRunner'
 import CumulativeMeanChart from '../components/live/CumulativeMeanChart'
 import LiveHistogram from '../components/live/LiveHistogram'
+import CdfChart from '../components/live/CdfChart'
+import CdfReadoutCard from '../components/live/CdfReadoutCard'
 import LiveScenePanel from '../components/live/LiveScenePanel'
 import RunThumbnailStrip from '../components/live/RunThumbnailStrip'
 import ConfettiBurst from '../components/live/ConfettiBurst'
@@ -21,6 +23,7 @@ import {
   detectConvergedAt, CONVERGENCE_WINDOW, CONVERGENCE_THRESHOLD,
 } from '../utils/convergence'
 import { calcExceedProb, type ThresholdConfig } from '../utils/exceedance'
+import { thresholdForTargetP } from '../utils/cdf'
 import { getThresholdStep, getThresholdBounds } from '../data/thresholdDefaults'
 
 interface Props {
@@ -39,6 +42,30 @@ interface Props {
 
 const SCENE_COLLAPSED_KEY = 'nekoserve:live-scene-collapsed'
 const SELECTED_METRICS_KEY = 'nekoserve:live-selected-metrics'
+const CDF_CONFIG_KEY = 'nekoserve:cdf-config'
+
+/** Per-metric CDF view preferences (target attainment + layer toggles).
+ *  Threshold and direction stay in liveBatchStore; only these UI prefs
+ *  persist here, mirroring how nekoserve:live-selected-metrics works. */
+interface CdfMetricConfig {
+  targetP: number
+  showSmoothed: boolean
+  showDkw: boolean
+}
+const CDF_DEFAULT: CdfMetricConfig = { targetP: 0.5, showSmoothed: true, showDkw: false }
+
+function loadCdfConfig(): Record<string, CdfMetricConfig> {
+  try {
+    const raw = localStorage.getItem(CDF_CONFIG_KEY)
+    return raw ? (JSON.parse(raw) as Record<string, CdfMetricConfig>) : {}
+  } catch {
+    return {}
+  }
+}
+function saveCdfConfig(cfg: Record<string, CdfMetricConfig>) {
+  try { localStorage.setItem(CDF_CONFIG_KEY, JSON.stringify(cfg)) }
+  catch { /* ok */ }
+}
 
 const DEFAULT_SELECTED_METRICS: LiveMetricKey[] = [
   'customerSatisfactionScore',
@@ -183,9 +210,103 @@ export default function LiveBatchPage({
 
   // Empty state: never started a batch (idle + no runs). Single-run
   // users land here without realising this page expects multi-run
-  // data. Render a clear explanation + CTA back to settings instead
-  // of a blank charts grid.
+  // data. The early return that renders it lives AFTER every hook
+  // (just before the main render) so the hook count stays stable when
+  // the page transitions idle -> running in place (e.g. the quick-start
+  // button). Returning here would change the hook count and crash with
+  // React #310.
   const isEmpty = status === 'idle' && runs.length === 0
+
+  // The store's selectedMetric still drives the run-thumbnail strip's
+  // value display (always shows _some_ metric per chip). We default it
+  // to the focused metric when one is set, otherwise the first selected.
+  const stripMetric = focusedMetric ?? storeMetric
+
+  const batchProgress = total > 0 ? currentIndex / total : 0
+
+  // Detail-view-only computations (skipped when in grid view to keep
+  // re-render cost low). When a replay is in flight, slice every
+  // detail-view dataset to the first replayIndex points so the chart,
+  // histogram, and readouts all redraw as if we were at run #N.
+  const detailFullSeries = focusedMetric ? series[focusedMetric] ?? [] : []
+  const detailSeries = isReplaying
+    ? detailFullSeries.slice(0, Math.max(1, replayIndex!))
+    : detailFullSeries
+  const detailFullStat = focusedMetric ? stats[focusedMetric] : undefined
+  const detailLastPoint = detailSeries[detailSeries.length - 1]
+  // While replaying, surface the snapshot stat from the latest visible
+  // ConvergencePoint instead of the full-data Welford aggregate.
+  const detailStat = isReplaying && detailLastPoint
+    ? { n: detailLastPoint.n, mean: detailLastPoint.mean, m2: 0 }
+    : detailFullStat
+  const detailLabel = focusedMetric
+    ? t(`liveOverlay:metric.${focusedMetric}`, { defaultValue: focusedMetric })
+    : ''
+  const detailSamples = useMemo(() => {
+    if (!focusedMetric) return []
+    const sliced = isReplaying
+      ? runs.slice(0, Math.max(1, replayIndex!))
+      : runs
+    return sliced.map((r) => r.metrics[focusedMetric] as unknown as number)
+  }, [runs, focusedMetric, isReplaying, replayIndex])
+  const detailConvergedAt = useMemo(
+    () => focusedMetric ? detectConvergedAt(detailSeries) : null,
+    [focusedMetric, detailSeries],
+  )
+
+  // Threshold + exceedance probability for the focused metric. Reading
+  // the whole thresholds map (not a per-key slice) is intentional: the
+  // GlobalThresholdBar edits arbitrary keys and we want the detail view
+  // to react to its own key changing without a stale-key closure.
+  const thresholds = useLiveBatchStore((s) => s.thresholds)
+  const setThreshold = useLiveBatchStore((s) => s.setThreshold)
+  const focusedThreshold = focusedMetric ? thresholds[focusedMetric] : undefined
+  const exceedance = useMemo(
+    () => focusedThreshold
+      ? calcExceedProb(detailSamples, focusedThreshold.value, focusedThreshold.direction)
+      : null,
+    [detailSamples, focusedThreshold],
+  )
+
+  // ── CDF analysis view state (per-metric prefs persisted to localStorage,
+  //    suggested-threshold is ephemeral and cleared when the focus changes).
+  const [cdfConfig, setCdfConfig] = useState<Record<string, CdfMetricConfig>>(loadCdfConfig)
+  const [suggestedThreshold, setSuggestedThreshold] = useState<number | null>(null)
+  const focusedCdf: CdfMetricConfig = focusedMetric
+    ? { ...CDF_DEFAULT, ...cdfConfig[focusedMetric] }
+    : CDF_DEFAULT
+  // Update the focused metric's CDF prefs and persist.
+  const patchCdf = (patch: Partial<CdfMetricConfig>) => {
+    if (!focusedMetric) return
+    setCdfConfig((prev) => {
+      const next = {
+        ...prev,
+        [focusedMetric]: { ...CDF_DEFAULT, ...prev[focusedMetric], ...patch },
+      }
+      saveCdfConfig(next)
+      return next
+    })
+  }
+  // Clear any inverse-lookup suggestion when the focused metric changes.
+  useEffect(() => { setSuggestedThreshold(null) }, [focusedMetric])
+
+  const handleThresholdDrag = (value: number) => {
+    if (!focusedMetric || !focusedThreshold) return
+    setThreshold(focusedMetric, { value, direction: focusedThreshold.direction })
+  }
+  const handleComputeSuggestion = () => {
+    if (!focusedMetric || !focusedThreshold) return
+    const { threshold } = thresholdForTargetP(detailSamples, focusedCdf.targetP, focusedThreshold.direction)
+    setSuggestedThreshold(Number.isFinite(threshold) ? threshold : null)
+  }
+  const handleApplySuggestion = () => {
+    if (!focusedMetric || !focusedThreshold || suggestedThreshold == null) return
+    setThreshold(focusedMetric, { value: suggestedThreshold, direction: focusedThreshold.direction })
+    setSuggestedThreshold(null)
+  }
+
+  const canReplay = runs.length >= 2
+
   if (isEmpty) {
     return (
       <div className="page-container space-y-4 max-w-3xl" data-testid="live-batch-empty">
@@ -260,58 +381,6 @@ export default function LiveBatchPage({
       </div>
     )
   }
-
-  // The store's selectedMetric still drives the run-thumbnail strip's
-  // value display (always shows _some_ metric per chip). We default it
-  // to the focused metric when one is set, otherwise the first selected.
-  const stripMetric = focusedMetric ?? storeMetric
-
-  const batchProgress = total > 0 ? currentIndex / total : 0
-
-  // Detail-view-only computations (skipped when in grid view to keep
-  // re-render cost low). When a replay is in flight, slice every
-  // detail-view dataset to the first replayIndex points so the chart,
-  // histogram, and readouts all redraw as if we were at run #N.
-  const detailFullSeries = focusedMetric ? series[focusedMetric] ?? [] : []
-  const detailSeries = isReplaying
-    ? detailFullSeries.slice(0, Math.max(1, replayIndex!))
-    : detailFullSeries
-  const detailFullStat = focusedMetric ? stats[focusedMetric] : undefined
-  const detailLastPoint = detailSeries[detailSeries.length - 1]
-  // While replaying, surface the snapshot stat from the latest visible
-  // ConvergencePoint instead of the full-data Welford aggregate.
-  const detailStat = isReplaying && detailLastPoint
-    ? { n: detailLastPoint.n, mean: detailLastPoint.mean, m2: 0 }
-    : detailFullStat
-  const detailLabel = focusedMetric
-    ? t(`liveOverlay:metric.${focusedMetric}`, { defaultValue: focusedMetric })
-    : ''
-  const detailSamples = useMemo(() => {
-    if (!focusedMetric) return []
-    const sliced = isReplaying
-      ? runs.slice(0, Math.max(1, replayIndex!))
-      : runs
-    return sliced.map((r) => r.metrics[focusedMetric] as unknown as number)
-  }, [runs, focusedMetric, isReplaying, replayIndex])
-  const detailConvergedAt = useMemo(
-    () => focusedMetric ? detectConvergedAt(detailSeries) : null,
-    [focusedMetric, detailSeries],
-  )
-
-  // Threshold + exceedance probability for the focused metric. Reading
-  // the whole thresholds map (not a per-key slice) is intentional: the
-  // GlobalThresholdBar edits arbitrary keys and we want the detail view
-  // to react to its own key changing without a stale-key closure.
-  const thresholds = useLiveBatchStore((s) => s.thresholds)
-  const focusedThreshold = focusedMetric ? thresholds[focusedMetric] : undefined
-  const exceedance = useMemo(
-    () => focusedThreshold
-      ? calcExceedProb(detailSamples, focusedThreshold.value, focusedThreshold.direction)
-      : null,
-    [detailSamples, focusedThreshold],
-  )
-
-  const canReplay = runs.length >= 2
 
   return (
     <div className="page-container space-y-4 relative pb-24" data-testid="live-batch-page">
@@ -591,6 +660,26 @@ export default function LiveBatchPage({
                 />
               )}
 
+              {/* CDF attainment readout + layer controls + inverse lookup. */}
+              {focusedMetric && (
+                <CdfReadoutCard
+                  metricKey={focusedMetric}
+                  values={detailSamples}
+                  threshold={focusedThreshold}
+                  exceedance={exceedance}
+                  targetP={focusedCdf.targetP}
+                  onTargetPChange={(p) => patchCdf({ targetP: p })}
+                  showSmoothed={focusedCdf.showSmoothed}
+                  onToggleSmoothed={(v) => patchCdf({ showSmoothed: v })}
+                  showDkw={focusedCdf.showDkw}
+                  onToggleDkw={(v) => patchCdf({ showDkw: v })}
+                  suggestedThreshold={suggestedThreshold}
+                  onComputeSuggestion={handleComputeSuggestion}
+                  onApplySuggestion={handleApplySuggestion}
+                  onClearSuggestion={() => setSuggestedThreshold(null)}
+                />
+              )}
+
               {/* Convergence banner (per-metric, only in detail view) */}
               {detailSeries.length >= CONVERGENCE_WINDOW && (
                 detailConvergedAt !== null ? (
@@ -622,6 +711,18 @@ export default function LiveBatchPage({
                 cumulativeMean={detailStat && detailStat.n > 0 ? detailStat.mean : null}
                 threshold={focusedThreshold}
                 exceedanceProb={exceedance?.probability}
+                onThresholdChange={focusedMetric ? handleThresholdDrag : undefined}
+                thresholdBounds={focusedMetric ? getThresholdBounds(focusedMetric) : undefined}
+              />
+              <CdfChart
+                values={detailSamples}
+                metricLabel={detailLabel}
+                threshold={focusedThreshold}
+                bounds={focusedMetric ? getThresholdBounds(focusedMetric) : {}}
+                onThresholdChange={focusedMetric ? handleThresholdDrag : undefined}
+                suggestedThreshold={suggestedThreshold}
+                showSmoothed={focusedCdf.showSmoothed}
+                showDkw={focusedCdf.showDkw}
               />
             </>
           )}

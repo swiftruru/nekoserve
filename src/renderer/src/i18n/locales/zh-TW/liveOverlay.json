@@ -184,6 +184,58 @@
     "quickStartBatch": "🚀 直接用目前參數跑 20 次批次",
     "quickStartHint": "或者一鍵立刻啟動 (使用最近一次的設定參數):"
   },
+  "cdf": {
+    "title": "累積分布：{{metric}}",
+    "sampleCount": "n = {{n}} 次",
+    "fLabel": "F(t) = {{value}}%",
+    "thresholdLabel": "門檻 {{value}}（1-F = {{survival}}%）",
+    "suggestLabel": "建議 {{value}}",
+    "hoverF": "F(x) = {{value}}%",
+    "hoverSurvival": "1-F(x) = {{value}}%",
+    "legendEmpirical": "經驗 CDF",
+    "legendSmoothed": "平滑 CDF",
+    "legendDkw": "DKW 95% 帶",
+    "explain": {
+      "title": "這張圖在告訴我什麼",
+      "intro": "我把每一次模擬的成績從低到高排好，畫成一條「到這裡為止累積了幾成」的線。看下方橫軸的某個分數時，線的高度就是「有幾成的模擬落在這個分數以下」。",
+      "empirical": "橘色階梯：我實際跑出來的成績，一次一筆往上疊。",
+      "smoothed": "藍綠虛線：把上面的階梯抹順成一條曲線，比較好看整體形狀。它和上方密度圖用的是同一套平滑設定。",
+      "dkw": "淡橘色帶子：我只跑了有限次數，真正的曲線大概落在這條帶子裡。跑越多次帶子越窄，代表我越能相信這個結果。",
+      "threshold": "直立橘線：我設的標準（例如福祉要 3.5 分）。旁邊的 F(t) 是「沒達到標準的比例」，1-F(t) 就是「達到標準的機率」。",
+      "suggest": "藍色虛線（按了「反查門檻」才會出現）：我反過來指定想要的達標率時，系統幫我回推、建議要設的標準。",
+      "howto": "想知道達標機率嗎？把直立的門檻線拖到你的標準，看達標那一側佔了多少就是了。"
+    },
+    "readoutHelp": {
+      "attainment": "達標機率：所有模擬裡，有幾成達到我設的標準。",
+      "wilson": "95% 信賴區間：因為只跑了有限次數，這個機率本身會有一點誤差，真正的值大概落在這個範圍內。",
+      "ft": "F(t) 是落在門檻以下的比例，1-F(t) 是門檻以上的比例。哪一側算達標，那一側就是達標機率。",
+      "verdict": "判定：達標機率有沒有超過我設的目標達標率。"
+    },
+    "attainmentLabel": "達標機率 P(X {{sign}} {{value}})",
+    "attainmentEmpty": "達標機率（請先設門檻）",
+    "wilsonHint": "95% 信賴區間：{{lo}}% 到 {{hi}}%",
+    "fOfT": "F(t)",
+    "survivalOfT": "1-F(t)",
+    "verdictLabel": "判定（目標 {{target}}%）",
+    "pass": "達標",
+    "fail": "未達標",
+    "toggleSmoothed": "平滑 CDF",
+    "toggleDkw": "DKW 信賴帶",
+    "targetLabel": "目標達標率",
+    "reverseLookup": "反查門檻",
+    "suggestText": "若要達標率到 {{target}}%，門檻大約要設在 {{value}}。",
+    "applySuggestion": "套用",
+    "clearSuggestion": "清除",
+    "conclusion": {
+      "relGte": "達到 {{threshold}} 以上",
+      "relLte": "維持在 {{threshold}} 以下",
+      "above": "高於",
+      "below": "低於",
+      "pass": "達標",
+      "fail": "未達標",
+      "sentence": "在目前設定下，{{metric}}{{relPhrase}}的機率為 {{prob}}%（95% 信賴區間 {{ciLo}}% 到 {{ciHi}}%），{{compare}} {{target}}% 的目標，判定為{{verdict}}。"
+    }
+  },
   "metric": {
     "avgWaitForSeat": "平均等待座位 (分)",
     "avgWaitForOrder": "平均等待點餐 (分)",

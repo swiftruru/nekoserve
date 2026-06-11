@@ -184,6 +184,58 @@
     "quickStartBatch": "🚀 Run a 20-replica batch with current params",
     "quickStartHint": "Or kick one off right now (reuses your last config):"
   },
+  "cdf": {
+    "title": "Cumulative distribution: {{metric}}",
+    "sampleCount": "n = {{n}} runs",
+    "fLabel": "F(t) = {{value}}%",
+    "thresholdLabel": "t = {{value}} (1-F = {{survival}}%)",
+    "suggestLabel": "suggested {{value}}",
+    "hoverF": "F(x) = {{value}}%",
+    "hoverSurvival": "1-F(x) = {{value}}%",
+    "legendEmpirical": "Empirical CDF",
+    "legendSmoothed": "Smoothed CDF",
+    "legendDkw": "DKW 95% band",
+    "explain": {
+      "title": "What this chart is telling me",
+      "intro": "I lined up the results of all my runs from low to high and drew a \"how much has added up so far\" line. At any score on the bottom axis, the height of the line is the share of my runs that landed at or below that score.",
+      "empirical": "Orange staircase: my actual results, stacked one run at a time.",
+      "smoothed": "Teal dashed line: the same results smoothed into one clean curve, so the overall shape is easier to read. It uses the same smoothing setting as the density chart above.",
+      "dkw": "Pale orange band: I only ran a limited number of times, so the real curve probably sits somewhere inside this band. The more runs I do, the narrower it gets, which means I can trust it more.",
+      "threshold": "Upright orange line: the standard I set (for example, welfare of 3.5). The F(t) reading next to it is the share that did NOT reach the standard; 1-F(t) is the chance of reaching it.",
+      "suggest": "Blue dashed line (shows up after I press \"Reverse lookup\"): when I ask for a target pass rate, this is the standard the app works backwards to suggest.",
+      "howto": "Want the pass rate? Drag the upright line to your standard, then read how much of the curve sits on the passing side."
+    },
+    "readoutHelp": {
+      "attainment": "Attainment: out of all my runs, the share that met the standard I set.",
+      "wilson": "95% CI: because I only ran a limited number of times, this rate has some wiggle room. The true value most likely sits inside this range.",
+      "ft": "F(t) is the share below the threshold; 1-F(t) is the share above it. Whichever side counts as passing is the attainment.",
+      "verdict": "Verdict: whether the attainment cleared the target pass rate I set."
+    },
+    "attainmentLabel": "Attainment P(X {{sign}} {{value}})",
+    "attainmentEmpty": "Attainment (set a threshold)",
+    "wilsonHint": "95% CI: {{lo}}% to {{hi}}%",
+    "fOfT": "F(t)",
+    "survivalOfT": "1-F(t)",
+    "verdictLabel": "Verdict (target {{target}}%)",
+    "pass": "PASS",
+    "fail": "FAIL",
+    "toggleSmoothed": "Smoothed CDF",
+    "toggleDkw": "DKW band",
+    "targetLabel": "Target",
+    "reverseLookup": "Reverse lookup",
+    "suggestText": "To reach {{target}}% attainment, set the threshold to about {{value}}.",
+    "applySuggestion": "Apply",
+    "clearSuggestion": "Clear",
+    "conclusion": {
+      "relGte": "reaches at least {{threshold}}",
+      "relLte": "stays at or below {{threshold}}",
+      "above": "above",
+      "below": "below",
+      "pass": "pass",
+      "fail": "fail",
+      "sentence": "Under the current setting, the probability that {{metric}} {{relPhrase}} is {{prob}}% (95% CI: {{ciLo}}% to {{ciHi}}%), {{compare}} the {{target}}% target. Result: {{verdict}}."
+    }
+  },
   "metric": {
     "avgWaitForSeat": "Avg wait for seat (min)",
     "avgWaitForOrder": "Avg wait for order (min)",
